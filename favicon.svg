@@ -1,0 +1,39 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#17262f"/>
+      <stop offset="100%" stop-color="#0b1016"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2fd897"/>
+      <stop offset="100%" stop-color="#16a06d"/>
+    </linearGradient>
+  </defs>
+
+  <!-- badge -->
+  <rect x="0" y="0" width="512" height="512" rx="116" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="100" fill="none" stroke="#27c488" stroke-opacity="0.28" stroke-width="7"/>
+
+  <!-- broto: árvore de decisão (raiz âmbar -> folhas verde/azul) -->
+  <g stroke="#62798a" stroke-width="11" stroke-linecap="round" fill="none">
+    <path d="M256 196 L256 150"/>
+    <path d="M256 152 L198 104"/>
+    <path d="M256 152 L314 104"/>
+  </g>
+  <circle cx="256" cy="150" r="14" fill="#ffb020"/>
+  <circle cx="198" cy="104" r="19" fill="#39d98a"/>
+  <circle cx="314" cy="104" r="19" fill="#4aa3ff"/>
+
+  <!-- corpo do homúnculo -->
+  <path d="M256 200 C 342 200, 388 260, 388 328 C 388 404, 332 456, 256 456 C 180 456, 124 404, 124 328 C 124 260, 170 200, 256 200 Z" fill="url(#body)"/>
+  <path d="M256 200 C 342 200, 388 260, 388 328 C 388 404, 332 456, 256 456 C 180 456, 124 404, 124 328 C 124 260, 170 200, 256 200 Z" fill="none" stroke="#0c6b4b" stroke-width="8"/>
+
+  <!-- olhos grandes (legíveis em 16px) -->
+  <circle cx="210" cy="322" r="36" fill="#0b1016"/>
+  <circle cx="302" cy="322" r="36" fill="#0b1016"/>
+  <circle cx="222" cy="310" r="11" fill="#eafff6"/>
+  <circle cx="314" cy="310" r="11" fill="#eafff6"/>
+
+  <!-- sorriso -->
+  <path d="M230 374 Q 256 398 282 374" fill="none" stroke="#0b1016" stroke-width="11" stroke-linecap="round"/>
+</svg>

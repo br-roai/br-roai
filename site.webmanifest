@@ -1,0 +1,26 @@
+{
+  "name": "BR-AI — IA de homúnculos",
+  "short_name": "BR-AI",
+  "description": "Editor e simulador de IA de homúnculos do Ragnarok Online.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0c141b",
+  "theme_color": "#0c141b",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}
