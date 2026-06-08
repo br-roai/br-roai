@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>BR-AI — Editor de Árvores (web)</title><link rel="icon" href="favicon.ico" sizes="32x32" /><link rel="icon" href="favicon.svg" type="image/svg+xml" /><link rel="apple-touch-icon" href="apple-touch-icon.png" /><link rel="manifest" href="site.webmanifest" /><meta name="theme-color" content="#0c141b" />
-  <link rel="stylesheet" href="assets/editor_css.04f0bc4094.css" />
+  <link rel="stylesheet" href="assets/editor_css.c7b9f2f3bd.css" />
   <link rel="stylesheet" href="assets/static.4ebe8688aa.css" />
   <style>
     #braibar { display:flex; align-items:center; gap:10px; padding:6px 10px; background:#101417; color:#cfd6dd; border-bottom:1px solid #263038; font:13px system-ui, sans-serif; }
@@ -13,11 +13,11 @@
 </head>
 <body>
 
-
   <header>
     <strong>BR-AI</strong> · Editor de Árvores <span class="tag">web</span>
-    <a class="nav" href="./index.html">← Simulador</a>
+    <a class="nav" href="./sim.html">← Simulador</a>
     <a class="nav" href="docs/index.html" target="_blank" rel="noopener" title="Abrir a documentação (nova aba)">❔ Documentação</a>
+    <a class="nav" href="./migrar.html" title="Migrar uma AzzyAI">🧬 Migrar AzzyAI</a>
     <span id="valid" class="valid"></span>
     <span id="status" class="status"></span>
   </header>
@@ -54,6 +54,7 @@
     <button id="btnMonsters" title="Cadastro de monstros e grupos">Monstros</button>
     <button id="btnSkills" title="Escolher skills por homúnculo (Homunculus S)">Skills</button>
     <button id="btnCombos" title="Configurar os combos da Eleanor (Homunculus S)">Combos</button>
+    <button id="btnConfig" title="Ajustes do H_Config (vão p/ o config.lua e o simulador)">Config</button>
     <button id="btnLoadDefault" title="Carregar a árvore padrão embutida">Padrão</button>
     <button id="btnSimulate" class="primary">▶ Simular</button>
   </div>
@@ -76,16 +77,16 @@
     </aside>
   </div>
 
-  <script>window.BRAI_SIM_URL = './index.html';</script>
+  <script>window.BRAI_SIM_URL = './sim.html';</script>
   <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
-  <script src="assets/build_tree_web.09258e3865.js"></script>
+  <script src="assets/build_tree_web.6b95d78f56.js"></script>
   <script src="assets/zip_web.8114b4c800.js"></script>
   <script src="assets/lua_host_core.e39837dc12.js"></script>
-  <script src="assets/lua-bundle.45016e7943.js"></script>
+  <script src="assets/lua-bundle.56956a3982.js"></script>
   <script src="assets/static_host.cf05239916.js"></script>
-  <script src="assets/bridge_core.f33c9ac3a0.js"></script>
+  <script src="assets/bridge_core.31927c1156.js"></script>
   <script src="assets/s3_backend.fe5ccd5e2e.js"></script>
-  <script src="assets/static_ui.ca4bca2770.js"></script>
-  <script src="assets/editor.2553ecefee.js"></script>
+  <script src="assets/static_ui.29bb9ebf37.js"></script>
+  <script src="assets/editor.a6f5c5e55e.js"></script>
 </body>
 </html>

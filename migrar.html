@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Migrar AzzyAI → BR-AI</title><link rel="icon" href="favicon.ico" sizes="32x32" /><link rel="icon" href="favicon.svg" type="image/svg+xml" /><link rel="apple-touch-icon" href="apple-touch-icon.png" /><link rel="manifest" href="site.webmanifest" />
+  <style>
+    :root { --bg:#11151c; --panel:#1a2030; --panel2:#222a3d; --ink:#e6ebf5; --muted:#9fb0c8; --line:#2c3650;
+            --accent:#4d8fd6; --ok:#46c46a; --warn:#d8a13a; --note:#a0a8bb; --pink:#d76aa0; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; }
+    header { display:flex; align-items:center; gap:12px; padding:12px 18px; background:var(--panel); border-bottom:1px solid var(--line); }
+    header h1 { font-size:16px; margin:0; font-weight:600; }
+    header .sp { flex:1; }
+    a.nav { color:var(--accent); text-decoration:none; font-size:13px; }
+    a.nav:hover { text-decoration:underline; }
+    main { max-width:1000px; margin:0 auto; padding:18px; }
+    .step { display:none; }
+    .step.active { display:block; }
+    .drop { border:2px dashed var(--line); border-radius:12px; padding:48px 24px; text-align:center; background:var(--panel);
+            transition:border-color .15s, background .15s; cursor:pointer; }
+    .drop.drag { border-color:var(--accent); background:var(--panel2); }
+    .drop.busy { opacity:.6; pointer-events:none; }
+    .drop h2 { margin:0 0 6px; font-size:18px; }
+    .drop p { color:var(--muted); margin:6px 0; }
+    .btn { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:9px 16px; font-size:14px; cursor:pointer; }
+    .btn:hover { filter:brightness(1.08); }
+    .btn.ghost { background:transparent; border:1px solid var(--line); color:var(--ink); }
+    .btn:disabled { opacity:.5; cursor:default; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .muted { color:var(--muted); }
+    .summary { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+    .pill { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-size:13px; }
+    .pill b { color:var(--ink); font-size:15px; }
+    .pill.ok b { color:var(--ok); } .pill.warn b { color:var(--warn); } .pill.acc b { color:var(--accent); }
+    section.card { background:var(--panel); border:1px solid var(--line); border-radius:10px; margin:12px 0; overflow:hidden; }
+    section.card > h3 { margin:0; padding:10px 14px; background:var(--panel2); font-size:14px; border-bottom:1px solid var(--line);
+                        cursor:pointer; display:flex; align-items:center; gap:8px; }
+    section.card.groups > h3 { cursor:default; }
+    section.card > h3 .count { margin-left:auto; color:var(--muted); font-weight:400; font-size:12px; }
+    table { width:100%; border-collapse:collapse; }
+    td { padding:7px 14px; border-top:1px solid var(--line); vertical-align:top; font-size:13px; }
+    td.from { color:var(--muted); width:42%; }
+    td.arrow { color:var(--line); width:18px; text-align:center; }
+    .badge { display:inline-block; min-width:18px; text-align:center; border-radius:5px; padding:1px 6px; font-size:11px; margin-right:6px; }
+    .badge.mapped { background:rgba(70,196,106,.15); color:var(--ok); }
+    .badge.adjusted { background:rgba(216,161,58,.15); color:var(--warn); }
+    .badge.note { background:rgba(160,168,187,.15); color:var(--note); }
+    .toolbar { position:sticky; bottom:0; background:linear-gradient(transparent, var(--bg) 30%); padding:16px 0 4px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    select { background:var(--panel2); color:var(--ink); border:1px solid var(--line); border-radius:7px; padding:7px 10px; }
+    select:disabled { opacity:.45; }
+    .applylbl { color:var(--muted); font-size:13px; }
+    .chk { display:inline-flex; align-items:center; gap:5px; font-size:13px; color:var(--muted); cursor:pointer; user-select:none; }
+    .chk input { accent-color:var(--accent); }
+    .chk input:disabled { opacity:.5; }
+    .gbeh { font-size:12px; color:var(--muted); white-space:nowrap; }
+    .gbeh.warn { color:var(--warn); }
+    input.gname, input.mname { background:var(--panel2); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:5px 9px; font-size:13px; width:300px; max-width:48vw; }
+    input.gname:focus, input.mname:focus { outline:none; border-color:var(--accent); }
+    .err { color:#e87070; }
+    .files { font-size:12px; color:var(--muted); margin-top:10px; }
+    .files code { background:var(--panel2); padding:1px 5px; border-radius:4px; }
+    .loading { position:fixed; inset:0; background:rgba(10,14,20,.72); display:flex; flex-direction:column; align-items:center;
+               justify-content:center; gap:16px; z-index:50; }
+    .spinner { width:46px; height:46px; border:4px solid var(--line); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    #loadingMsg { color:var(--ink); font-size:15px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧬 Migrar AzzyAI → BR-AI</h1>
+    <span class="sp"></span>
+    <a class="nav" href="./sim.html">← Simulador</a>
+    <a class="nav" href="./editor.html">Editor →</a>
+  </header>
+  <main>
+    <!-- PASSO 1: enviar -->
+    <div class="step active" id="step1">
+      <div class="drop" id="drop">
+        <h2>Envie seu <code>USER_AI.zip</code></h2>
+        <p>Arraste o arquivo aqui ou clique para escolher.</p>
+        <p class="muted">Lemos H_Config, H_Tactics e H_SkillList — nada sai do seu navegador.</p>
+        <input type="file" id="file" accept=".zip" style="display:none" />
+        <button class="btn" id="pick">Escolher arquivo</button>
+      </div>
+      <div class="files" id="detected"></div>
+      <p class="err" id="err1"></p>
+    </div>
+
+    <!-- PASSO 2: revisar de->para -->
+    <div class="step" id="step2">
+      <div class="row">
+        <strong id="title2">Migração</strong>
+        <span class="sp" style="flex:1"></span>
+        <label class="muted">Homúnculo:&nbsp;</label>
+        <select id="homunSel" title="Tipo do homúnculo (define as skills)">
+          <option value="4">Vanilmirth</option><option value="1">Lif</option><option value="2">Amistr</option><option value="3">Filir</option>
+          <option value="48">Eira</option><option value="49">Bayeri</option><option value="50">Sera</option><option value="51">Dieter</option><option value="52">Eleanor</option>
+        </select>
+        <label class="muted" style="margin-left:6px">base&nbsp;</label>
+        <select id="baseSel" disabled title="Forma base — só para Homunculus S (herda as skills da base)">
+          <option value="0">—</option><option value="4">Vanilmirth</option><option value="2">Amistr</option><option value="3">Filir</option><option value="1">Lif</option>
+        </select>
+      </div>
+      <div class="summary" id="summary"></div>
+      <div id="sections"></div>
+      <div class="toolbar">
+        <span class="applylbl">Aplicar:</span>
+        <label class="chk" title="Árvore de comportamento + ajustes + táticas (inclui os grupos de monstro)"><input type="checkbox" id="optTree" checked /> Árvore</label>
+        <label class="chk" title="Catálogo de monstros e grupos (monsters.json)"><input type="checkbox" id="optMon" checked /> Monstros &amp; grupos</label>
+        <label class="chk" title="Skills padrão por papel + nível (homun_skills.json)"><input type="checkbox" id="optSkills" checked /> Skills padrão</label>
+        <span style="flex:1 0 8px"></span>
+        <button class="btn" id="ok">✓ OK — abrir no editor</button>
+        <button class="btn ghost" id="dl">⤓ Baixar relatório (.json)</button>
+        <button class="btn ghost" id="again">↺ Recomeçar</button>
+        <span class="muted" id="hint"></span>
+      </div>
+    </div>
+  </main>
+
+  <!-- overlay de carregamento (lendo o zip + convertendo) -->
+  <div id="loading" class="loading" style="display:none">
+    <div class="spinner"></div>
+    <div id="loadingMsg">Lendo o arquivo…</div>
+  </div>
+
+  <!-- módulos do migrador (JS puro; expõem window.BRAI_*) -->
+  <script src="assets/migration_bundle.7e686d6cc1.js"></script>
+  <script src="assets/migration_ui.44c654fc59.js"></script>
+</body>
+</html>

@@ -56,7 +56,7 @@
           var payload = JSON.parse(payloadJson);
           var spec = payload.spec || payload;
           var sn = safeName(name); if (!sn) return { ok: false, error: 'nome da árvore vazio' };
-          var ctx = { homunType: payload.homunType, baseType: payload.baseType };
+          var ctx = { homunType: payload.homunType, baseType: payload.baseType, config: payload.config };
           var catalog = { monsters: [], groups: [] };
           try { catalog = JSON.parse((await target.monsters.load()).data); } catch (e) {}
           var choices = { choices: {} };

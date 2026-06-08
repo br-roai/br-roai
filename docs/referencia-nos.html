@@ -14,6 +14,7 @@
     <nav>
       <a href="index.html">Início</a>
       <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="migrar.html">Migrar AzzyAI</a>
       <a href="editor.html">Editor</a>
       <a href="simulador.html">Simulador</a>
       <a href="referencia-nos.html" class="cur">Referência de nós</a>
@@ -124,12 +125,13 @@
     <thead><tr><th>Ação</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
     <tbody>
       <tr><td><code>AcquireTarget</code></td><td><code>by</code> (<code>nearest</code>|<code>lowestHp</code>|<code>ownerAttacker</code>)</td><td>Seleciona o alvo por prioridade, respeitando o modo de KS.</td></tr>
-      <tr><td><code>ReacquireIfBetter</code></td><td><code>by</code></td><td>Mantém o alvo atual; troca por um melhor se aparecer (oportunista).</td></tr>
+      <tr><td><code>ReacquireIfBetter</code></td><td><code>by</code>, <code>gate</code></td><td>Mantém o alvo atual; troca por um melhor se aparecer (oportunista). <code>gate</code> liga ao flag de config (ex.: <code>OpportunisticTargeting</code>).</td></tr>
       <tr><td><code>AcquireOwnerAttacker</code></td><td>—</td><td>Mira no monstro que está atacando o dono (resgate).</td></tr>
+      <tr><td><code>RescueOwner</code></td><td><code>pct</code></td><td>Vai para o lado do dono quando o HP% do dono cai abaixo de <code>pct</code> (vazio = <code>config.RescueOwnerLowHP</code>). Resgate posicional.</td></tr>
       <tr><td><code>ChaseTarget</code></td><td><code>dist</code>, <code>giveUp</code></td><td>Persegue até a distância <code>dist</code>; com <code>giveUp</code>, desiste se não houver progresso.</td></tr>
-      <tr><td><code>DanceAttack</code></td><td>—</td><td>Ataca enquanto reposiciona: alterna golpe e passo lateral.</td></tr>
-      <tr><td><code>Kite</code></td><td><code>dist</code>, <code>step</code>, <code>bounds</code></td><td>Afasta-se para manter a distância (kiting), respeitando os limites do dono.</td></tr>
-      <tr><td><code>AttackTarget</code></td><td>—</td><td>Ataque normal no alvo atual.</td></tr>
+      <tr><td><code>DanceAttack</code></td><td><code>gate</code></td><td>Ataca enquanto reposiciona: alterna golpe e passo lateral. <code>gate</code> liga ao flag (ex.: <code>UseDanceAttack</code>).</td></tr>
+      <tr><td><code>Kite</code></td><td><code>dist</code>, <code>step</code>, <code>bounds</code>, <code>gate</code></td><td>Afasta-se para manter a distância (kiting), respeitando os limites do dono. <code>gate</code> liga ao flag (ex.: <code>KiteMonsters</code>).</td></tr>
+      <tr><td><code>AttackTarget</code></td><td><code>blockIf</code></td><td>Ataque normal no alvo atual. <code>blockIf</code> (chave de config) desliga o ataque normal (ex.: <code>UseSkillOnly</code>).</td></tr>
       <tr><td><code>Flee</code></td><td>—</td><td>Afasta-se do agressor mais próximo.</td></tr>
     </tbody>
   </table>
@@ -138,8 +140,9 @@
     <thead><tr><th>Ação</th><th>Descrição</th></tr></thead>
     <tbody>
       <tr><td><code>HandleOwnerCommand</code></td><td>Executa o comando pendente do dono (move/attack/follow).</td></tr>
-      <tr><td><code>MoveToOwner</code></td><td>Aproxima-se do dono até FollowStayBack.</td></tr>
+      <tr><td><code>MoveToOwner</code></td><td>Aproxima-se do dono até FollowStayBack (+<code>StickyMargin</code> se <code>MoveSticky</code>). Com <code>MoveStickyFight</code>, não retorna ao dono enquanto há alvo.</td></tr>
       <tr><td><code>Idle</code></td><td>Ocioso (sem ação).</td></tr>
+      <tr><td><code>IdleWalk</code></td><td>Perambula perto do dono quando ocioso (<code>UseIdleWalk</code>), dentro de <code>IdleWalkDistance</code> e só com SP% acima de <code>IdleWalkSP</code>.</td></tr>
     </tbody>
   </table>
   <h3>Skills automáticas (dirigidas pelo perfil do homúnculo)</h3>
@@ -147,14 +150,14 @@
   <table>
     <thead><tr><th>Ação</th><th>Descrição</th></tr></thead>
     <tbody>
-      <tr><td><code>UseMainSkill</code></td><td>Usa a skill ofensiva single-target no alvo.</td></tr>
-      <tr><td><code>UseAoESkill</code></td><td>Usa a skill de AoE quando há mobs suficientes (AutoMobCount).</td></tr>
-      <tr><td><code>UseOffensiveBuff</code></td><td>Recasta auto-buffs ofensivos expirados (Bloodlust, Flitting, Pyroclastic, ...).</td></tr>
-      <tr><td><code>UseDefensiveBuff</code></td><td>Recasta auto-buffs defensivos expirados (Amistr Bulwark, Granitic Armor, ...).</td></tr>
+      <tr><td><code>UseMainSkill</code></td><td>Usa a 1ª skill single-target <b>utilizável</b> da <b>lista de prioridade</b> do papel (0..N skills; <b>lista vazia ⇒ não age</b>). Gates: <code>UseHomunSSkillAttack</code> (em alcance) / <code>UseHomunSSkillChase</code> (aproximando).</td></tr>
+      <tr><td><code>UseAoESkill</code></td><td>Usa a 1ª AoE <b>utilizável</b> da <b>lista de prioridade</b> (0..N) com mobs suficientes (AutoMobCount); <b>lista vazia ⇒ não age</b>. <code>AutoMobMode=0</code> desliga; <code>AoEFixedLevel</code> fixa o nível; <code>AoEMaximizeTargets</code> mira no aglomerado.</td></tr>
+      <tr><td><code>UseOffensiveBuff</code></td><td><b>Mantém TODOS</b> os buffs ofensivos da lista (0..N; recasta cada um ao expirar — ex.: Bayeri usa Golden Ferse <i>e</i> Angriff Modus; <b>vazia ⇒ nenhum</b>).</td></tr>
+      <tr><td><code>UseDefensiveBuff</code></td><td><b>Mantém TODOS</b> os buffs defensivos da lista (0..N; Amistr Bulwark, Granitic Armor, Stein Wand, ...; <b>vazia ⇒ nenhum</b>). Nível por skill via tela de Skills.</td></tr>
       <tr><td><code>UseHealSelf</code></td><td>Cura a si quando HP% &lt; HealSelfHP (Chaotic Blessing).</td></tr>
       <tr><td><code>UseHealOwner</code></td><td>Cura o dono quando HP% &lt; HealOwnerHP (Healing Hands/Silent Breeze/Chaotic).</td></tr>
       <tr><td><code>UseOwnerBuff</code></td><td>Mantém buff no dono (Painkiller da Sera).</td></tr>
-      <tr><td><code>UseSummon</code></td><td>Invoca minions contra o alvo (Summon Legion).</td></tr>
+      <tr><td><code>UseSummon</code></td><td>Invoca minions contra o alvo (Summon Legion). Nível/política: <b>param do nó &gt; padrão da tela de Skills (<code>homun_summons.json</code>) &gt; perfil</b>.</td></tr>
       <tr><td><code>UseCastling</code></td><td>Castling para tirar mobs do dono quando ele está cercado (Amistr).</td></tr>
     </tbody>
   </table>
@@ -167,7 +170,7 @@
       <tr><td><code>UseSkillBuff</code></td><td><code>skill</code>, <code>level</code></td><td>Usa um buff em si mesmo (não recasta enquanto durar).</td></tr>
       <tr><td><code>SetStyle</code></td><td><code>style</code> (<code>power</code>|<code>grapple</code>)</td><td>Garante o estilo (Eleanor): conjura Style Change se necessário.</td></tr>
       <tr><td><code>UseCombo</code></td><td><code>combo</code>, <code>window</code></td><td>Executa um combo no alvo (sequência de golpes).</td></tr>
-      <tr><td><code>UseEleanorOffense</code></td><td><code>style</code>, <code>comboSpheres</code>, <code>window</code>, ...</td><td><strong>Eleanor:</strong> combo + estilo + esferas + segurança do Agarrão num só nó. Veja <a href="monstros-e-skills.html#eleanor">Monstros &amp; skills</a>.</td></tr>
+      <tr><td><code>UseEleanorOffense</code></td><td><code>style</code>, <code>comboSpheres</code>, <code>window</code>, ...</td><td><strong>Eleanor:</strong> combo + estilo + esferas + segurança do Agarrão num só nó. Precedência: <b>param do nó &gt; padrão da tela de Skills (<code>homun_skills.json</code>) &gt; config</b>. Veja <a href="monstros-e-skills.html#eleanor">Monstros &amp; skills</a>.</td></tr>
     </tbody>
   </table>
 

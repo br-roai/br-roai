@@ -14,6 +14,7 @@
     <nav>
       <a href="index.html">Início</a>
       <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="migrar.html">Migrar AzzyAI</a>
       <a href="editor.html" class="cur">Editor</a>
       <a href="simulador.html">Simulador</a>
       <a href="referencia-nos.html">Referência de nós</a>
@@ -37,6 +38,7 @@
       <li><a href="#tipos">Tipos de nó</a></li>
       <li><a href="#inspetor">Inspetor e parâmetros</a></li>
       <li><a href="#skills">Seletor de skills e contexto</a></li>
+      <li><a href="#config">Ajustes (painel Config)</a></li>
       <li><a href="#desativar">Desativar nós</a></li>
       <li><a href="#validacao">Validação</a></li>
       <li><a href="#salvar">Salvar, abrir e importar</a></li>
@@ -129,6 +131,17 @@
   <p>As ações de skill (<code>UseSkill</code>, <code>UseSkillBuff</code>) ganham um <strong>seletor de skills por categoria</strong> no inspetor, em vez de pedir um número cru. As categorias são <em>dano alvo único</em>, <em>dano em área</em>, <em>buff</em>, <em>cura</em>, <em>especial</em> e <em>passiva</em>. O catálogo é montado a partir do <strong>contexto</strong> atual (tipo de homúnculo e, para Homunculus S, o tipo base), então você só vê skills que aquele homúnculo realmente possui. Para cada skill o inspetor mostra alcance, SP, tempos de cast, recarga e duração; ao escolher um <strong>nível</strong>, mostra o efeito daquele nível (dano, cura, status) com dados Renewal.</p>
   <p>No alto da barra ficam os seletores de <strong>homúnculo</strong> e <strong>base</strong>. Eles definem qual catálogo de skills aparece e são compartilhados com o simulador, então <strong>▶ Simular</strong> já abre o simulador no tipo certo. O seletor de <strong>base</strong> só fica ativo para os tipos Homunculus S.</p>
 
+  <h2 id="config">Ajustes (painel Config)</h2>
+  <p>O botão <strong>Config</strong> na barra abre os <strong>ajustes do H_Config</strong> daquela árvore: HP de agressão (<code>AggroHP</code>), cura do dono (<code>HealOwnerHP</code>), nº de alvos p/ AoE (<code>AutoMobCount</code>), reserva de SP, esferas p/ combo (<code>AutoComboSpheres</code>), <strong>kite global</strong> (<code>KiteMonsters</code>/<code>ForceKite</code>, distância em <code>KiteBounds</code>), <strong>ataque dançante</strong> (<code>UseDanceAttack</code>) a <strong>trava de estilo da Eleanor</strong> (<code>EleanorDoNotSwitchMode</code>), <strong>resgate do dono</strong> (<code>RescueOwnerLowHP</code>), <strong>mira oportunista</strong> (<code>OpportunisticTargeting</code>) e <strong>só skill</strong> (<code>UseSkillOnly</code>), <strong>perambular ocioso</strong> (<code>UseIdleWalk</code>), <strong>movimento sticky</strong> (<code>MoveSticky</code>) e <strong>AoE</strong> (<code>AutoMobMode</code>/<code>AoEFixedLevel</code>), e por aí vai. Cada knob mostra o valor atual e o <strong>padrão</strong> ao lado; em <strong style="color:#46c46a">verde</strong> ficam os que você (ou a migração da AzzyAI) alterou. Limpar um número volta ao padrão; <strong>restaurar tudo ao padrão</strong> zera os overrides.</p>
+  <figure>
+    <img src="img/editor-config.png" alt="Painel Config com os ajustes do H_Config" />
+    <figcaption>O painel <b>Config</b> após migrar uma AzzyAI (Dieter): os ajustes vindos do <code>H_Config</code> aparecem em verde (alterados vs. o padrão).</figcaption>
+  </figure>
+  <div class="box key">
+    <div class="h">★ Os ajustes vão para o jogo e o simulador</div>
+    <p>Ao <strong>Gerar Lua</strong>, os ajustes entram no <code>config.lua</code> do pacote (que o <code>AI.lua</code> aplica sobre os padrões). Ao <strong>▶ Simular</strong>, o simulador também os aplica — então a prévia reflete os seus knobs. Quem vem da <a href="migrar.html">migração da AzzyAI</a> já chega com o painel preenchido.</p>
+  </div>
+
   <h2 id="desativar">Desativar nós</h2>
   <p>Você pode <strong>desativar</strong> qualquer nó para experimentar a árvore sem aquele ramo — sem precisar excluí-lo e recriá-lo. Selecione o nó e clique em <strong>⏸ Desativar (nó + filhos)</strong> no inspetor, ou aperte a tecla <kbd>D</kbd>.</p>
   <ul>
@@ -177,7 +190,7 @@
   <p><strong>Gerar Lua</strong> monta um <strong>pacote de instalação auto-suficiente</strong> da IA e o baixa como um <code>.zip</code>. Dentro dele vão:</p>
   <ul>
     <li><code>AI.lua</code> — o ponto de entrada (define <code>AI(myid)</code>).</li>
-    <li><code>brai/lua/**</code> — <strong>todo o runtime</strong> da IA, já com os arquivos gerados embutidos: a sua árvore, o tipo/base do homúnculo, o catálogo de monstros/grupos e a escolha de skills.</li>
+    <li><code>brai/lua/**</code> — <strong>todo o runtime</strong> da IA, já com os arquivos gerados embutidos: a sua árvore, o tipo/base do homúnculo, o catálogo de monstros/grupos, a escolha de skills e os <strong>ajustes</strong> (<code>config.lua</code>, do painel Config).</li>
     <li><code>LEIA-ME.txt</code> — instruções de instalação.</li>
   </ul>
   <p>O pacote é <strong>self-contained</strong>: não depende deste site nem de nada instalado — basta copiá-lo para o cliente.</p>

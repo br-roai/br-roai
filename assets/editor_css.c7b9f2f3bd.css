@@ -145,6 +145,12 @@ button:disabled{opacity:.45;cursor:default}
 .sc-sel{flex:1;min-width:0}
 .sc-fixed{flex:1;font-size:13px;color:var(--muted)}
 .sc-only{color:#6e7681;font-size:12px}
+.sc-ctrl{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.sc-none{flex:1;font-size:12px;color:#6e7681;font-style:italic}
+.sc-desc{margin:-3px 0 3px 178px;font-size:12px;color:var(--muted);line-height:1.45}
+.sc-lvlwrap{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+.sc-lvllbl{font-size:11px;color:#6e7681}
+.sc-lvl{width:88px}
 
 /* ===== Painel "Combos da Eleanor" ===== */
 .ce-panel{width:min(880px,94vw)}
@@ -188,3 +194,28 @@ button:disabled{opacity:.45;cursor:default}
 .live-edge.valid{stroke:var(--green);stroke-width:3;stroke-dasharray:none;opacity:.95}
 .live-edge.invalid{stroke:var(--red);stroke-width:2;stroke-dasharray:5 4}
 .cm-group{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#7a8794;padding:7px 9px 3px}
+.sm-note{font-size:12px;color:var(--muted);line-height:1.45;margin:2px 0 6px}
+.ce-note-def{border-left:3px solid var(--accent);padding-left:8px}
+.sc-tip{position:fixed;z-index:1100;max-width:320px;pointer-events:none;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;box-shadow:0 10px 28px rgba(0,0,0,.5)}
+.sc-ctrl,.sc-lvlwrap{cursor:help}
+.sc-skills{display:flex;flex-direction:column;gap:4px;margin:-2px 0 6px 178px}
+.sc-skill{display:flex;align-items:center;gap:8px;cursor:help}
+.sc-skill-name{font-size:13px;color:var(--ink);min-width:150px}
+.sc-skills .sc-desc{margin:0;flex:1}
+.sc-skill-lvl{width:88px}
+.sc-ctrl{display:flex;align-items:center;gap:8px;cursor:default}
+.sc-add{max-width:230px}
+.sc-reset{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer}
+.sc-reset:hover{border-color:var(--accent);color:var(--ink)}
+.sc-rm{background:transparent;border:none;color:#9a6a6a;cursor:pointer;font-size:13px;padding:0 4px;line-height:1}
+.sc-rm:hover{color:#e06a6a}
+.sc-skill-hot{display:inline-flex;align-items:center;gap:8px;cursor:help}
+.sc-skill-name{min-width:150px}
+.sc-empty-skill{font-size:12px;color:#6e7681;font-style:italic;margin:0 0 5px 178px}
+.sc-io{display:flex;align-items:center;gap:8px;margin:2px 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.sc-io-lbl{font-size:12px;color:var(--muted)}
+.sc-io button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+.sc-io button:hover{border-color:var(--accent)}
+.sc-io-msg{font-size:12px;margin-left:4px}
+.sc-io-msg.ok{color:#46c46a}
+.sc-io-msg.err{color:#e06a6a}

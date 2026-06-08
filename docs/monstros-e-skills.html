@@ -14,6 +14,7 @@
     <nav>
       <a href="index.html">Início</a>
       <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="migrar.html">Migrar AzzyAI</a>
       <a href="editor.html">Editor</a>
       <a href="simulador.html">Simulador</a>
       <a href="referencia-nos.html">Referência de nós</a>
@@ -45,7 +46,7 @@
     <li><strong>Cadastro de monstros</strong> — informe o <strong>ID</strong> (a classe do monstro no jogo, o <code>V_TYPE</code>) e uma <strong>descrição</strong>, e clique em cadastrar. Há uma <strong>busca</strong> por nome ou ID, e cada monstro pode ser removido.</li>
     <li><strong>Grupos</strong> — crie um grupo com um nome; selecione-o e marque, na lista, <strong>quais monstros cadastrados pertencem a ele</strong>. Você pode renomear ou excluir o grupo (excluir limpa as referências nos nós da árvore).</li>
   </ul>
-  <p>O cadastro é <strong>global do projeto</strong>: é compartilhado por todas as árvores e <strong>fica lembrado no navegador</strong>. Você pode levá-lo de um computador a outro com os botões <strong>⬆ importar</strong> / <strong>⬇ exportar</strong> ao lado do botão Monstros (veja <a href="primeiros-passos.html#dados">Primeiros passos</a>).</p>
+  <p>O cadastro é <strong>global do projeto</strong>: é compartilhado por todas as árvores e <strong>fica lembrado no navegador</strong>. Na <strong>versão estática</strong> (navegador), você pode levá-lo de um computador a outro pelos botões <strong>⬇ exportar</strong> / <strong>⬆ importar monstros</strong> <strong>dentro do modal de Monstros</strong> (logo abaixo do título). Na versão desktop/web a config já é persistida automaticamente.</p>
 
   <h2 id="monstercheck">O nó monsterCheck</h2>
   <p>Adicione um nó <strong>monsterCheck</strong> (tem <strong>um único filho</strong>). No inspetor você escolhe:</p>
@@ -62,8 +63,10 @@
 
   <h2 id="skills">Skills por homúnculo</h2>
   <p>As ações automáticas (<code>UseMainSkill</code>, <code>UseAoESkill</code>, <code>UseOffensiveBuff</code>, ...) resolvem a skill concreta pelo <strong>perfil</strong> do tipo de homúnculo. A maioria dos tipos tem uma escolha óbvia por papel — mas alguns <strong>Homunculus S</strong> têm duas ou mais skills no mesmo papel. Por exemplo, o Dieter pode usar Lava Slide ou Blast Forge como AoE; Pyroclastic ou Tempering como buff ofensivo.</p>
-  <p>O botão <strong>Skills</strong> na barra de ferramentas abre a tela onde você define <strong>qual skill cada papel usa</strong>, por tipo de homúnculo. Para cada papel (dano alvo único, AoE, buff ofensivo, buff defensivo) a tela lista os candidatos, o padrão do perfil e a sua escolha. Papel não configurado usa o padrão.</p>
-  <p>Essa escolha é <strong>global</strong> (vale no jogo, no simulador e no pacote gerado) e <strong>fica lembrada no navegador</strong>; pode ser importada/exportada pelos botões ⬆/⬇ ao lado de Skills.</p>
+  <p>O botão <strong>Skills</strong> na barra de ferramentas abre a tela onde você monta, por papel (dano alvo único, AoE, buff ofensivo, buff defensivo), <strong>quais skills</strong> o homúnculo usa e <strong>em que nível</strong>. Cada papel é um <strong>seletor múltiplo</strong>: use <strong>“➕ adicionar skill”</strong> para incluir e o <strong>✕</strong> para remover — pode haver <strong>0, 1 ou várias</strong> skills. Abaixo aparece <strong>uma linha por skill</strong>, com o <strong>nome</strong> e o <strong>nível</strong> ao lado; a <strong>descrição</strong> aparece <strong>ao passar o mouse</strong> no nome ou no nível. <strong>“↺ padrão”</strong> volta às skills do perfil; remover todas deixa o papel <strong>sem skill</strong> (não age). Se o tipo não tem skill para um papel, aparece “não há skill para este papel”.</p>
+  <p>Como executa: os <strong>buffs</strong> (ofensivo/defensivo) são <strong>mantidos todos</strong> — recasta cada um ao expirar (ex.: Bayeri usa <em>Golden Ferse</em> e <em>Angriff Modus</em>). Os <strong>ataques</strong> (main/AoE) seguem a <strong>ordem como prioridade</strong>: conjura a <strong>primeira utilizável</strong> e cai para a seguinte (ex.: Dieter usa <em>Lava Slide</em> e, em recarga, <em>Blast Forge</em>). Com o papel <strong>vazio</strong>, a ação automática não faz nada.</p>
+  <p>Essa escolha é <strong>global</strong> (vale no jogo, no simulador e no pacote gerado) e <strong>fica lembrada no navegador</strong>.</p>
+  <p>Na <strong>versão estática</strong> (navegador, sem servidor), o modal de Skills traz <strong>logo abaixo do título</strong> os botões <strong>⬇ exportar</strong> e <strong>⬆ importar skills</strong> — para <strong>salvar</strong> a sua configuração num arquivo <code>homun_skills.json</code> e <strong>carregá-la</strong> depois. (Na versão desktop/web isso não aparece, pois a config já é persistida automaticamente.)</p>
 
   <h2 id="eleanor">Combos da Eleanor</h2>
   <p>A Eleanor é o caso mais complexo: dano de alvo único em <strong>dois estilos mutuamente exclusivos</strong>, alternados por Style Change:</p>
@@ -71,7 +74,7 @@
     <li><strong>Combate</strong> (Power): Sonic Claw → Silvervein Rush → Midnight Frenzy.</li>
     <li><strong>Agarrão</strong> (Grapple): Tinder Breaker → C.B.C. → E.Q.C.</li>
   </ul>
-  <p>Tudo é encapsulado no nó <strong><code>UseEleanorOffense</code></strong> e configurado pelo painel <strong>Combos</strong> da barra de ferramentas. Os pontos que valem entender:</p>
+  <p>Tudo é encapsulado no nó <strong><code>UseEleanorOffense</code></strong> e configurado pelo painel <strong>Combos</strong> — aberto pela barra de ferramentas ou pelo <strong>link na tela de Skills</strong> (Eleanor). O painel tem <strong>dois modos</strong>: o <strong>padrão</strong> da Eleanor (salvo nas skills padrão, em <code>homun_skills.json</code>) e o de um <strong>nó</strong> específico — e os <strong>params do nó na árvore sobrepõem o padrão</strong>. Os pontos que valem entender:</p>
   <ul>
     <li><strong>Esferas Espirituais (estimadas).</strong> A API do cliente não expõe a contagem de esferas, então a IA <strong>estima</strong> (sobe com ataques e dano recebido, desce pelo custo de cada golpe). A “barragem” só <strong>inicia</strong> um combo quando há esferas estimadas para fechar o finalizador — evitando disparar um finalizador sem recurso.</li>
     <li><strong>Segurança do Agarrão.</strong> O Tinder Breaker zera o Flee da Eleanor; em multidão isso é fatal. O nó só libera o Agarrão quando há poucos monstros no raio (limite configurável); caso contrário, recua para o Combate.</li>
@@ -84,7 +87,7 @@
   </div>
 
   <h2 id="sera">Invocações da Sera</h2>
-  <p>A Sera invoca uma legião de minions (Summon Legion) via a ação <code>UseSummon</code>. Os parâmetros de invocação (nível, quando reinvocar, contagem mínima, só contra boss, etc.) ficam na configuração de <strong>invocações</strong>, que acompanha a tela de Skills e também é lembrada no navegador (com importar/exportar). No simulador, ao usar uma Sera, um painel lateral mostra a <strong>legião invocada</strong> e seu estado.</p>
+  <p>A Sera invoca uma legião de minions (Summon Legion) via a ação <code>UseSummon</code>. Os parâmetros de invocação (nível, quando reinvocar, contagem mínima, só contra boss, etc.) são o <strong>padrão</strong> da invocação, embutido na tela de Skills (salvo em <code>homun_summons.json</code>) — e os <strong>params do nó <code>UseSeraLegion</code> na árvore sobrepõem</strong> esse padrão. Fica lembrado no navegador (com importar/exportar). No simulador, ao usar uma Sera, um painel lateral mostra a <strong>legião invocada</strong> e seu estado.</p>
 
   <p style="margin-top:2em">Para a semântica exata de cada nó citado aqui, veja a <a href="referencia-nos.html">Referência de nós</a>.</p>
 </main>

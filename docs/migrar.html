@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Migrar uma AzzyAI — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="migrar.html" class="cur">Migrar AzzyAI</a>
+      <a href="editor.html">Editor</a>
+      <a href="simulador.html">Simulador</a>
+      <a href="referencia-nos.html">Referência de nós</a>
+      <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="conceitos.html">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="crumbs"><a href="index.html">Início</a> › Migrar uma AzzyAI</div>
+  <h1>Migrar uma AzzyAI → BR-AI</h1>
+  <p class="lead">Já usa a <strong>AzzyAI</strong>? Você pode trazer a sua configuração para o BR-AI em segundos: envie o seu <code>USER_AI.zip</code>, confira o <strong>de→para</strong> na tela e clique em OK — a árvore já abre montada no editor, pronta para refinar e gerar o Lua.</p>
+
+  <div class="toc">
+    <div class="h">Nesta página</div>
+    <ul>
+      <li><a href="#ideia">A ideia</a></li>
+      <li><a href="#passos">Passo a passo</a></li>
+      <li><a href="#controles">Na tela de revisão</a></li>
+      <li><a href="#migra">O que é migrado</a></li>
+      <li><a href="#naomigra">O que não é migrado</a></li>
+      <li><a href="#revisar">Depois de migrar</a></li>
+    </ul>
+  </div>
+
+  <h2 id="ideia">A ideia</h2>
+  <p>A AzzyAI tem um <em>motor</em> fixo (igual para todo mundo) e a <em>sua configuração</em> por cima dele: HP de agressão, cura do dono, quais skills cada homúnculo usa e como reagir a cada monstro. O BR-AI <strong>já reimplementa esse motor</strong> como uma árvore de comportamento — então migrar não é reescrever a IA, é <strong>pegar a árvore padrão do BR-AI e aplicar a sua configuração</strong>: os ajustes (knobs), as skills padrão de cada papel e as táticas por monstro.</p>
+  <div class="box tip">
+    <div class="h">▶ Tudo no navegador</div>
+    <p>A leitura do <code>USER_AI.zip</code> e a conversão acontecem <strong>na própria página</strong> — nada é enviado para nenhum servidor. Funciona offline.</p>
+  </div>
+
+  <h2 id="passos">Passo a passo</h2>
+  <ol class="steps">
+    <li><strong>Abra “🧬 Migrar AzzyAI”</strong> no topo do Simulador ou do Editor.</li>
+    <li><strong>Envie o seu <code>USER_AI.zip</code></strong> — arraste para a área ou clique para escolher. É a pasta inteira da sua IA, compactada.</li>
+    <li><strong>Aguarde o indicador de carregamento</strong> (“Lendo o arquivo…” → “Convertendo a IA…”) — ele some sozinho quando o de→para aparece.</li>
+    <li><strong>Confira o de→para.</strong> Ajuste o <strong>homúnculo</strong> e, se for um Homunculus S, a <strong>forma base</strong>; <strong>renomeie os grupos</strong> de monstro como preferir.</li>
+    <li class="last"><strong>Marque o que aplicar e clique em “OK — abrir no editor”.</strong> Por padrão vai tudo (árvore + monstros + skills); dá para migrar só parte. A árvore migrada abre montada no editor.</li>
+  </ol>
+
+  <figure>
+    <img src="img/migrar-enviar.png" alt="Tela de envio do USER_AI.zip" />
+    <figcaption>1. Envie o <code>USER_AI.zip</code> — arrastando ou clicando. A página detecta os arquivos lidos (H_Config, H_Tactics, H_SkillList…).</figcaption>
+  </figure>
+
+  <figure>
+    <img src="img/migrar-depara.png" alt="Relatório de→para da migração" />
+    <figcaption>2. O <strong>de→para</strong>: no topo, um resumo (mapeados / ajustados / a revisar / grupos de monstro / skills). Cada linha mostra <em>AzzyAI → BR-AI</em> com um selo: ✓ mapeado, ⚙ ajustado, ⚠ a revisar. Aqui o migrador detectou um <strong>Dieter</strong> (forma base Amistr) e converteu 47 ajustes. No alto à direita dá para trocar o <strong>homúnculo</strong> e a <strong>forma base</strong>; o painel <strong>“Táticas por monstro”</strong> lista cada grupo com <strong>nome editável</strong>, o comportamento e os monstros; e as caixas <strong>“Aplicar”</strong> (perto do OK) escolhem <em>o que</em> migrar.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="img/migrar-editor.png" alt="Editor já carregado com a árvore migrada" />
+    <figcaption>3. Após o OK, o <strong>Editor</strong> abre com a árvore migrada já montada — incluindo o ramo “Táticas por monstro” com um nó de checagem por grupo. Revise e clique em <strong>Gerar Lua</strong>.</figcaption>
+  </figure>
+
+  <h2 id="controles">Na tela de revisão</h2>
+  <p>Três controles deixam a migração do seu jeito antes de abrir no editor:</p>
+  <ul class="bullets">
+    <li><strong>Indicador de carregamento.</strong> Ao escolher o zip, um spinner aparece na hora (“Lendo o arquivo…” → “Convertendo a IA…”), então você sabe que está processando — mesmo com muitas táticas.</li>
+    <li><strong>Homúnculo + forma base.</strong> O seletor de homúnculo define as skills. Para um <strong>Homunculus S</strong> (Eira/Bayeri/Sera/Dieter/Eleanor) habilita-se o seletor de <strong>forma base</strong> (Lif/Amistr/Filir/Vanilmirth) — igual às telas do editor e do simulador —, que define de qual base o S herda skills. Vem pré-selecionado pelo <code>OldHomunType</code> da sua config; trocar qualquer um recalcula o de→para na hora.</li>
+    <li><strong>Renomear grupos.</strong> O painel <strong>“Táticas por monstro”</strong> mostra cada grupo com um campo de nome editável, o <strong>comportamento</strong> (atacar, kite, snipe, reagir…) e os monstros ao lado; um <strong>⚠</strong> marca os comportamentos de encaixe aproximado, para você revisar. O nome novo vai tanto para o catálogo (<code>monsters.json</code>) quanto para o rótulo do nó <code>monsterCheck</code>, então a árvore já abre no editor com os nomes que você escolheu. As renomeações são preservadas mesmo se você trocar o homúnculo/base.</li>
+    <li><strong>Migrar só uma parte.</strong> Perto do botão OK há três caixas — <strong>Árvore</strong> (comportamento + ajustes + táticas), <strong>Monstros &amp; grupos</strong> e <strong>Skills padrão</strong> — e você aplica só o que marcar. Ex.: traga os monstros e as skills da AzzyAI <em>sem</em> mexer na árvore que você já tem (desmarque “Árvore”). Marcar “Árvore” inclui os grupos automaticamente, pois os nós de tática dependem deles.</li>
+  </ul>
+
+  <h2 id="migra">O que é migrado</h2>
+  <ul class="bullets">
+    <li><strong>Ajustes (H_Config)</strong> → as configurações do BR-AI: <code>AggroHP</code>, <code>HealOwnerHP</code>, <code>AutoMobCount</code>, <code>CastleDefendThreshold</code>, <code>AutoComboSpheres</code>, <code>FollowStayBack</code> e muitos outros. Flags <code>Use…=0</code> <strong>desativam o ramo</strong> correspondente da árvore (ex.: <code>UseAutoHeal=0</code> apaga o ramo de cura). Esses ajustes vão para o <code>config.lua</code> do pacote (Gerar Lua) e valem no simulador; reveja/edite no painel <strong>Config</strong> do editor.</li>
+    <li><strong>Skills padrão por papel</strong> → para cada tipo de homúnculo, as 4 skills de <strong>Main</strong>, <strong>Dano AoE</strong>, <strong>Buff Ofensivo</strong> e <strong>Buff Defensivo</strong>, com o <strong>nível</strong> de cada uma. Ex.: Dieter com <em>Blast Forge</em> no AoE e <em>Tempering</em> no buff ofensivo.</li>
+    <li><strong>Táticas por monstro (H_Tactics)</strong> → monstros com a <strong>mesma configuração</strong> viram um <strong>grupo</strong> (“Grupo 1”, “Grupo 2”…), e cada grupo vira um nó <strong>“checagem de monstro”</strong> na árvore com o comportamento traduzido (atacar, kite, snipe, reagir, ignorar). A lista de <strong>evitar (H_Avoid)</strong> sempre vira um grupo de MVPs — que alimenta a <em>detecção de chefe</em> (<code>config.BossGroup</code>) —, mas o <strong>ramo de fuga</strong> só é montado quando <code>UseAvoid&ne;0</code> (com <code>UseAvoid=0</code>, igual à AzzyAI, o homúnculo não foge).</li>
+    <li><strong>Comportamentos prontos ligados por ajuste</strong> → alguns nós que <em>já existem</em> na árvore são <strong>ativados conforme a sua config</strong>, sem você montar nada: <strong>kite global</strong> (<code>KiteMonsters</code>/<code>ForceKite</code>, com distância e passo de <code>KiteBounds</code>/<code>KiteStep</code>), <strong>ataque dançante</strong> (<code>UseDanceAttack</code>, respeitando <code>DanceMinSP</code>) e a <strong>trava de estilo da Eleanor</strong> (<code>EleanorDoNotSwitchMode</code> mantém o estilo fixo, sem Style Change). O <strong>nível da invocação</strong> da Sera (<code>SeraCallLegionLevel</code>) vai para a tela <strong>Skills</strong>.</li>
+    <li><strong>Proteção do dono e estratégia de mira</strong> → <strong>resgate do dono</strong> (<code>RescueOwnerLowHP</code>: o homúnculo corre para o lado do dono quando o HP dele cai abaixo do limite), <strong>buff defensivo no dono cercado</strong> (<code>DefensiveBuffOwnerMobbed</code>), <strong>mira oportunista</strong> (<code>OpportunisticTargeting</code> troca para um alvo melhor se aparecer) e <strong>só skill</strong> (<code>UseSkillOnly</code> desliga o ataque normal — o homúnculo só usa habilidades).</li>
+    <li><strong>Perambular, movimento e AoE</strong> → <strong>perambular ocioso</strong> (<code>UseIdleWalk</code>/<code>IdleWalkSP</code>/<code>IdleWalkDistance</code>: anda perto do dono quando não há nada a fazer), <strong>movimento «sticky»</strong> (<code>MoveSticky</code>/<code>MoveStickyFight</code>: gruda mais no lugar e não volta ao dono no meio da luta), <strong>ajuste de AoE</strong> (<code>AutoMobMode</code> liga/desliga a AoE automática, <code>AoEFixedLevel</code> fixa o nível, <code>AoEMaximizeTargets</code> mira no aglomerado) e a <strong>skill principal em perseguição/ataque</strong> (<code>UseHomunSSkillChase</code>/<code>UseHomunSSkillAttack</code>).</li>
+  </ul>
+  <div class="box note">
+    <div class="h">A lista de skills NÃO é importada</div>
+    <p>A base de skills do BR-AI (alcance, SP, tempo de cast, área) é <strong>mais atual que qualquer AzzyAI</strong> e permanece como está. Da AzzyAI lemos apenas <em>qual</em> skill é a padrão de cada papel e <em>em que nível</em> — nada dos metadados.</p>
+  </div>
+
+  <h2 id="naomigra">O que não é migrado (e por quê)</h2>
+  <ul class="bullets">
+    <li><strong>Lista de amigos / PVP (A_Friends)</strong>: o BR-AI ainda não tem sistema de amigos. As entradas são <strong>contadas e relatadas</strong> para você não perder a informação.</li>
+    <li><strong>Comportamentos marcados ⚠</strong>: alguns campos de tática (como “ignorar” e “reagir”) ainda não têm um nó dedicado e entram como <em>encaixe aproximado</em> — o de→para sinaliza com ⚠ para você revisar no editor.</li>
+    <li><strong>Knobs sem equivalente</strong>: a seção “Não migrado / requer atenção” separa em <strong>dois grupos</strong> — os que <strong>poderiam ser implementados</strong> (comportamentos que o BR-AI ainda não tem) e os <strong>ignorados de propósito</strong>: ajustes internos de motor e <em>timing</em>, opções de PVP e <em>níveis órfãos</em> (de skills desligadas ou não escolhidas). Assim o total de “não mapeados” para de assustar — boa parte é ruído sem efeito no BR-AI.</li>
+  </ul>
+
+  <h2 id="revisar">Depois de migrar</h2>
+  <p>A árvore abre no editor com tudo aplicado. Recomendamos:</p>
+  <ol class="steps">
+    <li><strong>Clique em “Organizar”</strong> para reposicionar os nós com o layout automático do editor.</li>
+    <li><strong>Revise os itens ⚠</strong> do relatório — especialmente os grupos de tática “Ignorar/Reagir”.</li>
+    <li><strong>Confira as skills</strong> na tela “Skills” (papéis e níveis por homúnculo).</li>
+    <li><strong>Reveja os ajustes</strong> no painel <strong>Config</strong> (HP de agressão, cura, AoE…) — os migrados aparecem em verde.</li>
+    <li class="last"><strong>Simule</strong> para ver o comportamento e, quando estiver bom, <strong>Gerar Lua</strong>.</li>
+  </ol>
+  <div class="box tip">
+    <div class="h">▶ Baixar o relatório</div>
+    <p>O botão <strong>“Baixar relatório (.json)”</strong> salva tudo que foi lido e decidido — útil para conferir ou pedir ajuda.</p>
+  </div>
+</main>
+
+<footer>
+  BR-AI — IA de homúnculos do Ragnarok Online sobre árvore de comportamento. Documentação da versão estática (navegador).
+</footer>
+</body>
+</html>

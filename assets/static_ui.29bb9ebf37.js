@@ -109,10 +109,7 @@
     var exsel = document.createElement('select'); exsel.id = 'braiExTree'; exsel.style.display = 'none'; exsel.title = 'Exemplos de árvore — selecione para carregar'; exsel.addEventListener('change', function () { if (exsel.value) loadExample('tree', exsel.value); });
     var exb = mkBtn('baixar exemplo', function () { downloadExample('tree', exsel.value); }, 'Baixar a árvore de exemplo selecionada (.json)'); exb.id = 'braiExTreeDl'; exb.style.display = 'none';
     after(exb, $('btnSaveTree')); after(exsel, $('btnSaveTree'));
-    after(mkBtn('⬇', function () { exportConfig('monsters.json', 'Monstros'); }, 'Exportar monstros (.json)'), $('btnMonsters'));
-    after(mkImport('⬆', 'monsters', 'braiImpMon', 'Importar monstros (.json) — vai p/ localStorage'), $('btnMonsters'));
-    after(mkBtn('⬇', function () { exportConfig('homun_skills.json', 'Skills'); }, 'Exportar skills (.json)'), $('btnSkills'));
-    after(mkImport('⬆', 'skills', 'braiImpSkill', 'Importar skills (.json) — vai p/ localStorage'), $('btnSkills'));
+    // import/export de monstros/skills movido p/ DENTRO dos respectivos modais (só na estática)
     tb.appendChild(mkMsg());
     await loadExamples(); fillEx(exsel, examples.trees); toggle(exsel, (examples.trees || []).length > 0); toggle(exb, (examples.trees || []).length > 0);
     await refreshLists();

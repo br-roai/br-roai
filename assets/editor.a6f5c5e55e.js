@@ -14,7 +14,9 @@ let selId = null;
 let uidSeq = 1;
 let nodeEls = {};       // uid -> elemento DOM
 let zoom = 1;           // fator de zoom do canvas
-let ctxHomun = 4, ctxBase = 0, catalog = [];  // contexto p/ skills (UseSkill)
+let ctxHomun = 4, ctxBase = 0, catalog = [];
+let treeConfig = {};  // knobs do H_Config (migrados/editados) — vão p/ save/build/sim
+let cfgDefaults = null;  // BRAI.defaultConfig() (do sim), p/ o painel Config  // contexto p/ skills (UseSkill)
 const S_TYPES_E = [48, 49, 50, 51, 52];
 const CAT_LABEL = { single: 'Dano alvo único', aoe: 'Dano em área', buff: 'Buff', heal: 'Cura', special: 'Especial', passive: 'Passiva' };
 const CAT_ORDER = ['single', 'aoe', 'buff', 'heal', 'special', 'passive'];
@@ -26,6 +28,25 @@ function monById(id) { for (const m of monCatalog.monsters) if (m.id === id) ret
 function grpById(id) { for (const g of monCatalog.groups) if (g.id === id) return g; return null; }
 async function loadMonsters() { try { const r = await window.monsters.load(); if (r && r.ok) monCatalog = normCatalog(JSON.parse(r.data)); } catch (e) { monCatalog = { monsters: [], groups: [] }; } }
 async function saveMonsters() { try { await window.monsters.save(JSON.stringify(monCatalog, null, 2)); } catch (e) {} }
+// Importar/Exportar monstros — só na ESTÁTICA (stateless); salvar/carregar o cadastro.
+function monIoMsg(t, isErr) { const m = document.getElementById('monIoMsg'); if (m) { m.textContent = t || ''; m.className = 'sc-io-msg ' + (isErr ? 'err' : 'ok'); } }
+function monExportCfg() {
+  try {
+    const blob = new Blob([JSON.stringify(monCatalog || { monsters: [], groups: [] }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'monsters.json';
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    monIoMsg('Monstros exportados (download).', false);
+  } catch (e) { monIoMsg('Falha ao exportar.', true); }
+}
+async function monImportCfg(file) {
+  try {
+    const obj = JSON.parse(await file.text());
+    if (!obj || typeof obj !== 'object' || !Array.isArray(obj.monsters)) throw new Error('fmt');
+    monCatalog = normCatalog(obj);
+    await saveMonsters(); renderMonManager(); renderInspector(); renderAll();
+    monIoMsg('Monstros importados.', false);
+  } catch (e) { monIoMsg('Arquivo de monstros inválido.', true); }
+}
 
 // ===== Escolha de skills por homúnculo (homun_skills.json) =================
 // Alguns Homunculus S têm 2+ skills no mesmo papel (Dieter: Lava Slide/Blast Forge
@@ -39,15 +60,38 @@ const SC_ROLE_LABEL = { mainAtk: 'Main skill (alvo único)', aoeAtk: 'Skill em �
 const SC_HOMUN_ORDER = [51, 49, 50, 48, 52, 4, 1, 2, 3];  // Homunculus S primeiro
 let comboInfoCache = null;   // dados dos combos da Eleanor (BRAI.comboInfo)
 let comboNodeUid = null;     // nó UseEleanorOffense ligado ao painel
+let comboMode = 'node';     // 'node' (params do nó) | 'default' (padrão em homun_skills.json)
 function normChoice(c) { c = c || {}; return { choices: (c.choices && typeof c.choices === 'object') ? c.choices : {} }; }
 async function loadSkillChoice() { try { const r = await window.skillChoiceIO.load(); if (r && r.ok) skillChoice = normChoice(JSON.parse(r.data)); } catch (e) { skillChoice = { choices: {} }; } }
-async function saveSkillChoice() { try { await window.skillChoiceIO.save(JSON.stringify(skillChoice, null, 2)); } catch (e) {} }
+async function saveSkillChoice() { try { await window.skillChoiceIO.save(JSON.stringify(skillChoice, null, 2)); } catch (e) {} try { await callSim('setSkillChoice', skillChoice); } catch (e) {} }
+// Importar/Exportar skills — só na versão ESTÁTICA (stateless); permite salvar/carregar a config.
+function scIsStatic() { return typeof window !== 'undefined' && !!window.BRAI_STATIC_BACKEND; }
+function scIoMsg(t, isErr) { const m = document.getElementById('scIoMsg'); if (m) { m.textContent = t || ''; m.className = 'sc-io-msg ' + (isErr ? 'err' : 'ok'); } }
+function scExportSkills() {
+  try {
+    const blob = new Blob([JSON.stringify(skillChoice || { choices: {} }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'homun_skills.json';
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    scIoMsg('Skills exportadas (download).', false);
+  } catch (e) { scIoMsg('Falha ao exportar.', true); }
+}
+async function scImportSkills(file) {
+  try {
+    const obj = JSON.parse(await file.text());
+    if (!obj || typeof obj !== 'object' || typeof obj.choices !== 'object') throw new Error('fmt');
+    skillChoice = normChoice(obj);
+    await saveSkillChoice();
+    await renderSkillManager();   // recria o modal a partir do importado
+    scIoMsg('Skills importadas.', false);
+  } catch (e) { scIoMsg('Arquivo de skills inválido.', true); }
+}
 async function loadSummonChoice() { try { const r = await window.summonIO.load(); if (r && r.ok) summonCfg = normChoice(JSON.parse(r.data)); } catch (e) { summonCfg = { choices: {} }; } try { await callSim('setSummonChoice', summonCfg); } catch (e) {} }
 async function saveSummonChoice() { try { await window.summonIO.save(JSON.stringify(summonCfg, null, 2)); } catch (e) {} try { await callSim('setSummonChoice', summonCfg); } catch (e) {} }
 function renderSummonPanel(si) {
   const saved = (summonCfg.choices[String(scHomun)]) || si.saved || {};
   const cat = (si.perLevel || []).map(p => 'nv' + p.level + ': ' + p.count + '\u00d7 ' + esc(p.name) + ' (' + Math.round(p.duration / 1000) + 's)').join(' \u00b7 ');
-  let h = '<div class="sm-panel"><div class="sm-head"><b>Invoca\u00e7\u00e3o \u2014 ' + esc(si.name) + '</b></div>';
+  let h = '<div class="sm-panel"><div class="sm-head"><b>Invoca\u00e7\u00e3o \u2014 ' + esc(si.name) + ' \u00b7 padr\u00e3o</b></div>';
+  h += '<div class="sm-note">Padr\u00e3o da invoca\u00e7\u00e3o (salvo em <code>homun_summons.json</code>). Os <b>params do n\u00f3</b> <code>UseSeraLegion</code> na \u00e1rvore <b>sobrep\u00f5em</b> isto.</div>';
   h += '<div class="sm-cat">' + cat + '</div>';
   for (const f of (si.fields || [])) {
     const val = (saved[f.key] !== undefined && saved[f.key] !== null) ? saved[f.key] : f.default;
@@ -65,6 +109,24 @@ function scSet(type, role, id) {
   if (!id) { if (skillChoice.choices[k]) { delete skillChoice.choices[k][role]; if (!Object.keys(skillChoice.choices[k]).length) delete skillChoice.choices[k]; } }
   else { skillChoice.choices[k] = skillChoice.choices[k] || {}; skillChoice.choices[k][role] = id; }
 }
+// nível por papel (homun_skills.json grava <role>Level; 0/vazio = nível padrão conhecido)
+function scGetLevel(type, role) { const t = skillChoice.choices[String(type)]; return (t && t[role + 'Level']) ? t[role + 'Level'] : 0; }
+function scSetLevel(type, role, lvl) {
+  const k = String(type), key = role + 'Level';
+  if (!lvl || lvl <= 0) { if (skillChoice.choices[k]) { delete skillChoice.choices[k][key]; if (!Object.keys(skillChoice.choices[k]).length) delete skillChoice.choices[k]; } }
+  else { skillChoice.choices[k] = skillChoice.choices[k] || {}; skillChoice.choices[k][key] = lvl; }
+}
+// nível POR SKILL (skillLevels[id]; precede o por papel). Chave string (JSON).
+function scGetSkillLevel(type, id) { const t = skillChoice.choices[String(type)]; return (t && t.skillLevels && t.skillLevels[String(id)]) ? t.skillLevels[String(id)] : 0; }
+function scSetSkillLevel(type, id, lvl) {
+  const k = String(type); skillChoice.choices[k] = skillChoice.choices[k] || {};
+  const sl = skillChoice.choices[k].skillLevels = skillChoice.choices[k].skillLevels || {};
+  if (!lvl || lvl <= 0) { delete sl[String(id)]; if (!Object.keys(sl).length) delete skillChoice.choices[k].skillLevels; if (!Object.keys(skillChoice.choices[k]).length) delete skillChoice.choices[k]; }
+  else sl[String(id)] = lvl;
+}
+// lista de skills do papel (0..N ids; [] = nenhuma). scClearRole remove a chave (= padrão do perfil).
+function scSetRoleList(type, role, ids) { const k = String(type); skillChoice.choices[k] = skillChoice.choices[k] || {}; skillChoice.choices[k][role] = (ids || []).slice(); }
+function scClearRole(type, role) { const k = String(type); if (skillChoice.choices[k]) { delete skillChoice.choices[k][role]; if (!Object.keys(skillChoice.choices[k]).length) delete skillChoice.choices[k]; } }
 function monLabel(id) { const m = monById(id); return m ? (m.desc || ('#' + m.id)) : ('#' + id); }
 function nextGroupId() { let mx = 0; for (const g of monCatalog.groups) if (typeof g.id === 'number' && g.id > mx) mx = g.id; return mx + 1; }
 function mcSummary(n) { const parts = []; if (n.monster && n.monster !== 0) parts.push(monLabel(n.monster)); if (n.group && n.group !== 0) { const g = grpById(n.group); parts.push('[' + (g ? (g.name || ('grupo ' + g.id)) : ('grupo ' + n.group)) + ']'); } return parts.length ? parts.join(' / ') : '(definir alvo)'; }
@@ -986,6 +1048,7 @@ async function openTree() {
   const w = JSON.parse(r.data);
   tree = w.spec || w;
   ctxHomun = w.homunType || 4; ctxBase = w.baseType || 0;
+  treeConfig = w.config || {};
   applyContextToUI(); await loadCatalog();
   uidSeq = 1; assignUids(tree); selId = tree._uid; autoLayout();
   currentName = name; $('treeName').value = name;
@@ -995,7 +1058,7 @@ async function openTree() {
 async function saveTreeAs() {
   const name = ($('treeName').value || '').trim();
   if (!name) { setStatus('Dê um nome à árvore (será a pasta trees/<nome>/).', true); return; }
-  const wrapper = { name: name, homunType: ctxHomun, baseType: ctxBase, spec: exportSpec(tree) };
+  const wrapper = { name: name, homunType: ctxHomun, baseType: ctxBase, config: treeConfig, spec: exportSpec(tree) };
   const r = await window.trees.save(name, JSON.stringify(wrapper, null, 2));
   if (!r.ok) { setStatus('Erro ao salvar: ' + r.error, true); return; }
   currentName = r.name; $('treeName').value = r.name;
@@ -1006,7 +1069,7 @@ async function buildTreeLua() {
   const name = ($('treeName').value || '').trim();
   if (!name) { setStatus('Dê um nome à árvore antes de gerar o Lua.', true); return; }
   if (renderValidation() > 0) { setStatus('Corrija os erros antes de gerar o Lua.', true); return; }
-  const payload = { spec: exportSpec(tree), homunType: ctxHomun, baseType: ctxBase };
+  const payload = { spec: exportSpec(tree), homunType: ctxHomun, baseType: ctxBase, config: treeConfig };
   const r = await window.trees.build(name, JSON.stringify(payload));
   if (!r.ok) { setStatus('Erro: ' + r.error, true); return; }
   setStatus('Pacote gerado: trees/' + r.name + '/dist/  +  trees/' + r.name + '/' + r.name + '.zip  (' + (r.files || '?') + ' arquivos, pronto p/ a pasta da IA do RO).');
@@ -1021,7 +1084,7 @@ async function newTree() {
   }
   tree = { type: 'selector', label: 'root', children: [] };
   uidSeq = 1; assignUids(tree); selId = tree._uid; autoLayout();
-  const wrapper = { name: name, homunType: ctxHomun, baseType: ctxBase, spec: exportSpec(tree) };
+  const wrapper = { name: name, homunType: ctxHomun, baseType: ctxBase, config: treeConfig, spec: exportSpec(tree) };
   const r = await window.trees.save(name, JSON.stringify(wrapper, null, 2));
   if (!r.ok) { setStatus('Erro ao criar: ' + r.error, true); return; }
   currentName = r.name; $('treeName').value = r.name;
@@ -1033,6 +1096,7 @@ async function simulateTree() {
   if (renderValidation() > 0) { setStatus('Corrija os erros antes de simular.', true); return; }
   await callSim('setTree', exportSpec(tree));
   await callSim('setMonsters', monCatalog);
+  await callSim('setConfig', treeConfig);
   // passa homún/base p/ o simulador e guarda o estado do editor p/ a volta
   try { sessionStorage.setItem('brai.simContext', JSON.stringify({ homunType: ctxHomun, baseType: ctxBase })); } catch (e) {}
   saveEditorState();
@@ -1081,7 +1145,7 @@ function saveEditorState() {
     sessionStorage.setItem(STATE_KEY, JSON.stringify({
       tree: tree,                 // inclui _uid/_x/_y p/ preservar layout e seleção
       selId: selId,
-      ctxHomun: ctxHomun, ctxBase: ctxBase,
+      ctxHomun: ctxHomun, ctxBase: ctxBase, config: treeConfig,
       treeName: $('treeName').value || '', currentName: currentName,
       zoom: zoom,
       sl: wrap ? wrap.scrollLeft : 0, st: wrap ? wrap.scrollTop : 0,
@@ -1130,6 +1194,7 @@ document.addEventListener('mousedown', function (e) { const m = document.getElem
     const bm = $('btnMonsters'); if (bm) bm.onclick = () => openMonsterManager();
     const bs = $('btnSkills'); if (bs) bs.onclick = () => openSkillManager();
     const bc = $('btnCombos'); if (bc) bc.onclick = () => openComboManager();
+    const bcf = $('btnConfig'); if (bcf) bcf.onclick = () => openConfigManager();
     $('ctxHomun').addEventListener('change', async () => { syncCtx(); await loadCatalog(); renderInspector(); });
     $('ctxBase').addEventListener('change', async () => { syncCtx(); await loadCatalog(); renderInspector(); });
     window.addEventListener('beforeunload', saveEditorState);
@@ -1139,6 +1204,7 @@ document.addEventListener('mousedown', function (e) { const m = document.getElem
       // volta do simulador: restaura árvore, contexto, nome, zoom e rolagem
       tree = saved.tree;
       ctxHomun = saved.ctxHomun || 4; ctxBase = saved.ctxBase || 0;
+      treeConfig = saved.config || {};
       applyContextToUI(); await loadCatalog();
       currentName = saved.currentName || '';
       $('treeName').value = saved.treeName || '';
@@ -1160,6 +1226,59 @@ document.addEventListener('mousedown', function (e) { const m = document.getElem
     renderInspector(); renderAll(); initCanvasNav(); refreshTreeList(); histInit();
   } catch (e) { setStatus('boot: ' + ((e && e.message) || e), true); }
 })();
+
+// ===== Painel de Configuração (knobs do H_Config) ==========================
+// Os ajustes (AggroHP, HealOwnerHP, AutoMobCount, …) vão p/ o config.lua do
+// pacote (Gerar Lua) e valem no simulador. treeConfig guarda o que o usuário/migração definiu.
+async function openConfigManager() {
+  let ov = document.getElementById('cfgModal');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'cfgModal'; ov.className = 'mm-overlay'; document.body.appendChild(ov); }
+  renderConfigManager();            // mostra o painel já (mesmo antes do defaultConfig)
+  ov.style.display = 'flex';
+  if (!cfgDefaults) {
+    try { cfgDefaults = await callSim('defaultConfig'); } catch (e) { cfgDefaults = cfgDefaults || {}; }
+    renderConfigManager();          // re-renderiza com os knobs quando chegar
+  }
+}
+function closeConfigManager() { const ov = document.getElementById('cfgModal'); if (ov) ov.style.display = 'none'; }
+function renderConfigManager() {
+  const ov = document.getElementById('cfgModal'); if (!ov) return;
+  const def = cfgDefaults || {};
+  const keys = Object.keys(def).sort();
+  const rows = keys.map(function (k) {
+    const dv = def[k];
+    const ovr = (treeConfig[k] !== undefined && treeConfig[k] !== null);
+    const cur = ovr ? treeConfig[k] : dv;
+    let input;
+    if (typeof dv === 'boolean') input = '<input type="checkbox" class="cfg-in" data-k="' + k + '" data-t="bool"' + (cur ? ' checked' : '') + '>';
+    else if (typeof dv === 'number') input = '<input type="number" class="cfg-in" data-k="' + k + '" data-t="num" value="' + esc(cur) + '" style="width:90px">';
+    else input = '<input type="text" class="cfg-in" data-k="' + k + '" data-t="str" value="' + esc(cur) + '" style="width:120px">';
+    return '<div class="mm-row" style="gap:8px;align-items:center">' +
+      '<span style="flex:1' + (ovr ? ';font-weight:700;color:#46c46a' : '') + '">' + esc(k) + '</span>' + input +
+      '<span style="color:var(--muted);font-size:11px;min-width:96px;text-align:right">padrão: ' + esc(String(dv)) + '</span></div>';
+  }).join('');
+  ov.innerHTML =
+    '<div class="mm-panel">' +
+      '<div class="mm-head"><strong>Configuração — ajustes do H_Config</strong><button id="cfgClose" class="mm-x">fechar ✕</button></div>' +
+      '<div class="mm-body"><section class="mm-col" style="flex:1">' +
+        '<div class="mm-hint">Vão para o <b>config.lua</b> do pacote (Gerar Lua) e valem no simulador. Em <b style="color:#46c46a">verde</b> = alterado vs. o padrão; limpar um número volta ao padrão.</div>' +
+        '<div class="mm-list">' + (rows || '<div class="mm-empty">defaultConfig indisponível</div>') + '</div>' +
+        '<div class="mm-add"><button id="cfgReset" class="mm-danger">restaurar tudo ao padrão</button></div>' +
+      '</section></div>' +
+    '</div>';
+  document.getElementById('cfgClose').onclick = closeConfigManager;
+  ov.onclick = (e) => { if (e.target === ov) closeConfigManager(); };
+  Array.prototype.forEach.call(ov.querySelectorAll('.cfg-in'), function (inp) {
+    inp.onchange = function () {
+      const k = inp.getAttribute('data-k'), t = inp.getAttribute('data-t');
+      if (t === 'bool') treeConfig[k] = inp.checked;
+      else if (t === 'num') { const v = parseFloat(inp.value); if (isNaN(v)) delete treeConfig[k]; else treeConfig[k] = v; }
+      else { if (inp.value === '') delete treeConfig[k]; else treeConfig[k] = inp.value; }
+      renderConfigManager();
+    };
+  });
+  const rst = document.getElementById('cfgReset'); if (rst) rst.onclick = function () { treeConfig = {}; renderConfigManager(); };
+}
 
 // ===== Gerenciador de monstros e grupos (modal) ============================
 // Catálogo GLOBAL (monsters.json): cadastra monstros (id + descrição) e grupos
@@ -1212,6 +1331,7 @@ function renderMonManager() {
   ov.innerHTML =
     '<div class="mm-panel">' +
       '<div class="mm-head"><strong>Monstros e grupos</strong><button id="mmClose" class="mm-x">fechar ✕</button></div>' +
+      (scIsStatic() ? '<div class="sc-io" style="padding:8px 14px 10px"><span class="sc-io-lbl">Config:</span><button id="monExport" type="button">\u2b07 exportar monstros</button><button id="monImport" type="button">\u2b06 importar monstros</button><input id="monImportFile" type="file" accept="application/json,.json" style="display:none"><span class="sc-io-msg" id="monIoMsg"></span></div>' : '') +
       '<div class="mm-body">' +
         '<section class="mm-col">' +
           '<h4>Cadastro de monstros</h4>' +
@@ -1239,6 +1359,9 @@ function renderMonManager() {
   // wiring
   document.getElementById('mmClose').onclick = closeMonManager;
   ov.onclick = (e) => { if (e.target === ov) closeMonManager(); };
+  const _mex = document.getElementById('monExport'); if (_mex) _mex.onclick = monExportCfg;
+  const _mim = document.getElementById('monImport'), _mimf = document.getElementById('monImportFile');
+  if (_mim && _mimf) { _mim.onclick = () => _mimf.click(); _mimf.onchange = () => { if (_mimf.files && _mimf.files[0]) monImportCfg(_mimf.files[0]); _mimf.value = ''; }; }
 
   const add = document.getElementById('mmAdd');
   add.onclick = async () => {
@@ -1320,35 +1443,60 @@ async function renderSkillManager() {
 
   const homunOpts = SC_HOMUN_ORDER.map(t => '<option value="' + t + '"' + (t === scHomun ? ' selected' : '') + '>' + esc(HOMUN_NAMES[t] || ('#' + t)) + '</option>').join('');
 
+  const skillLine = (role, sk) => {
+    const maxLv = sk.maxLevel || 1;
+    const cur = sk.level || maxLv;   // pré-seleciona o nível efetivo (skillLevels[id] ou o conhecido); sem rótulo "Padrão"
+    let lo = '';
+    for (let i = 1; i <= maxLv; i++) lo += '<option value="' + i + '"' + (i === cur ? ' selected' : '') + '>' + i + '</option>';
+    return '<div class="sc-skill" data-role="' + role + '" data-skill="' + sk.id + '">' +
+      '<span class="sc-skill-hot" data-role="' + role + '" data-skill="' + sk.id + '">' +
+        '<span class="sc-skill-name">' + esc(sk.name) + '</span>' +
+        '<span class="sc-lvlwrap"><span class="sc-lvllbl">nível</span>' +
+        '<select class="sc-skill-lvl" data-role="' + role + '" data-skill="' + sk.id + '">' + lo + '</select></span>' +
+      '</span>' +
+      '<button class="sc-rm" type="button" data-role="' + role + '" data-skill="' + sk.id + '" title="remover">✕</button>' +
+      '</div>';
+  };
   const rows = (roles || []).map(r => {
+    const label = esc(SC_ROLE_LABEL[r.key] || r.key);
     const cands = r.candidates || [];
-    const nameOf = (id) => { for (const c of cands) if (c.id === id) return c.name; return '#' + id; };
-    const defNames = (r.defaultIds || []).map(nameOf);
-    const defLabel = defNames.length ? defNames.join(' + ') : 'nenhuma';
-    if (cands.length === 0) return '';
-    if (cands.length === 1) {
-      return '<div class="sc-row"><span class="sc-role">' + esc(SC_ROLE_LABEL[r.key] || r.key) + '</span>' +
-             '<span class="sc-fixed">' + esc(cands[0].name) + ' <span class="sc-only">(única opção)</span></span></div>';
-    }
-    const chosen = scGet(scHomun, r.key);
-    const opts = '<option value="0">Padrão (' + esc(defLabel) + ')</option>' +
-      cands.map(c => '<option value="' + c.id + '"' + (c.id === chosen ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('');
-    return '<div class="sc-row"><span class="sc-role">' + esc(SC_ROLE_LABEL[r.key] || r.key) + '</span>' +
-           '<select class="sc-sel" data-role="' + r.key + '">' + opts + '</select></div>';
+    if (cands.length === 0)
+      return '<div class="sc-row"><span class="sc-role">' + label + '</span>' +
+             '<span class="sc-none">Não há skill de ' + label.toLowerCase() + ' para este homúnculo.</span></div>';
+    const eff = r.effective || [];
+    const effIds = eff.map(s => s.id);
+    const addable = cands.filter(c => effIds.indexOf(c.id) < 0);
+    const addCtrl = '<select class="sc-add" data-role="' + r.key + '"' + (addable.length ? '' : ' disabled') + '>' +
+      '<option value="">➕ adicionar skill…</option>' +
+      addable.map(c => '<option value="' + c.id + '">' + esc(c.name) + '</option>').join('') + '</select>';
+    const resetBtn = r.overridden ? '<button class="sc-reset" type="button" data-role="' + r.key + '" title="usar o padrão do perfil">↺ padrão</button>' : '';
+    const skillLines = eff.length
+      ? eff.map(sk => skillLine(r.key, sk)).join('')
+      : '<div class="sc-empty-skill">nenhuma skill — este papel não age</div>';
+    return '<div class="sc-row"><span class="sc-role">' + label + '</span>' +
+           '<span class="sc-ctrl">' + addCtrl + resetBtn + '</span></div>' +
+           '<div class="sc-skills' + (eff.length > 1 ? ' multi' : '') + '" data-role="' + r.key + '">' + skillLines + '</div>';
   }).join('');
 
-  const configurable = (roles || []).some(r => (r.candidates || []).length >= 2);
   let si = null; try { si = await callSim('summonInfo', { homunType: scHomun }); } catch (e) {}
   const summonHtml = (si && si.hasSummon) ? renderSummonPanel(si) : '';
-  const roleInner = configurable ? rows : (summonHtml ? '' : '<div class="mm-empty">Este homúnculo tem só uma opção por papel — nada para escolher aqui.</div>');
-  const inner = roleInner + summonHtml;
+  const comboLink = (scHomun === 52) ? '<div class="sc-combolink"><button id="scComboLink" type="button" class="primary">✦ Editar combos da Eleanor (padrão)…</button></div>' : '';
+  const inner = rows + comboLink + summonHtml;
+  const ioBar = scIsStatic()
+    ? '<div class="sc-io"><span class="sc-io-lbl">Config:</span>' +
+        '<button id="scExport" type="button">\u2b07 exportar skills</button>' +
+        '<button id="scImport" type="button">\u2b06 importar skills</button>' +
+        '<input id="scImportFile" type="file" accept="application/json,.json" style="display:none">' +
+        '<span class="sc-io-msg" id="scIoMsg"></span></div>'
+    : '';
 
   ov.innerHTML =
     '<div class="mm-panel sc-panel">' +
       '<div class="mm-head"><strong>Skills por homúnculo</strong><button id="scClose" class="mm-x">fechar ✕</button></div>' +
       '<div class="mm-body sc-body">' +
+        ioBar +
         '<div class="sc-pick"><label>Homúnculo: <select id="scHomunSel">' + homunOpts + '</select></label>' +
-          '<span class="sc-note">Para Homunculus S com mais de uma skill no mesmo papel: escolha qual cada ação automática usa. <b>Padrão</b> mantém o perfil.</span></div>' +
+          '<span class="sc-note">Adicione/remova as skills de cada papel (0 ou mais). <b>Padrão</b> = as skills do perfil. Passe o mouse no nome ou no nível para ver os detalhes.</span></div>' +
         '<div class="sc-rows">' + inner + '</div>' +
       '</div>' +
     '</div>';
@@ -1357,18 +1505,64 @@ async function renderSkillManager() {
   ov.onclick = (e) => { if (e.target === ov) closeSkillManager(); };
   const hs = document.getElementById('scHomunSel');
   if (hs) hs.onchange = async () => { scHomun = parseInt(hs.value, 10) || 51; await renderSkillManager(); };
-  ov.querySelectorAll('.sc-sel').forEach(sel => sel.onchange = async () => {
-    scSet(scHomun, sel.dataset.role, parseInt(sel.value, 10) || 0);
-    await saveSkillChoice();
-    setStatus('Skill de ' + (HOMUN_NAMES[scHomun] || scHomun) + ' atualizada.');
+  const roleByKey = {}; (roles || []).forEach(r => { roleByKey[r.key] = r; });
+  const effIdsOf = (role) => ((roleByKey[role] && roleByKey[role].effective) || []).map(s => s.id);
+  ov.querySelectorAll('.sc-add').forEach(sel => sel.onchange = async () => {
+    const id = parseInt(sel.value, 10) || 0; if (!id) return;
+    const list = effIdsOf(sel.dataset.role); if (list.indexOf(id) < 0) list.push(id);
+    scSetRoleList(scHomun, sel.dataset.role, list);
+    await saveSkillChoice(); setStatus('Skill adicionada (' + (HOMUN_NAMES[scHomun] || scHomun) + ').');
+    await renderSkillManager();
+  });
+  ov.querySelectorAll('.sc-rm').forEach(btn => btn.onclick = async () => {
+    const id = parseInt(btn.dataset.skill, 10), role = btn.dataset.role;
+    scSetRoleList(scHomun, role, effIdsOf(role).filter(x => x !== id));
+    await saveSkillChoice(); setStatus('Skill removida (' + (HOMUN_NAMES[scHomun] || scHomun) + ').');
+    await renderSkillManager();
+  });
+  ov.querySelectorAll('.sc-reset').forEach(btn => btn.onclick = async () => {
+    scClearRole(scHomun, btn.dataset.role);
+    await saveSkillChoice(); setStatus('Papel voltou ao padrão (' + (HOMUN_NAMES[scHomun] || scHomun) + ').');
+    await renderSkillManager();
+  });
+  ov.querySelectorAll('.sc-skill-lvl').forEach(sel => sel.onchange = async () => {
+    scSetSkillLevel(scHomun, parseInt(sel.dataset.skill, 10), parseInt(sel.value, 10) || 0);
+    await saveSkillChoice(); setStatus('Nível de skill atualizado (' + (HOMUN_NAMES[scHomun] || scHomun) + ').');
   });
   ov.querySelectorAll('.sm-field').forEach(el => el.onchange = async () => {
     const key = el.dataset.key, ty = el.dataset.type;
     let v; if (ty === 'bool') v = el.checked; else if (ty === 'int') v = parseInt(el.value, 10); else v = el.value;
     const k = String(scHomun); summonCfg.choices[k] = summonCfg.choices[k] || {}; summonCfg.choices[k][key] = v;
-    await saveSummonChoice();
-    setStatus('Invocação de ' + (HOMUN_NAMES[scHomun] || scHomun) + ' atualizada.');
+    await saveSummonChoice(); setStatus('Invocação de ' + (HOMUN_NAMES[scHomun] || scHomun) + ' atualizada.');
   });
+  const _cl = document.getElementById('scComboLink');
+  if (_cl) _cl.onclick = () => openComboManager('default');
+  const _ex = document.getElementById('scExport'); if (_ex) _ex.onclick = scExportSkills;
+  const _im = document.getElementById('scImport'), _imf = document.getElementById('scImportFile');
+  if (_im && _imf) { _im.onclick = () => _imf.click(); _imf.onchange = () => { if (_imf.files && _imf.files[0]) scImportSkills(_imf.files[0]); _imf.value = ''; }; }
+
+  // card de info (igual ao UseSkill) ao passar o mouse no NOME ou no NÍVEL de cada skill
+  let scTip = document.getElementById('scTip');
+  if (!scTip) { scTip = document.createElement('div'); scTip.id = 'scTip'; scTip.className = 'sc-tip'; document.body.appendChild(scTip); }
+  scTip.style.display = 'none';
+  const skillById = (key, id) => { const r = roleByKey[key]; if (!r) return null; for (const c of (r.candidates || [])) if (c.id === id) return c; for (const e of (r.effective || [])) if (e.id === id) return e; return null; };
+  const showScTip = (key, id, anchorEl) => {
+    const sk = skillById(key, id); if (!sk) { scTip.style.display = 'none'; return; }
+    const lv = scGetSkillLevel(scHomun, id) || sk.level || sk.maxLevel || 1;
+    scTip.innerHTML = skillInfoHtml(sk, lv);
+    scTip.style.display = 'block';
+    const rect = anchorEl.getBoundingClientRect();
+    const w = scTip.offsetWidth || 300;
+    scTip.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - w - 12)) + 'px';
+    scTip.style.top = (rect.bottom + 6) + 'px';
+  };
+  const hideScTip = () => { scTip.style.display = 'none'; };
+  ov.querySelectorAll('.sc-skill-hot[data-skill]').forEach(el => {
+    const key = el.dataset.role, id = parseInt(el.dataset.skill, 10);
+    el.addEventListener('mouseenter', () => showScTip(key, id, el));
+    el.addEventListener('mouseleave', hideScTip);
+  });
+  ov.addEventListener('mouseleave', hideScTip, { once: false });
 }
 
 // ===== Painel "Combos da Eleanor" (modal) ==================================
@@ -1386,11 +1580,15 @@ function eleanorInspectorHtml(sel) {
     '<div class="field"><button id="iEleanorPanel" type="button" class="primary">✦ Abrir painel de Combos da Eleanor…</button></div>';
 }
 
-async function openComboManager() {
+async function openComboManager(mode) {
   if (!comboInfoCache) { try { comboInfoCache = await callSim('comboInfo'); } catch (e) { comboInfoCache = null; } }
-  const sel = selected();
-  const node = (sel && sel.type === 'action' && sel.name === 'UseEleanorOffense') ? sel : firstEleanorNode();
-  comboNodeUid = node ? node._uid : null;
+  comboMode = (mode === 'default') ? 'default' : 'node';
+  if (comboMode === 'default') { await loadSkillChoice(); comboNodeUid = null; }
+  else {
+    const sel = selected();
+    const node = (sel && sel.type === 'action' && sel.name === 'UseEleanorOffense') ? sel : firstEleanorNode();
+    comboNodeUid = node ? node._uid : null;
+  }
   let ov = document.getElementById('ceModal');
   if (!ov) { ov = document.createElement('div'); ov.id = 'ceModal'; ov.className = 'mm-overlay'; document.body.appendChild(ov); }
   renderComboManager();
@@ -1420,18 +1618,25 @@ function ceChainHtml(style, p) {
 
 function renderComboManager() {
   const ov = document.getElementById('ceModal'); if (!ov) return;
-  const node = comboNodeUid ? find(tree, comboNodeUid) : null;
-  if (!node) {
-    ov.innerHTML = '<div class="mm-panel ce-panel"><div class="mm-head"><strong>Combos da Eleanor</strong>' +
-      '<button id="ceClose" class="mm-x">fechar ✕</button></div><div class="mm-body" style="flex-direction:column">' +
-      '<div class="mm-empty">Nenhum nó <b>UseEleanorOffense</b> na árvore. Crie um agora (entra como filho do nó selecionado ou da raiz):</div>' +
-      '<div class="ce-actions"><button id="ceCreate" type="button" class="primary">+ criar nó UseEleanorOffense</button></div></div></div>';
-    document.getElementById('ceClose').onclick = closeComboManager;
-    ov.onclick = (e) => { if (e.target === ov) closeComboManager(); };
-    const cc = document.getElementById('ceCreate'); if (cc) cc.onclick = () => ceCreateNode();
-    return;
+  const isDefault = (comboMode === 'default');
+  let p;
+  if (isDefault) {
+    skillChoice.choices['52'] = skillChoice.choices['52'] || {};
+    p = skillChoice.choices['52'].combo = skillChoice.choices['52'].combo || {};
+  } else {
+    const node = comboNodeUid ? find(tree, comboNodeUid) : null;
+    if (!node) {
+      ov.innerHTML = '<div class="mm-panel ce-panel"><div class="mm-head"><strong>Combos da Eleanor</strong>' +
+        '<button id="ceClose" class="mm-x">fechar ✕</button></div><div class="mm-body" style="flex-direction:column">' +
+        '<div class="mm-empty">Nenhum nó <b>UseEleanorOffense</b> na árvore. Crie um agora (entra como filho do nó selecionado ou da raiz):</div>' +
+        '<div class="ce-actions"><button id="ceCreate" type="button" class="primary">+ criar nó UseEleanorOffense</button></div></div></div>';
+      document.getElementById('ceClose').onclick = closeComboManager;
+      ov.onclick = (e) => { if (e.target === ov) closeComboManager(); };
+      const cc = document.getElementById('ceCreate'); if (cc) cc.onclick = () => ceCreateNode();
+      return;
+    }
+    p = node.params = node.params || {};
   }
-  const p = node.params = node.params || {};
   const style = p.style || 'power';
   const defBarr = comboInfoCache ? comboInfoCache.defaults.autoComboSpheres : 5;
   const barr = (p.comboSpheres != null) ? p.comboSpheres : defBarr;
@@ -1443,9 +1648,11 @@ function renderComboManager() {
     .map(o => '<option value="' + o[0] + '"' + (o[0] === style ? ' selected' : '') + '>' + o[1] + '</option>').join('');
 
   ov.innerHTML = '<div class="mm-panel ce-panel">' +
-    '<div class="mm-head"><strong>Combos da Eleanor</strong><button id="ceClose" class="mm-x">fechar ✕</button></div>' +
+    '<div class="mm-head"><strong>Combos da Eleanor' + (isDefault ? ' · padrão' : '') + '</strong><button id="ceClose" class="mm-x">fechar ✕</button></div>' +
     '<div class="mm-body ce-body">' +
-      '<div class="ce-note">Configura o nó <b>UseEleanorOffense</b> selecionado. Tudo aqui é salvo nos <b>params do nó</b> da árvore — dá pra ajustar por aqui a qualquer momento.</div>' +
+      (isDefault
+        ? '<div class="ce-note ce-note-def">Editando o <b>padrão</b> da Eleanor (salvo em <code>homun_skills.json</code>). Os <b>params do nó</b> na árvore <b>sobrepõem</b> este padrão.</div>'
+        : '<div class="ce-note">Configura o nó <b>UseEleanorOffense</b> selecionado. Salvo nos <b>params do nó</b> da árvore — <b>sobrepõe</b> o padrão da tela de Skills.</div>') +
       '<div class="ce-cfg">' +
         '<div class="field"><label>Estilo padrão</label><select id="ceStyle">' + styleOpts + '</select></div>' +
         '<div class="field"><label>Barragem de esferas (AutoComboSpheres)</label>' +
@@ -1465,13 +1672,13 @@ function renderComboManager() {
 
   document.getElementById('ceClose').onclick = closeComboManager;
   ov.onclick = (e) => { if (e.target === ov) closeComboManager(); };
-  const touch = () => { renderInspector(); renderGraph(); };
-  document.getElementById('ceStyle').onchange = (e) => { p.style = e.target.value; touch(); };
-  document.getElementById('ceBarr').onchange = (e) => { let v = parseInt(e.target.value, 10); if (Number.isNaN(v)) delete p.comboSpheres; else p.comboSpheres = Math.max(0, Math.min(10, v)); touch(); };
-  document.getElementById('ceWin').onchange = (e) => { const v = parseInt(e.target.value, 10); if (Number.isNaN(v)) delete p.window; else p.window = Math.max(0, v); touch(); };
-  document.getElementById('ceThr').onchange = (e) => { const v = parseInt(e.target.value, 10); if (Number.isNaN(v)) delete p.grappleThreatLimit; else p.grappleThreatLimit = Math.max(0, v); touch(); };
-  document.getElementById('ceGap').onchange = (e) => { const v = parseInt(e.target.value, 10); if (Number.isNaN(v) || v <= 0) delete p.minGap; else p.minGap = v; touch(); };
-  document.getElementById('ceAllow').onchange = (e) => { if (e.target.checked) delete p.allowStyleSwitch; else p.allowStyleSwitch = false; touch(); };
+  const persist = isDefault ? () => { saveSkillChoice(); } : () => { renderInspector(); renderGraph(); };
+  document.getElementById('ceStyle').onchange = (e) => { p.style = e.target.value; persist(); };
+  document.getElementById('ceBarr').onchange = (e) => { let v = parseInt(e.target.value, 10); if (Number.isNaN(v)) delete p.comboSpheres; else p.comboSpheres = Math.max(0, Math.min(10, v)); persist(); };
+  document.getElementById('ceWin').onchange = (e) => { const v = parseInt(e.target.value, 10); if (Number.isNaN(v)) delete p.window; else p.window = Math.max(0, v); persist(); };
+  document.getElementById('ceThr').onchange = (e) => { const v = parseInt(e.target.value, 10); if (Number.isNaN(v)) delete p.grappleThreatLimit; else p.grappleThreatLimit = Math.max(0, v); persist(); };
+  document.getElementById('ceGap').onchange = (e) => { const v = parseInt(e.target.value, 10); if (Number.isNaN(v) || v <= 0) delete p.minGap; else p.minGap = v; persist(); };
+  document.getElementById('ceAllow').onchange = (e) => { if (e.target.checked) delete p.allowStyleSwitch; else p.allowStyleSwitch = false; persist(); };
   ov.querySelectorAll('.ce-lvl').forEach(selct => selct.onchange = () => {
     const st = selct.dataset.style, step = parseInt(selct.dataset.step, 10), val = parseInt(selct.value, 10);
     const links = (comboInfoCache && comboInfoCache[st]) || [];
@@ -1480,7 +1687,7 @@ function renderComboManager() {
       const cur = (p.levels[st] && p.levels[st][i] != null) ? p.levels[st][i] : lk.maxLevel;
       return (i === step - 1) ? val : cur;
     });
-    renderInspector(); renderGraph();
+    persist();
   });
 }
 

@@ -74,13 +74,22 @@
     var ht = ctx.homunType || 0, bt = ctx.baseType || 0;
     var hn = HOMUN_NAMES[ht] || ('tipo ' + ht);
     var bn = bt ? (HOMUN_NAMES[bt] || ('tipo ' + bt)) : 'nenhuma';
+    var cfg = {};
+    var src = ctx.config || {};
+    Object.keys(src).forEach(function (k) { if (src[k] !== undefined && src[k] !== null) cfg[k] = src[k]; });
+    if (cfg.BaseHomunType === undefined) cfg.BaseHomunType = bt;
+    var lines = Object.keys(cfg).map(function (k) {
+      var key = IDENT.test(k) ? k : '[' + luaString(k) + ']';
+      return '\t' + key + ' = ' + luaValue(cfg[k], 1) + ',';
+    });
     return [
       '-- config.lua — GERADO por BR-AI (web). Nao editar a mao.',
+      '-- Config de runtime desta arvore (knobs migrados / forma base).',
       '-- Homunculo: ' + hn + ' · Forma base: ' + bn,
       'BRAI = BRAI or {}',
       '',
       'BRAI.userConfig = {',
-      '\tBaseHomunType = ' + bt + ',',
+      lines.join('\n'),
       '}',
       '',
       'return BRAI.userConfig',
@@ -112,9 +121,17 @@
     Object.keys(src).forEach(function (k) {
       var roles = src[k] || {}, r = {};
       ['mainAtk', 'aoeAtk', 'offBuff', 'defBuff'].forEach(function (rk) {
-        var v = parseInt(roles[rk], 10);
-        if (v > 0) r[rk] = v;
+        var rv = roles[rk];
+        if (Array.isArray(rv)) { var lst = rv.map(function (x) { return parseInt(x, 10); }).filter(function (x) { return x > 0; }); r[rk] = lst; }   // lista (inclui VAZIA = nenhuma skill)
+        else { var v = parseInt(rv, 10); if (v > 0) r[rk] = v; }
+        var lv = parseInt(roles[rk + 'Level'], 10);
+        if (lv > 0) r[rk + 'Level'] = lv;
       });
+      if (roles.combo && typeof roles.combo === 'object') r.combo = roles.combo;
+      if (roles.skillLevels && typeof roles.skillLevels === 'object') {
+        var sl = {}; Object.keys(roles.skillLevels).forEach(function (id) { var lv2 = parseInt(roles.skillLevels[id], 10); if (lv2 > 0) sl[String(id)] = lv2; });
+        if (Object.keys(sl).length) r.skillLevels = sl;
+      }
       if (Object.keys(r).length) data[String(k)] = r;
     });
     return [

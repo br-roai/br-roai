@@ -2,140 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>BR-AI — Simulador (web)</title><link rel="icon" href="favicon.ico" sizes="32x32" /><link rel="icon" href="favicon.svg" type="image/svg+xml" /><link rel="apple-touch-icon" href="apple-touch-icon.png" /><link rel="manifest" href="site.webmanifest" /><meta name="theme-color" content="#0c141b" />
-  <link rel="stylesheet" href="assets/style.ba4ee455d7.css" />
-  <link rel="stylesheet" href="assets/static.4ebe8688aa.css" />
-  <style>
-    #braibar { display:flex; align-items:center; gap:10px; padding:6px 10px; background:#101417; color:#cfd6dd; border-bottom:1px solid #263038; font:13px system-ui, sans-serif; }
-    #braibar button { font:13px system-ui; padding:4px 10px; cursor:pointer; }
-    #braibar .muted { color:#8a97a2; }
-    #braibar a { color:#7fd1ff; margin-left:auto; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="refresh" content="0; url=./editor.html" />
+  <title>BR-AI</title>
+  <link rel="icon" href="favicon.ico" sizes="32x32" /><link rel="icon" href="favicon.svg" type="image/svg+xml" /><link rel="apple-touch-icon" href="apple-touch-icon.png" /><link rel="manifest" href="site.webmanifest" /><meta name="theme-color" content="#0c141b" />
+  <script>location.replace('./editor.html');</script>
+  <style>body{margin:0;font:15px/1.6 system-ui,sans-serif;background:#0c141b;color:#dfe5ea}.wrap{max-width:720px;margin:0 auto;padding:40px 24px}a{color:#7fd1ff}</style>
 </head>
 <body>
-
-
-  <header>
-    <strong>BR-AI</strong> · Simulador <span class="tag">web</span>
-    <a class="nav" href="./editor.html">Editor de árvores →</a>
-    <a class="nav" href="docs/index.html" target="_blank" rel="noopener" title="Abrir a documentação (nova aba)">❔ Documentação</a>
-    <span id="hud"></span>
-    <span id="status" class="status"></span>
-  </header>
-
-  <div id="controls">
-      <div id="transport">
-        <button id="btnStart" title="Início (Home)">⏮</button>
-        <button id="btnBack" title="Voltar 1 (←)">◀</button>
-        <button id="btnPlay" title="Play/Pause (Espaço)">▶</button>
-        <button id="btnFwd" title="Avançar 1 (→)">▶❘</button>
-        <button id="btnLive" title="Ir ao vivo (End)">⤓ vivo</button>
-        <button id="btnReset" title="Reiniciar cenário">⟲ reset</button>
-        <button id="btnNewMon" title="Criar um novo monstro">＋ monstro</button>
-        <button id="btnNewAlly" title="Criar um aliado (testar anti-KS)">＋ aliado</button>
-        <label class="spd">homún
-          <select id="homun">
-            <option value="4">Vanilmirth</option>
-            <option value="1">Lif</option>
-            <option value="2">Amistr</option>
-            <option value="3">Filir</option>
-            <option value="48">Eira</option>
-            <option value="49">Bayeri</option>
-            <option value="50">Sera</option>
-            <option value="51">Dieter</option>
-            <option value="52">Eleanor</option>
-          </select>
-        </label>
-        <label class="spd">base
-          <select id="base" disabled>
-            <option value="0">—</option>
-            <option value="4">Vanilmirth</option>
-            <option value="2">Amistr</option>
-            <option value="3">Filir</option>
-            <option value="1">Lif</option>
-          </select>
-        </label>
-        <label class="spd">vel
-          <input id="speed" type="range" min="1" max="30" value="8" />
-        </label>
-        <button id="spd05" title="meia velocidade">0.5×</button>
-        <button id="spd1" title="velocidade normal">1×</button>
-        <button id="spd2" title="velocidade dobrada">2×</button>
-        <button id="btnAllHp" title="Mostrar HP de todos os monstros">HP: alvo</button>
-        <label class="spd">mapa <input id="mapsize" type="range" min="400" max="1100" value="600" step="40" title="Tamanho do mapa na tela" /></label>
-      </div>
-
-      <div id="scnbar">
-        <input id="scnName" class="scnname" placeholder="nome do cenário" title="Nome do arquivo em scenarios/" />
-        <button id="btnScnSave" title="Salvar o estado atual como cenário">💾 salvar cenário</button>
-        <select id="scnList" title="Cenários salvos em scenarios/"><option value="">— cenários —</option></select>
-        <button id="btnScnLoad" title="Carregar o cenário selecionado">📂 carregar</button>
-      </div>
-
-      <div id="timelineRow">
-        <input id="timeline" type="range" min="0" max="0" value="0" />
-        <span id="frameLbl" class="muted">0 / 0</span>
-      </div>
-
-  </div>
-
-  <div id="app">
-    <section id="left">
-      <div id="simmain">
-      <canvas id="grid" width="600" height="600"></canvas>
-
-      <div id="legend">
-        <span><i class="dot d-owner"></i> dono</span>
-        <span><i class="dot d-homun"></i> homúnculo</span>
-        <span><i class="dot d-ally"></i> aliado</span>
-        <span><i class="dot d-mob"></i> monstro</span>
-        <span><i class="ring"></i> alvo atual</span>
-        <span><i class="bar bar-hp"></i> HP <i class="bar bar-sp"></i> SP</span>
-        <span class="muted">(barra do monstro só quando alvo)</span>
-      </div>
-      <div id="hint" class="muted">Clique numa célula: mover o dono · Clique num monstro: editar · Arraste: mover dono/monstro</div>
-      <div id="monpanel"></div>
-      </div>
-    </section>
-
-    <aside id="right">
-      <h3>Blackboard</h3>
-      <div id="bb"></div>
-      <section id="eleanorPanel" style="display:none">
-        <h3>Eleanor — Esferas &amp; Combo</h3>
-        <div id="eleanor"></div>
-      </section>
-      <section id="seraPanel" style="display:none">
-        <h3>Sera — Legião invocada</h3>
-        <div id="sera"></div>
-      </section>
-
-      <h3>Skills / Buffs</h3>
-      <div id="skills"></div>
-
-      <h3>Árvore de comportamento</h3>
-      <div id="treelegend" class="tree-legend" aria-label="Legenda das cores da árvore">
-        <span><i class="tl-dot tl-ok"></i> sucesso</span>
-        <span><i class="tl-dot tl-run"></i> rodando</span>
-        <span><i class="tl-dot tl-fail"></i> ação falhou</span>
-        <span><i class="tl-dot tl-none"></i> condição falhou / não avaliado</span>
-      </div>
-      <div id="tree"></div>
-
-      <h3>Log (TraceAI)</h3>
-      <pre id="log"></pre>
-    </aside>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
-  <script src="assets/build_tree_web.09258e3865.js"></script>
-  <script src="assets/zip_web.8114b4c800.js"></script>
-  <script src="assets/lua_host_core.e39837dc12.js"></script>
-  <script src="assets/lua-bundle.45016e7943.js"></script>
-  <script src="assets/static_host.cf05239916.js"></script>
-  <script src="assets/bridge_core.f33c9ac3a0.js"></script>
-  <script src="assets/s3_backend.fe5ccd5e2e.js"></script>
-  <script src="assets/static_ui.ca4bca2770.js"></script>
-  <script src="assets/renderer.c5fc9af095.js"></script>
+  <div class="wrap"><p>Abrindo o <strong>editor</strong>… Se não acontecer, clique: <a href="./editor.html">Editor de árvores</a> · <a href="./sim.html">Simulador</a>.</p></div>
 </body>
 </html>
