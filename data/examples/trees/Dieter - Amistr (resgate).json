@@ -1,0 +1,127 @@
+{
+  "name": "Dieter - Amistr (resgate)",
+  "homunType": 51,
+  "baseType": 2,
+  "spec": {
+    "type": "selector",
+    "label": "root",
+    "children": [
+      {
+        "type": "check",
+        "name": "HasOwnerCommand",
+        "params": {},
+        "child": {
+          "type": "action",
+          "name": "HandleOwnerCommand",
+          "params": {}
+        },
+        "label": "comando do dono"
+      },
+      {
+        "type": "sequence",
+        "label": "Engajar",
+        "children": [
+          {
+            "type": "selector",
+            "label": "Definir alvo",
+            "children": [
+              {
+                "type": "check",
+                "name": "OwnerUnderAttack",
+                "params": {},
+                "label": "Dono sob ataque",
+                "child": {
+                  "type": "action",
+                  "name": "AcquireOwnerAttacker",
+                  "params": {}
+                }
+              },
+              {
+                "type": "check",
+                "name": "HasValidTarget",
+                "params": {},
+                "label": "Tem alvo"
+              },
+              {
+                "type": "check",
+                "name": "CanEngage",
+                "params": {},
+                "label": "Pode engajar",
+                "child": {
+                  "type": "action",
+                  "name": "AcquireTarget",
+                  "params": {}
+                }
+              }
+            ]
+          },
+          {
+            "type": "selector",
+            "children": [
+              {
+                "type": "action",
+                "name": "UseSkill",
+                "params": {
+                  "skill": 8044,
+                  "level": 10,
+                  "on": "enemy"
+                }
+              },
+              {
+                "type": "check",
+                "name": "InAttackRange",
+                "params": {},
+                "child": {
+                  "type": "action",
+                  "name": "AttackTarget",
+                  "params": {}
+                },
+                "label": "Está no alcance"
+              },
+              {
+                "type": "action",
+                "name": "ChaseTarget",
+                "params": {
+                  "dist": 1
+                }
+              }
+            ],
+            "label": "Atacar (escolhe uma ação)"
+          }
+        ]
+      },
+      {
+        "type": "selector",
+        "children": [
+          {
+            "type": "check",
+            "name": "TooFarFromOwner",
+            "params": {
+              "dist": 4
+            },
+            "child": {
+              "type": "action",
+              "name": "MoveToOwner",
+              "params": {}
+            },
+            "label": "Longe do dono"
+          },
+          {
+            "type": "action",
+            "name": "UseSkillBuff",
+            "params": {
+              "skill": 8045,
+              "level": 10
+            }
+          },
+          {
+            "type": "action",
+            "name": "Idle",
+            "params": {}
+          }
+        ],
+        "label": "Ocioso"
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#0c141b"/>
+  <circle cx="256" cy="256" r="246" fill="#0f1a22"/>
+  <circle cx="256" cy="256" r="244" fill="none" stroke="#27c488" stroke-opacity="0.35" stroke-width="5"/>
+
+  <!-- árvore de comportamento (flat) -->
+  <g stroke="#5b7382" stroke-width="5" fill="none" stroke-linecap="round">
+    <path d="M256 196 L 188 120"/><path d="M256 196 L 324 120"/>
+  </g>
+  <circle cx="256" cy="196" r="9" fill="#cfe9ff"/>
+  <circle cx="188" cy="120" r="14" fill="#39d98a"/>
+  <circle cx="324" cy="120" r="14" fill="#4aa3ff"/>
+  <circle cx="256" cy="150" r="10" fill="#ffb020"/>
+  <line x1="256" y1="196" x2="256" y2="160" stroke="#5b7382" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- corpo flat -->
+  <path d="M256 198 C 330 198, 372 252, 372 314 C 372 382, 322 416, 256 416 C 190 416, 140 382, 140 314 C 140 252, 182 198, 256 198 Z" fill="#22c184"/>
+  <path d="M256 198 C 330 198, 372 252, 372 314 C 372 382, 322 416, 256 416 C 190 416, 140 382, 140 314 C 140 252, 182 198, 256 198 Z" fill="none" stroke="#0e6f4e" stroke-width="6"/>
+
+  <!-- olhos flat -->
+  <circle cx="214" cy="306" r="30" fill="#0c141b"/>
+  <circle cx="298" cy="306" r="30" fill="#0c141b"/>
+  <circle cx="224" cy="296" r="9" fill="#eafff6"/>
+  <circle cx="308" cy="296" r="9" fill="#eafff6"/>
+  <path d="M238 352 Q 256 366 274 352" fill="none" stroke="#0c141b" stroke-width="7" stroke-linecap="round"/>
+
+  <text x="256" y="470" text-anchor="middle" font-family="'Trebuchet MS', Verdana, system-ui, sans-serif" font-size="44" font-weight="800" letter-spacing="3" fill="#e6f3fb">BR-AI</text>
+</svg>

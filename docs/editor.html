@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Guia do Editor — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="editor.html" class="cur">Editor</a>
+      <a href="simulador.html">Simulador</a>
+      <a href="referencia-nos.html">Referência de nós</a>
+      <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="conceitos.html">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="crumbs"><a href="index.html">Início</a> › Guia do Editor</div>
+  <h1>Guia do Editor de Árvores</h1>
+  <p class="lead">O editor visual deixa você criar, editar e gerar árvores de comportamento como um grafo de arrastar e soltar — sem escrever Lua à mão. A paleta de nós e a validação vêm dos comportamentos reais do motor, então você nunca monta uma árvore que o jogo não saberia executar.</p>
+
+  <div class="toc">
+    <div class="h">Nesta página</div>
+    <ul>
+      <li><a href="#tela">A tela</a></li>
+      <li><a href="#manipular">Manipular nós no canvas</a></li>
+      <li><a href="#adicionar">Adicionar nós (menu agrupado)</a></li>
+      <li><a href="#tipos">Tipos de nó</a></li>
+      <li><a href="#inspetor">Inspetor e parâmetros</a></li>
+      <li><a href="#skills">Seletor de skills e contexto</a></li>
+      <li><a href="#desativar">Desativar nós</a></li>
+      <li><a href="#validacao">Validação</a></li>
+      <li><a href="#salvar">Salvar, abrir e importar</a></li>
+      <li><a href="#gerar">Gerar o pacote Lua</a></li>
+    </ul>
+  </div>
+
+  <h2 id="tela">A tela</h2>
+  <p>A área central é o <strong>canvas</strong> (o grafo), onde cada nó é um retângulo ligado aos filhos por linhas. À direita fica o <strong>inspetor</strong>, que mostra as propriedades do nó selecionado e, abaixo, a <strong>validação</strong>. No topo fica a <strong>barra de ferramentas</strong>, com os botões de edição de nó e de árvore.</p>
+  <figure>
+    <img src="img/editor-visao-geral.png" alt="Visão geral do editor com as três áreas destacadas" />
+    <figcaption><b>1</b> · barra de ferramentas (adicionar nós, contexto e botões de árvore) — <b>2</b> · canvas, a árvore em si — <b>3</b> · inspetor do nó selecionado e a validação.</figcaption>
+  </figure>
+
+  <h2 id="manipular">Manipular nós no canvas</h2>
+  <table>
+    <thead><tr><th>Ação</th><th>Como fazer</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Selecionar</strong></td><td>Clique no nó. O inspetor passa a mostrar suas propriedades.</td></tr>
+      <tr><td><strong>Mover</strong></td><td>Arraste o nó pelo canvas.</td></tr>
+      <tr><td><strong>Reordenar filhos</strong></td><td>Arraste os <strong>pontos na base do nó pai</strong>. A ordem dos filhos é a <strong>prioridade</strong> num <code>selector</code> (veja <a href="conceitos.html">Conceitos</a>).</td></tr>
+      <tr><td><strong>Reparentar</strong></td><td>Arraste um nó e solte sobre <strong>outro nó válido</strong>: o destino fica destacado em verde com a etiqueta <em>“novo pai →”</em>. Solte para mover o nó (e sua subárvore) para lá.</td></tr>
+      <tr><td><strong>Zoom</strong></td><td>Roda do mouse (de 0,3× a 2,2×).</td></tr>
+      <tr><td><strong>Pan</strong></td><td>Arraste o fundo do canvas.</td></tr>
+      <tr><td><strong>Organizar</strong></td><td>Botão <strong>⤢ organizar</strong> reposiciona tudo automaticamente (auto-layout).</td></tr>
+    </tbody>
+  </table>
+  <div class="box note">
+    <div class="h">ℹ Reparentar é guiado pelo destino</div>
+    <p>Um nó só pode virar filho de um destino que aceite filhos: um <strong>composite</strong> (aceita vários) ou um <strong>decorator / condicional</strong> que ainda esteja sem filho. Folhas (ação) não podem ser pais — ao passar por cima delas, o destaque não aparece.</p>
+  </div>
+
+  <h2 id="adicionar">Adicionar nós (menu agrupado)</h2>
+  <p>Há três formas de adicionar:</p>
+  <ul>
+    <li><strong>+ filho</strong> — adiciona um filho ao nó selecionado.</li>
+    <li><strong>+ irmão</strong> — adiciona um irmão (mesmo pai) do selecionado.</li>
+    <li>O seletor de tipo na barra (à esquerda) define <strong>qual tipo</strong> será criado.</li>
+  </ul>
+  <p>Tanto o seletor da barra quanto o menu “+” e o seletor de tipo do inspetor mostram os tipos <strong>agrupados por categoria</strong>: <strong>Composite</strong>, <strong>Decorator</strong>, <strong>Condicional</strong> e <strong>Folha</strong> — para você achar o que quer rápido.</p>
+  <p>Para remover, selecione o nó e clique <strong>excluir</strong> (remove o nó e toda a sua subárvore).</p>
+
+  <h2 id="tipos">Tipos de nó</h2>
+  <p>Cada tipo se comporta de um jeito. A semântica completa, com parâmetros, está na <a href="referencia-nos.html">Referência de nós</a>; aqui vai o essencial para montar.</p>
+
+  <h3>Composites — aceitam vários filhos</h3>
+  <ul>
+    <li><strong>selector</strong> — tenta os filhos em ordem; o primeiro que tem sucesso (ou está rodando) vence. É um “OU de prioridade”.</li>
+    <li><strong>sequence</strong> — executa os filhos em ordem; para no primeiro que falha. É um “E”.</li>
+    <li><strong>parallel</strong> — tica todos os filhos; o campo <strong>policy</strong> define se o sucesso exige <code>all</code> (todos) ou <code>any</code> (ao menos um).</li>
+  </ul>
+
+  <h3>Decorators — um único filho</h3>
+  <ul>
+    <li><strong>inverter</strong> — inverte sucesso/falha do filho.</li>
+    <li><strong>succeeder</strong> — força sucesso (torna o ramo opcional).</li>
+    <li><strong>cooldown</strong> — após o filho ter sucesso, bloqueia-o por <strong>ms</strong> milissegundos.</li>
+    <li><strong>limiter</strong> — deixa o filho ter sucesso no máximo <strong>max</strong> vezes.</li>
+  </ul>
+
+  <h3>Condicional — “se X, então Y”</h3>
+  <ul>
+    <li><strong>Condição</strong> (o nó <code>check</code>) — avalia uma condição (<code>name</code> + <code>params</code>); se verdadeira, executa o filho e devolve o status dele; se falsa, falha sem executar o filho. <strong>Sem filho, age como condição pura.</strong></li>
+    <li><strong>monsterCheck</strong> — executa o filho conforme <strong>qual monstro é o alvo atual</strong> (é o monstro escolhido ou está no grupo escolhido), com opção de <strong>negar</strong>. Veja <a href="monstros-e-skills.html">Monstros &amp; skills</a>.</li>
+  </ul>
+  <div class="box note">
+    <div class="h">ℹ “Condição” é a porta de entrada das condições</div>
+    <p>O nó condicional <strong>Condição</strong> serve tanto para amarrar “se X então Y” (com filho) quanto como condição pura (sem filho). Árvores antigas podem ter uma condição-folha separada; o inspetor a mostra como <em>“Condição (folha)”</em> e você pode trocá-la para <strong>Condição</strong> num clique — são equivalentes quando não há filho.</p>
+  </div>
+
+  <h3>Folha — a ação</h3>
+  <ul>
+    <li><strong>Ação</strong> (o nó <code>action</code>) — uma ação do registry (ex.: <code>AttackTarget</code>, <code>ChaseTarget</code>, <code>UseSkill</code>). Tem <code>name</code> e, conforme a ação, <code>params</code>.</li>
+  </ul>
+
+  <h2 id="inspetor">Inspetor e parâmetros</h2>
+  <p>Ao selecionar um nó, o inspetor mostra:</p>
+  <ul>
+    <li><strong>Tipo do nó</strong> — um seletor (agrupado por categoria) para trocar o tipo do nó.</li>
+    <li><strong>Rótulo</strong> — texto opcional exibido no canvas e no painel do simulador (ajuda a ler a árvore).</li>
+    <li>Campos específicos do tipo: <strong>policy</strong> (parallel), <strong>ms</strong> (cooldown), <strong>max</strong>/<strong>key</strong> (limiter), <strong>name</strong> (Condição/Ação) e os <strong>params</strong> da condição/ação escolhida.</li>
+  </ul>
+  <p>Tudo é editado <strong>ao vivo</strong>: digitar um valor já atualiza a árvore.</p>
+  <figure class="inline">
+    <img src="img/editor-inspetor.png" alt="Painel do inspetor e validação" />
+    <figcaption>O inspetor: o botão <b>Desativar</b>, o seletor <b>Tipo do nó</b> (agrupado), o <b>Rótulo</b>, a condição/ação e seus parâmetros. Abaixo, a <b>Validação</b>.</figcaption>
+  </figure>
+
+  <h2 id="skills">Seletor de skills e contexto</h2>
+  <p>As ações de skill (<code>UseSkill</code>, <code>UseSkillBuff</code>) ganham um <strong>seletor de skills por categoria</strong> no inspetor, em vez de pedir um número cru. As categorias são <em>dano alvo único</em>, <em>dano em área</em>, <em>buff</em>, <em>cura</em>, <em>especial</em> e <em>passiva</em>. O catálogo é montado a partir do <strong>contexto</strong> atual (tipo de homúnculo e, para Homunculus S, o tipo base), então você só vê skills que aquele homúnculo realmente possui. Para cada skill o inspetor mostra alcance, SP, tempos de cast, recarga e duração; ao escolher um <strong>nível</strong>, mostra o efeito daquele nível (dano, cura, status) com dados Renewal.</p>
+  <p>No alto da barra ficam os seletores de <strong>homúnculo</strong> e <strong>base</strong>. Eles definem qual catálogo de skills aparece e são compartilhados com o simulador, então <strong>▶ Simular</strong> já abre o simulador no tipo certo. O seletor de <strong>base</strong> só fica ativo para os tipos Homunculus S.</p>
+
+  <h2 id="desativar">Desativar nós</h2>
+  <p>Você pode <strong>desativar</strong> qualquer nó para experimentar a árvore sem aquele ramo — sem precisar excluí-lo e recriá-lo. Selecione o nó e clique em <strong>⏸ Desativar (nó + filhos)</strong> no inspetor, ou aperte a tecla <kbd>D</kbd>.</p>
+  <ul>
+    <li>Desativar é <strong>recursivo</strong>: o nó e <strong>todos os filhos</strong> ficam desativados. Reativar (o mesmo botão / <kbd>D</kbd>) religa o nó e os filhos.</li>
+    <li>No canvas, os nós desativados continuam visíveis, porém em <strong>cinza</strong>, para você lembrar que estão lá.</li>
+    <li>Um nó desativado <strong>não é executado</strong>: a árvore o trata como se não existisse.</li>
+  </ul>
+  <figure>
+    <img src="img/editor-no-desativado.png" alt="Canvas com um ramo desativado em cinza" />
+    <figcaption>O ramo <b>sobrevivencia</b> desativado: aparece em cinza no editor, mas não roda. Os demais nós seguem ativos e coloridos normalmente.</figcaption>
+  </figure>
+  <div class="box key">
+    <div class="h">★ Desativado some do jogo e do simulador</div>
+    <p>Ao clicar em <strong>Gerar Lua</strong>, os nós desativados <strong>não vão para os arquivos finais</strong> — o pacote da IA fica enxuto, só com o que está ativo. E o <strong>simulador também os esconde</strong>, espelhando exatamente a árvore que rodaria no jogo. No editor eles continuam ali (em cinza), prontos para você reativar quando quiser.</p>
+  </div>
+
+  <h2 id="validacao">Validação</h2>
+  <p>O editor valida a árvore continuamente e mostra a contagem de problemas no inspetor. Os tipos de aviso/erro:</p>
+  <ul>
+    <li>Composite <strong>sem filhos</strong> (aviso).</li>
+    <li>Decorator <strong>sem filho</strong> (erro).</li>
+    <li><strong>cooldown</strong> com <code>ms</code> inválido (erro).</li>
+    <li><strong>limiter</strong> com <code>max</code> inválido (erro).</li>
+    <li><strong>Condição</strong>/Ação com <code>name</code> inexistente no registry (erro).</li>
+    <li><strong>params</strong> obrigatórios ausentes (aviso).</li>
+  </ul>
+  <p>Isso barra a maior parte das árvores quebradas antes de chegarem ao jogo. O <strong>▶ Simular</strong> recusa se houver erros — corrija-os primeiro.</p>
+
+  <h2 id="salvar">Salvar, abrir e importar</h2>
+  <p>Na versão estática, <strong>salvar baixa um arquivo</strong> e <strong>abrir/importar envia um arquivo</strong> — seus dados não ficam guardados no navegador. Os botões de árvore:</p>
+  <table>
+    <thead><tr><th>Botão</th><th>O que faz</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Nova</strong></td><td>Começa uma árvore vazia (só o nó raiz). Dê um nome no campo ao lado.</td></tr>
+      <tr><td><strong>Padrão</strong></td><td>Carrega a árvore padrão embutida — um ótimo ponto de partida que já funciona.</td></tr>
+      <tr><td><strong>📤 Importar árvore</strong></td><td>Envia um <code>.json</code> de árvore do seu computador (validado).</td></tr>
+      <tr><td><strong>Salvar</strong></td><td><strong>Baixa</strong> a árvore atual como <code>.json</code>.</td></tr>
+      <tr><td><strong>baixar exemplo</strong></td><td>Baixa uma árvore de exemplo; depois use <strong>Importar</strong> para abri-la.</td></tr>
+      <tr><td><strong>▶ Simular</strong></td><td>Envia a árvore atual ao simulador e abre o simulador para testá-la.</td></tr>
+    </tbody>
+  </table>
+  <p>Detalhes do modelo carregar/salvar e dos cadastros que ficam no navegador (monstros/skills): <a href="primeiros-passos.html#dados">Primeiros passos</a>.</p>
+
+  <h2 id="gerar">Gerar o pacote Lua (para o jogo)</h2>
+  <p><strong>Gerar Lua</strong> monta um <strong>pacote de instalação auto-suficiente</strong> da IA e o baixa como um <code>.zip</code>. Dentro dele vão:</p>
+  <ul>
+    <li><code>AI.lua</code> — o ponto de entrada (define <code>AI(myid)</code>).</li>
+    <li><code>brai/lua/**</code> — <strong>todo o runtime</strong> da IA, já com os arquivos gerados embutidos: a sua árvore, o tipo/base do homúnculo, o catálogo de monstros/grupos e a escolha de skills.</li>
+    <li><code>LEIA-ME.txt</code> — instruções de instalação.</li>
+  </ul>
+  <p>O pacote é <strong>self-contained</strong>: não depende deste site nem de nada instalado — basta copiá-lo para o cliente.</p>
+
+  <h3>Instalar no RO</h3>
+  <ol>
+    <li>Extraia o <code>.zip</code> dentro de <code>&lt;pasta do RO&gt;/AI/USER_AI/</code>, ficando <code>&lt;RO&gt;/AI/USER_AI/AI.lua</code> e <code>&lt;RO&gt;/AI/USER_AI/brai/lua/...</code>.</li>
+    <li>No jogo, ative a IA customizada do homúnculo com <strong>/hoai</strong> (digite de novo para desligar).</li>
+  </ol>
+  <div class="box note">
+    <div class="h">ℹ Caminho da IA</div>
+    <p>O <code>AI.lua</code> usa <code>BRAI_BASE = "./AI/USER_AI/brai/lua"</code> (relativo à pasta do RO). Se a sua instalação usar outro caminho, edite a primeira linha útil do <code>AI.lua</code>.</p>
+  </div>
+
+  <h2>Fluxo recomendado</h2>
+  <ol class="steps">
+    <li><strong>Padrão</strong> (ou Importar uma árvore) para começar de algo que funciona.</li>
+    <li>Ajuste a árvore: adicione ramos, troque skills, reordene prioridades, desative o que quiser ignorar.</li>
+    <li><strong>▶ Simular</strong> e teste num cenário (veja o <a href="simulador.html">Guia do Simulador</a>).</li>
+    <li>Itere até o comportamento ficar correto; <strong>Salvar</strong> para guardar o arquivo.</li>
+    <li class="last"><strong>Gerar Lua</strong> e leve o pacote para o cliente do RO.</li>
+  </ol>
+</main>
+
+<footer>
+  BR-AI — Documentação da versão estática · <a href="index.html">voltar ao índice</a> · <a href="simulador.html">Guia do Simulador →</a>
+</footer>
+</body>
+</html>

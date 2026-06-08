@@ -1,0 +1,64 @@
+{
+  "grid": { "w": 40, "h": 40 },
+  "dt": 50,
+  "homunId": 100,
+  "ownerId": 1,
+  "config": {
+    "BaseHomunType": 4,
+    "AggroDist": 12,
+    "MoveBounds": 16,
+    "AutoMobCount": 2,
+    "HealOwnerHP": 50,
+    "FleeHP": 20
+  },
+  "homunType": 50,
+  "baseType": 4,
+  "entities": [
+    {
+      "id": 1, "kind": "owner", "x": 10, "y": 20,
+      "hp": 12000, "maxhp": 12000, "sp": 100, "maxsp": 100,
+      "atk": 10, "matk": 10
+    },
+    {
+      "id": 100, "kind": "homun", "x": 13, "y": 20,
+      "hp": 200000, "maxhp": 200000, "sp": 11000, "maxsp": 11000,
+      "atk": 900, "matk": 1600, "homunType": 50
+    },
+    {
+      "id": 200, "kind": "monster", "x": 20, "y": 19,
+      "hp": 8000, "maxhp": 8000, "sp": 100, "maxsp": 100,
+      "atk": 500, "matk": 0, "aggro": 8, "atkInterval": 1000,
+      "aggressive": true, "etype": 1002
+    },
+    {
+      "id": 201, "kind": "monster", "x": 22, "y": 21,
+      "hp": 8000, "maxhp": 8000, "sp": 100, "maxsp": 100,
+      "atk": 500, "matk": 0, "aggro": 8, "atkInterval": 1000,
+      "aggressive": true, "etype": 1063
+    },
+    {
+      "id": 202, "kind": "monster", "x": 21, "y": 18,
+      "hp": 8000, "maxhp": 8000, "sp": 100, "maxsp": 100,
+      "atk": 500, "matk": 0, "aggro": 8, "atkInterval": 1000,
+      "aggressive": true, "etype": 1002
+    },
+    {
+      "id": 203, "kind": "monster", "x": 23, "y": 20,
+      "hp": 8000, "maxhp": 8000, "sp": 100, "maxsp": 100,
+      "atk": 500, "matk": 0, "aggro": 8, "atkInterval": 1000,
+      "aggressive": true, "etype": 1113
+    },
+    {
+      "id": 210, "kind": "monster", "x": 22, "y": 24,
+      "hp": 40000, "maxhp": 40000, "sp": 100, "maxsp": 100,
+      "atk": 1200, "matk": 0, "aggro": 9, "atkInterval": 1000,
+      "aggressive": true, "etype": 1039
+    },
+    {
+      "id": 220, "kind": "monster", "x": 12, "y": 23,
+      "hp": 6000, "maxhp": 6000, "sp": 100, "maxsp": 100,
+      "atk": 650, "matk": 0, "aggro": 9, "atkInterval": 1000,
+      "aggressive": true, "etype": 1063
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "name": "Filir Base",
+  "homunType": 3,
+  "baseType": 3,
+  "spec": {
+    "type": "selector",
+    "label": "root",
+    "children": [
+      {
+        "type": "check",
+        "name": "HasOwnerCommand",
+        "params": {},
+        "label": "Comando do dono",
+        "child": {
+          "type": "action",
+          "name": "HandleOwnerCommand",
+          "params": {}
+        }
+      },
+      {
+        "type": "check",
+        "name": "ShouldFlee",
+        "params": {},
+        "label": "Fugir se HP baixo",
+        "child": {
+          "type": "action",
+          "name": "Flee",
+          "params": {}
+        }
+      },
+      {
+        "type": "sequence",
+        "label": "Combate",
+        "children": [
+          {
+            "type": "selector",
+            "label": "Definir Alvo",
+            "children": [
+              {
+                "type": "check",
+                "name": "OwnerUnderAttack",
+                "params": {
+                  "count": 2
+                },
+                "label": "Ataque ao dono",
+                "child": {
+                  "type": "action",
+                  "name": "AcquireOwnerAttacker",
+                  "params": {}
+                }
+              },
+              {
+                "type": "check",
+                "name": "HasValidTarget",
+                "params": {},
+                "label": "Tem alvo"
+              },
+              {
+                "type": "check",
+                "name": "CanEngage",
+                "params": {},
+                "label": "Pode engajar",
+                "child": {
+                  "type": "action",
+                  "name": "AcquireTarget",
+                  "params": {
+                    "by": "nearest"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "selector",
+            "label": "Ações de Combate",
+            "children": [
+              {
+                "type": "action",
+                "name": "UseOffensiveBuff",
+                "params": {},
+                "label": "Flitting (Aumento ASPD/ATK)"
+              },
+              {
+                "type": "action",
+                "name": "UseDefensiveBuff",
+                "params": {},
+                "label": "Accelerated Flight (Aumento Flee)"
+              },
+              {
+                "type": "action",
+                "name": "UseMainSkill",
+                "params": {},
+                "label": "Moonlight (Dano Físico)"
+              },
+              {
+                "type": "check",
+                "name": "InAttackRange",
+                "params": {},
+                "label": "Está no alcance",
+                "child": {
+                  "type": "action",
+                  "name": "AttackTarget",
+                  "params": {}
+                }
+              },
+              {
+                "type": "action",
+                "name": "ChaseTarget",
+                "params": {
+                  "dist": 1,
+                  "giveUp": 1500
+                },
+                "label": "Perseguir"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "selector",
+        "label": "Ocioso",
+        "children": [
+          {
+            "type": "check",
+            "name": "TooFarFromOwner",
+            "params": {
+              "dist": 4
+            },
+            "label": "Longe do dono",
+            "child": {
+              "type": "action",
+              "name": "MoveToOwner",
+              "params": {}
+            }
+          },
+          {
+            "type": "action",
+            "name": "UseDefensiveBuff",
+            "params": {},
+            "label": "Manter Accelerated Flight"
+          },
+          {
+            "type": "action",
+            "name": "Idle",
+            "params": {},
+            "label": "Idle"
+          }
+        ]
+      }
+    ]
+  }
+}

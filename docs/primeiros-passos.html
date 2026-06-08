@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Primeiros passos — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="primeiros-passos.html" class="cur">Primeiros passos</a>
+      <a href="editor.html">Editor</a>
+      <a href="simulador.html">Simulador</a>
+      <a href="referencia-nos.html">Referência de nós</a>
+      <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="conceitos.html">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="crumbs"><a href="index.html">Início</a> › Primeiros passos</div>
+  <h1>Primeiros passos</h1>
+  <p class="lead">As duas telas da versão estática, como circular entre elas e — o mais importante — como você guarda e recupera o seu trabalho.</p>
+
+  <h2>As duas telas</h2>
+  <p>O BR-AI estático tem duas páginas, e você alterna entre elas pelo link no canto superior:</p>
+  <ul>
+    <li><strong>Simulador</strong> — a página inicial (<code>index.html</code>). É onde você testa a árvore num mundo de mentira: mapa, controle de tempo e painéis de depuração. Veja o <a href="simulador.html">Guia do Simulador</a>.</li>
+    <li><strong>Editor</strong> — a página <code>editor.html</code>. É onde você monta a árvore arrastando blocos. Veja o <a href="editor.html">Guia do Editor</a>.</li>
+  </ul>
+  <p>No topo de cada tela há os links de navegação: <strong>“Editor de árvores →”</strong> (no simulador) e <strong>“← Simulador”</strong> (no editor), além do link <strong>“❔ Documentação”</strong>, que abre esta ajuda em uma nova aba.</p>
+
+  <div class="box note">
+    <div class="h">ℹ Não precisa instalar nada</div>
+    <p>Toda a IA roda dentro da própria página — o motor de árvore em Lua é interpretado no navegador. Você não precisa de Node, Electron, terminal nem instalar dependências. Use um navegador atual (Chrome, Edge ou Firefox).</p>
+  </div>
+
+  <h2 id="dados">Onde fica o seu trabalho: carregar = upload, salvar = download</h2>
+  <p>Esta é a diferença mais importante da versão estática. Para manter sua privacidade e não acumular dados no navegador, <strong>os seus cenários e árvores não ficam guardados na página</strong>. O modelo é simples:</p>
+  <ul>
+    <li><strong>Carregar</strong> uma árvore ou um cenário = <strong>enviar um arquivo</strong> do seu computador (upload).</li>
+    <li><strong>Salvar</strong> uma árvore ou um cenário = <strong>baixar um arquivo</strong> <code>.json</code> (download), que você guarda onde quiser.</li>
+  </ul>
+  <p>Ou seja: o que você produz vira um arquivo no seu computador. Para retomar depois, basta enviar esse arquivo de volta. Nada é perdido — mas nada fica preso ao navegador.</p>
+
+  <div class="box warn">
+    <div class="h">⚠ Antes de fechar a aba, baixe o que importa</div>
+    <p>Como o conteúdo não é gravado no navegador, recarregar ou fechar a página descarta a árvore/cenário que estiverem só na tela. Clique em <strong>Salvar</strong> (árvore) ou <strong>💾 salvar cenário</strong> para baixar o arquivo antes de sair.</p>
+  </div>
+
+  <h3>Importar uma árvore (no Editor)</h3>
+  <p>No Editor, use <strong>📤 Importar árvore</strong> (fica junto dos controles de árvore, na barra de ferramentas). Escolha um arquivo <code>.json</code> de árvore que você baixou antes. Se o arquivo não for uma árvore válida, o editor avisa e não carrega nada.</p>
+  <figure>
+    <img src="img/editor-importar.png" alt="Barra de ferramentas do editor com o botão Importar árvore" />
+    <figcaption>No Editor, <b>📤 Importar árvore</b> fica na barra de ferramentas, perto de <b>Nova / Salvar / Gerar Lua</b>. Ao lado de <b>Monstros</b> e <b>Skills</b> há setas ⬆/⬇ para importar/exportar esses cadastros.</figcaption>
+  </figure>
+
+  <h3>Importar um cenário (no Simulador)</h3>
+  <p>No Simulador, use <strong>📤 Importar cenário</strong> (fica junto dos controles de cenário). Escolha um arquivo <code>.json</code> de cenário. Ele é validado e carregado direto no mapa.</p>
+  <figure class="inline">
+    <img src="img/sim-importar-cenario.png" alt="Controles de cenário do simulador com Importar cenário" />
+    <figcaption>No Simulador, a barra de cenário traz <b>💾 salvar cenário</b> (baixa) e <b>📤 Importar cenário</b> (envia). A lista <b>“— cenários —”</b> só aparece depois que você importa um.</figcaption>
+  </figure>
+
+  <h3>Exemplos prontos para baixar</h3>
+  <p>Para você não começar do zero, a versão estática traz <strong>exemplos</strong> de árvores e cenários. Use o seletor <strong>“— exemplos —”</strong> e o botão <strong>baixar exemplo</strong>: ele salva o arquivo no seu computador; em seguida é só usar <strong>Importar</strong> para carregá-lo. (Baixar primeiro, importar depois — assim o exemplo também serve de modelo para você editar e guardar.)</p>
+
+  <h2>Cadastros que ficam no navegador (monstros e skills)</h2>
+  <p>Diferente de cenários e árvores, alguns <strong>cadastros de configuração</strong> — o catálogo de <strong>monstros/grupos</strong>, a escolha de <strong>skills por homúnculo</strong> e as <strong>invocações</strong> — vêm preenchidos com valores padrão e <strong>são lembrados pelo navegador</strong> entre sessões, porque são preferências da ferramenta, não o seu conteúdo. Você ainda pode <strong>exportar</strong> (⬇, baixa um <code>.json</code>) e <strong>importar</strong> (⬆) esses cadastros para levar de um computador a outro. Depois de importar um cadastro, <strong>recarregue a página</strong> para aplicá-lo.</p>
+
+  <h2 id="round-trip">O laço editor ↔ simulador</h2>
+  <p>O caminho mais rápido para iterar não passa por arquivos. No Editor, o botão <strong>▶ Simular</strong> envia a árvore atual (com o tipo de homúnculo) direto para o Simulador e abre a tela dele. Ajuste, volte ao editor, mude algo, simule de novo.</p>
+  <ol class="steps">
+    <li>No <strong>Editor</strong>, monte a árvore e clique <strong>▶ Simular</strong>.</li>
+    <li>No <strong>Simulador</strong>, pinte o cenário e rode os ticks; observe a árvore colorida.</li>
+    <li>Achou um problema? Volte pelo link <strong>“Editor de árvores →”</strong>, corrija, e clique <strong>▶ Simular</strong> de novo.</li>
+    <li class="last">Quando estiver bom, baixe a árvore (<strong>Salvar</strong>) e gere o pacote (<strong>Gerar Lua</strong>).</li>
+  </ol>
+  <div class="box tip">
+    <div class="h">✓ Guarde os bugs como cenários</div>
+    <p>Sempre que reproduzir um comportamento errado, salve aquele cenário (download). Ele vira um <em>caso de regressão</em>: você reabre o mesmo mundo depois para confirmar que a correção funcionou.</p>
+  </div>
+
+  <p style="margin-top:2em">Pronto para construir? Siga para o <a href="editor.html">Guia do Editor</a> ou, se quiser entender o todo antes, leia <a href="conceitos.html">Conceitos</a>.</p>
+</main>
+
+<footer>
+  BR-AI — Documentação da versão estática · <a href="index.html">voltar ao índice</a>
+</footer>
+</body>
+</html>

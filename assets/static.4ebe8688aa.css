@@ -1,0 +1,10 @@
+/* static.css — só na versão estática. NÃO limita a largura (usa a largura total da tela).
+   Faz: ocultar comboboxes até upload, estilizar mensagens, e CENTRALIZAR o conteúdo
+   abaixo dos controles (mapa + painel), eliminando o vão à direita. Não toca o CSS compartilhado. */
+.brai-msg { font: 12px system-ui, sans-serif; margin-left: 6px; }
+.brai-msg.err { color: #ff6b6b; }
+.brai-msg.okmsg { color: #7CFC9A; }
+/* Comboboxes de seleção começam ocultos — aparecem após um upload válido. */
+#scnList, #btnScnLoad, #treeList, #btnOpen { display: none; }
+/* Centraliza mapa+painel; "safe" evita cortar o início quando o conteúdo é maior que a tela. */
+#app { justify-content: safe center; }

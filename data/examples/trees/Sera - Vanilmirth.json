@@ -1,0 +1,138 @@
+{
+  "name": "Sera - Vanilmirth",
+  "homunType": 50,
+  "baseType": 4,
+  "spec": {
+    "type": "selector",
+    "label": "root",
+    "children": [
+      {
+        "type": "check",
+        "name": "HasOwnerCommand",
+        "params": {},
+        "label": "comando do dono",
+        "child": { "type": "action", "name": "HandleOwnerCommand", "params": {} }
+      },
+      {
+        "type": "check",
+        "name": "ShouldFlee",
+        "params": {},
+        "label": "sobrevivencia (HP baixo)",
+        "child": { "type": "action", "name": "Flee", "params": {} }
+      },
+      {
+        "type": "action",
+        "name": "UseHealOwner",
+        "params": {},
+        "label": "curar o dono (Chaotic, da base Vanilmirth)"
+      },
+      {
+        "type": "action",
+        "name": "UseHealSelf",
+        "params": {},
+        "label": "curar a si (Chaotic)"
+      },
+      {
+        "type": "action",
+        "name": "UseOwnerBuff",
+        "params": {},
+        "label": "Painkiller no dono"
+      },
+      {
+        "type": "sequence",
+        "label": "Engajar",
+        "children": [
+          {
+            "type": "selector",
+            "label": "Definir alvo",
+            "children": [
+              {
+                "type": "check",
+                "name": "OwnerUnderAttack",
+                "params": {},
+                "label": "resgatar o dono",
+                "child": { "type": "action", "name": "AcquireOwnerAttacker", "params": {} }
+              },
+              {
+                "type": "check",
+                "name": "HasValidTarget",
+                "params": {},
+                "label": "ja tem alvo"
+              },
+              {
+                "type": "check",
+                "name": "CanEngage",
+                "params": {},
+                "label": "pode buscar alvo",
+                "child": { "type": "action", "name": "AcquireTarget", "params": { "by": "nearest" } }
+              }
+            ]
+          },
+          {
+            "type": "selector",
+            "label": "combate (escolhe uma acao)",
+            "children": [
+              {
+            "type": "action",
+            "name": "UseSeraLegion",
+            "params": {},
+            "label": "manter a Legiao (Summon Legion)"
+          },
+              {
+                "type": "monsterCheck",
+                "monster": 0,
+                "group": 2,
+                "negate": false,
+                "label": "se o alvo e CHEFE -> Poison Mist",
+                "child": {
+                  "type": "action",
+                  "name": "UseSkill",
+                  "params": { "skill": 8020, "level": 5, "on": "enemy" }
+                }
+              },
+              {
+                "type": "action",
+                "name": "UseAoESkill",
+                "params": {},
+                "label": "Poison Mist (2+ mobs)"
+              },
+              {
+                "type": "action",
+                "name": "UseMainSkill",
+                "params": {},
+                "label": "Needle of Paralysis (single)"
+              },
+              {
+                "type": "check",
+                "name": "InAttackRange",
+                "params": {},
+                "label": "no alcance -> atacar",
+                "child": { "type": "action", "name": "AttackTarget", "params": {} }
+              },
+              {
+                "type": "action",
+                "name": "ChaseTarget",
+                "params": { "dist": 4, "giveUp": 1500 },
+                "label": "perseguir o alvo"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "selector",
+        "label": "Ocioso",
+        "children": [
+          {
+            "type": "check",
+            "name": "TooFarFromOwner",
+            "params": { "dist": 4 },
+            "label": "longe do dono -> voltar",
+            "child": { "type": "action", "name": "MoveToOwner", "params": {} }
+          },
+          { "type": "action", "name": "Idle", "params": {} }
+        ]
+      }
+    ]
+  }
+}

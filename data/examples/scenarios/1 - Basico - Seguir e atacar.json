@@ -1,0 +1,33 @@
+{
+  "grid": { "w": 40, "h": 40 },
+  "dt": 50,
+  "homunId": 100,
+  "ownerId": 1,
+  "config": {
+    "BaseHomunType": 4,
+    "AggroDist": 12,
+    "MoveBounds": 16,
+    "FleeHP": 20,
+    "HealOwnerHP": 50
+  },
+  "homunType": 50,
+  "baseType": 4,
+  "entities": [
+    {
+      "id": 1, "kind": "owner", "x": 10, "y": 20,
+      "hp": 12000, "maxhp": 12000, "sp": 100, "maxsp": 100,
+      "atk": 10, "matk": 10
+    },
+    {
+      "id": 100, "kind": "homun", "x": 13, "y": 20,
+      "hp": 200000, "maxhp": 200000, "sp": 11000, "maxsp": 11000,
+      "atk": 900, "matk": 1600, "homunType": 50
+    },
+    {
+      "id": 200, "kind": "monster", "x": 26, "y": 20,
+      "hp": 8000, "maxhp": 8000, "sp": 100, "maxsp": 100,
+      "atk": 500, "matk": 0, "aggro": 8, "atkInterval": 1000,
+      "aggressive": false, "etype": 1002
+    }
+  ]
+}

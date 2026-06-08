@@ -1,0 +1,146 @@
+{
+  "name": "Vanilmirth Base",
+  "homunType": 4,
+  "baseType": 4,
+  "spec": {
+    "type": "selector",
+    "label": "root",
+    "children": [
+      {
+        "type": "check",
+        "name": "HasOwnerCommand",
+        "params": {},
+        "label": "Comando do dono",
+        "child": {
+          "type": "action",
+          "name": "HandleOwnerCommand",
+          "params": {}
+        }
+      },
+      {
+        "type": "check",
+        "name": "ShouldFlee",
+        "params": {},
+        "label": "Fugir se HP baixo",
+        "child": {
+          "type": "action",
+          "name": "Flee",
+          "params": {}
+        }
+      },
+      {
+        "type": "action",
+        "name": "UseHealOwner",
+        "params": {},
+        "label": "Curar dono (Chaotic Blessing)"
+      },
+      {
+        "type": "action",
+        "name": "UseHealSelf",
+        "params": {},
+        "label": "Curar a si (Chaotic Blessing)"
+      },
+      {
+        "type": "sequence",
+        "label": "Combate",
+        "children": [
+          {
+            "type": "selector",
+            "label": "Definir Alvo",
+            "children": [
+              {
+                "type": "check",
+                "name": "OwnerUnderAttack",
+                "params": {
+                  "count": 2
+                },
+                "label": "Ataque ao dono",
+                "child": {
+                  "type": "action",
+                  "name": "AcquireOwnerAttacker",
+                  "params": {}
+                }
+              },
+              {
+                "type": "check",
+                "name": "HasValidTarget",
+                "params": {},
+                "label": "Tem alvo"
+              },
+              {
+                "type": "check",
+                "name": "CanEngage",
+                "params": {},
+                "label": "Pode engajar",
+                "child": {
+                  "type": "action",
+                  "name": "AcquireTarget",
+                  "params": {
+                    "by": "nearest"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "selector",
+            "label": "Ações de Combate",
+            "children": [
+              {
+                "type": "action",
+                "name": "UseMainSkill",
+                "params": {},
+                "label": "Caprice (Bolt de Dano)"
+              },
+              {
+                "type": "check",
+                "name": "InAttackRange",
+                "params": {},
+                "label": "Está no alcance",
+                "child": {
+                  "type": "action",
+                  "name": "AttackTarget",
+                  "params": {}
+                }
+              },
+              {
+                "type": "action",
+                "name": "ChaseTarget",
+                "params": {
+                  "dist": 8,
+                  "giveUp": 1500
+                },
+                "label": "Perseguir"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "selector",
+        "label": "Ocioso",
+        "children": [
+          {
+            "type": "check",
+            "name": "TooFarFromOwner",
+            "params": {
+              "dist": 4
+            },
+            "label": "Longe do dono",
+            "child": {
+              "type": "action",
+              "name": "MoveToOwner",
+              "params": {}
+            }
+          },
+          {
+            "type": "action",
+            "name": "Idle",
+            "params": {},
+            "label": "Idle"
+          }
+        ]
+      }
+    ]
+  }
+}

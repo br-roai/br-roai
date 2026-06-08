@@ -1,0 +1,110 @@
+/* help.css — estilo do site de documentação estática do BR-AI.
+   Tema escuro coeso com o app, otimizado para leitura. */
+:root{
+  --bg:#0c1014; --bg2:#11171d; --card:#141b22; --card2:#0f151b;
+  --ink:#dfe6ec; --ink2:#aeb9c4; --mut:#8593a0; --faint:#5f6c78;
+  --line:#243038; --line2:#2e3c46;
+  --acc:#7fd1ff; --acc2:#6fe0a0; --warn:#ffcf5c; --bad:#ff7a7a; --viol:#c9a6ff;
+  --code:#0a0e12; --kbdbg:#1b242c;
+  --maxw:980px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--acc); text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---- top nav ---- */
+header.top{
+  position:sticky; top:0; z-index:50; background:rgba(12,16,20,.92);
+  backdrop-filter:saturate(140%) blur(8px); border-bottom:1px solid var(--line);
+}
+header.top .row{max-width:var(--maxw); margin:0 auto; display:flex; align-items:center; gap:14px; padding:10px 20px; flex-wrap:wrap}
+header.top .brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px; color:var(--ink)}
+header.top .brand img{width:26px; height:26px; border-radius:6px; display:block}
+header.top nav{display:flex; gap:4px; flex-wrap:wrap; margin-left:auto}
+header.top nav a{
+  color:var(--ink2); padding:5px 10px; border-radius:7px; font-size:13.5px; white-space:nowrap;
+}
+header.top nav a:hover{background:var(--bg2); color:var(--ink); text-decoration:none}
+header.top nav a.cur{background:#16323f; color:var(--acc)}
+
+/* ---- layout ---- */
+main{max-width:var(--maxw); margin:0 auto; padding:26px 20px 80px}
+.crumbs{font-size:13px; color:var(--mut); margin:2px 0 18px}
+.crumbs a{color:var(--mut)}
+h1{font-size:30px; line-height:1.2; margin:.2em 0 .35em; letter-spacing:-.01em}
+h2{font-size:22px; margin:1.8em 0 .5em; padding-top:.3em; border-top:1px solid var(--line); padding-top:18px}
+h2:first-of-type{border-top:0; padding-top:0}
+h3{font-size:17px; margin:1.4em 0 .4em; color:var(--ink)}
+p{margin:.6em 0}
+.lead{font-size:18px; color:var(--ink2); margin:.4em 0 1em}
+ul,ol{margin:.5em 0 .9em; padding-left:1.3em}
+li{margin:.28em 0}
+strong{color:#f1f5f9}
+hr{border:0; border-top:1px solid var(--line); margin:2em 0}
+small,.muted{color:var(--mut)}
+
+/* ---- code ---- */
+code{background:#0a0f14; border:1px solid var(--line); border-radius:5px; padding:1px 6px; font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:#cfe9ff}
+pre{background:var(--code); border:1px solid var(--line); border-radius:10px; padding:14px 16px; overflow:auto; margin:1em 0}
+pre code{background:none; border:0; padding:0; color:#cbd6e2}
+kbd{display:inline-block; background:var(--kbdbg); border:1px solid var(--line2); border-bottom-width:2px; border-radius:6px; padding:1px 7px; font:12.5px ui-monospace,monospace; color:#e7eef5; min-width:18px; text-align:center}
+
+/* ---- figures / screenshots ---- */
+figure{margin:1.2em 0; background:var(--card2); border:1px solid var(--line); border-radius:12px; padding:10px; }
+figure img{display:block; width:100%; height:auto; border-radius:8px; border:1px solid var(--line)}
+figure.inline{max-width:520px}
+figure.narrow{max-width:380px; margin-left:0}
+figcaption{color:var(--mut); font-size:13px; margin-top:8px; padding:0 4px}
+figcaption b{color:var(--ink2)}
+
+/* ---- callouts ---- */
+.box{border:1px solid var(--line2); border-left-width:4px; border-radius:9px; padding:12px 16px; margin:1.1em 0; background:var(--card)}
+.box p:first-child{margin-top:0}.box p:last-child{margin-bottom:0}
+.box .h{font-weight:700; margin-bottom:.2em; display:flex; align-items:center; gap:8px}
+.box.note{border-left-color:var(--acc)} .box.note .h{color:var(--acc)}
+.box.tip{border-left-color:var(--acc2)} .box.tip .h{color:var(--acc2)}
+.box.warn{border-left-color:var(--warn)} .box.warn .h{color:var(--warn)}
+.box.key{border-left-color:var(--viol)} .box.key .h{color:var(--viol)}
+
+/* ---- tables ---- */
+table{width:100%; border-collapse:collapse; margin:1em 0; font-size:14.5px}
+th,td{text-align:left; padding:8px 11px; border-bottom:1px solid var(--line); vertical-align:top}
+thead th{color:var(--ink); border-bottom:2px solid var(--line2); font-size:13px; text-transform:uppercase; letter-spacing:.04em}
+tbody tr:nth-child(even){background:#0f151b}
+td code{white-space:nowrap}
+
+/* ---- index hero + cards ---- */
+.hero{display:flex; gap:22px; align-items:center; margin:8px 0 6px; flex-wrap:wrap}
+.hero img{width:96px; height:96px; border-radius:18px; border:1px solid var(--line); box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.hero .t h1{margin:.1em 0}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin:1.3em 0}
+.card{display:block; background:var(--card); border:1px solid var(--line); border-radius:13px; padding:16px 17px; transition:border-color .15s, transform .15s, background .15s}
+.card:hover{border-color:var(--acc); background:#15202a; text-decoration:none; transform:translateY(-2px)}
+.card .k{font-size:12px; color:var(--faint); font-weight:700; letter-spacing:.08em; text-transform:uppercase}
+.card h3{margin:.25em 0 .3em; color:var(--ink)}
+.card p{margin:0; color:var(--ink2); font-size:14px}
+
+/* ---- step list ---- */
+ol.steps{counter-reset:s; list-style:none; padding-left:0; margin:1.1em 0}
+ol.steps>li{position:relative; padding:4px 0 14px 46px; margin:0}
+ol.steps>li:before{counter-increment:s; content:counter(s); position:absolute; left:0; top:0; width:32px; height:32px; border-radius:50%; background:#16323f; color:var(--acc); font-weight:800; display:flex; align-items:center; justify-content:center; border:1px solid var(--line2)}
+ol.steps>li.last{padding-bottom:0}
+
+/* swatches for tree colors */
+.sw{display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:-1px; margin-right:5px; border:1px solid rgba(255,255,255,.15)}
+.sw.ok{background:#6fe0a0}.sw.run{background:#ffcf5c}.sw.fail{background:#ff7a7a}.sw.none{background:#5f6c78}.sw.off{background:#3a4753}
+
+/* footer */
+footer{max-width:var(--maxw); margin:0 auto; padding:24px 20px 50px; color:var(--faint); font-size:13px; border-top:1px solid var(--line)}
+footer a{color:var(--mut)}
+
+.toc{background:var(--card2); border:1px solid var(--line); border-radius:11px; padding:12px 18px; margin:1.2em 0}
+.toc .h{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--faint); font-weight:700; margin-bottom:6px}
+.toc ul{margin:.2em 0; columns:2; column-gap:26px}
+@media(max-width:640px){ .toc ul{columns:1} header.top nav{width:100%; margin-left:0} h1{font-size:25px} }

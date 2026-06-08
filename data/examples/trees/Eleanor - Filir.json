@@ -1,0 +1,51 @@
+{
+  "name": "Eleanor - Filir",
+  "homunType": 52,
+  "baseType": 3,
+  "spec": {
+    "type": "selector",
+    "label": "root",
+    "children": [
+      {
+        "type": "check", "name": "HasOwnerCommand", "params": {},
+        "child": { "type": "action", "name": "HandleOwnerCommand", "params": {} },
+        "label": "comando do dono"
+      },
+      {
+        "type": "check", "name": "HasValidTarget", "params": {},
+        "child": {
+          "type": "selector", "label": "Atacar (Eleanor)",
+          "children": [
+            {
+              "type": "action", "name": "UseEleanorOffense",
+              "params": { "style": "auto", "comboSpheres": 3, "window": 2000, "grappleThreatLimit": 1 }
+            },
+            {
+              "type": "check", "name": "InAttackRange", "params": {},
+              "child": { "type": "action", "name": "AttackTarget", "params": {} },
+              "label": "Está no alcance"
+            },
+            { "type": "action", "name": "ChaseTarget", "params": { "dist": 1 } }
+          ]
+        }
+      },
+      {
+        "type": "check", "name": "CanEngage", "params": {},
+        "child": { "type": "action", "name": "AcquireTarget", "params": {} }
+      },
+      {
+        "type": "selector", "label": "Ocioso / buffs (Filir)",
+        "children": [
+          {
+            "type": "check", "name": "TooFarFromOwner", "params": { "dist": 4 },
+            "child": { "type": "action", "name": "MoveToOwner", "params": {} },
+            "label": "Longe do dono"
+          },
+          { "type": "action", "name": "UseSkillBuff", "params": { "skill": 8010, "level": 5 } },
+          { "type": "action", "name": "UseSkillBuff", "params": { "skill": 8011, "level": 5 } },
+          { "type": "action", "name": "Idle", "params": {} }
+        ]
+      }
+    ]
+  }
+}

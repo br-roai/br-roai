@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Guia do Simulador — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="editor.html">Editor</a>
+      <a href="simulador.html" class="cur">Simulador</a>
+      <a href="referencia-nos.html">Referência de nós</a>
+      <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="conceitos.html">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="crumbs"><a href="index.html">Início</a> › Guia do Simulador</div>
+  <h1>Guia do Simulador / Depurador</h1>
+  <p class="lead">O simulador roda a <strong>mesma árvore</strong> que rodaria no cliente do RO, mas contra um <strong>mundo de mentira</strong> desenhado por você. Você vê o homúnculo seguir, perseguir e atacar num mapa, controla o tempo (passo a passo, replay) e acompanha a <strong>árvore colorida ao vivo</strong> — cada nó pintado pelo status que teve naquele tick. É a ferramenta mais útil do projeto: transforma “por que o homún travou?” numa inspeção visual de segundos.</p>
+
+  <div class="toc">
+    <div class="h">Nesta página</div>
+    <ul>
+      <li><a href="#tela">A tela</a></li>
+      <li><a href="#tempo">Controle de tempo</a></li>
+      <li><a href="#mapa">Interagir com o mapa</a></li>
+      <li><a href="#cenario">Montar o cenário</a></li>
+      <li><a href="#indicadores">Barras e indicadores</a></li>
+      <li><a href="#efeitos">Efeitos de skill</a></li>
+      <li><a href="#blackboard">Inspetor de blackboard</a></li>
+      <li><a href="#arvore">Árvore ao vivo</a></li>
+      <li><a href="#log">Skills, buffs e log</a></li>
+      <li><a href="#cenarios">Salvar e carregar cenários</a></li>
+    </ul>
+  </div>
+
+  <h2 id="tela">A tela</h2>
+  <p>A tela tem o <strong>mapa</strong> (um grid de 40×40 células), os <strong>controles de tempo</strong> e os painéis de depuração: <strong>blackboard</strong>, <strong>árvore ao vivo</strong>, <strong>skills/buffs</strong> e <strong>log</strong>.</p>
+  <figure>
+    <img src="img/sim-visao-geral.png" alt="Visão geral do simulador com as três áreas destacadas" />
+    <figcaption><b>1</b> · controles de tempo e de cenário — <b>2</b> · o mapa (o mundo simulado, com dono, homúnculo e monstros) — <b>3</b> · os painéis de depuração (blackboard, árvore, skills, log).</figcaption>
+  </figure>
+
+  <h2 id="tempo">Controle de tempo (transporte)</h2>
+  <table>
+    <thead><tr><th>Botão</th><th>Atalho</th><th>O que faz</th></tr></thead>
+    <tbody>
+      <tr><td>⏮</td><td><kbd>Home</kbd></td><td>Volta ao primeiro frame gravado.</td></tr>
+      <tr><td>◀</td><td><kbd>←</kbd></td><td>Volta 1 frame.</td></tr>
+      <tr><td>▶ / ⏸</td><td><kbd>Espaço</kbd></td><td>Play / pause.</td></tr>
+      <tr><td>▶❘</td><td><kbd>→</kbd></td><td>Avança 1 frame.</td></tr>
+      <tr><td>⤓ vivo</td><td><kbd>End</kbd></td><td>Salta para o frame “ao vivo” (presente).</td></tr>
+      <tr><td>⟲ reset</td><td>—</td><td>Reinicia o cenário.</td></tr>
+    </tbody>
+  </table>
+  <p>Há ainda um <strong>controle de velocidade</strong> (slider de FPS, com atalhos 0,5× / 1× / 2×) e a <strong>timeline</strong>, uma barra <code>frame atual / total</code> que você pode arrastar para revisitar qualquer tick passado — inclusive o <strong>estado da árvore daquele tick</strong>. O slider <strong>mapa</strong> ajusta o tamanho do mapa na tela.</p>
+  <div class="box note">
+    <div class="h">ℹ AO VIVO × REPLAY</div>
+    <p>O simulador grava o histórico por tick. No presente, você está <strong>AO VIVO</strong> e cada passo avança a simulação de verdade. Ao voltar no tempo, entra em <strong>REPLAY</strong>: reproduz frames gravados; ao alcançar o presente, volta a avançar ao vivo. Um selo indica o modo. No passado, clicar no mapa traz você de volta ao vivo.</p>
+  </div>
+
+  <h2 id="mapa">Interagir com o mapa</h2>
+  <p>Cada entidade aparece como um marcador circular rotulado, com barras de HP/SP: <strong>D</strong> (dono), <strong>H</strong> (homúnculo), <strong>A</strong> (aliado), <strong>M</strong> (monstro).</p>
+  <ul>
+    <li><strong>Clique numa célula vazia</strong> — move o dono para lá (veja o homúnculo seguir).</li>
+    <li><strong>Clique num monstro</strong> — comanda o homúnculo a atacá-lo.</li>
+    <li><strong>Clique numa entidade</strong> — seleciona para editar no painel (HP/SP, ataque, agressividade, posição).</li>
+    <li><strong>Arraste uma entidade</strong> — reposiciona em tempo real.</li>
+  </ul>
+
+  <h2 id="cenario">Montar o cenário</h2>
+  <p>Você pinta o mundo: <strong>＋ monstro</strong> e <strong>＋ aliado</strong> adicionam entidades (aliados ajudam a testar a proteção anti-KS). Clique numa entidade para editar HP, ataque, intervalo de ataque, se é agressiva e — no monstro — a classe/ID (usada pelos nós <code>monsterCheck</code>). O relógio do mundo é <strong>determinístico</strong> (avança por um passo fixo por frame), o que torna os testes reproduzíveis — essencial para depurar cooldowns e timeouts.</p>
+
+  <h2 id="indicadores">Barras e indicadores</h2>
+  <p>Cada entidade mostra barras: <strong>HP</strong> (verde › amarelo › vermelho conforme a porcentagem) e, abaixo, <strong>SP</strong> (azul). Dono, homúnculo e aliados exibem as barras sempre; <strong>monstros só quando são o alvo atual</strong> do homúnculo (ou quando você os clica) — assim o mapa não fica poluído. O botão <strong>HP: alvo/todos</strong> alterna mostrar o HP de todos os monstros.</p>
+  <p>Outros indicadores no mapa:</p>
+  <ul>
+    <li><strong>Anel amarelo</strong> — o alvo atual do homúnculo. <strong>Anel branco tracejado</strong> — a entidade selecionada.</li>
+    <li><strong>Linha vermelha sólida</strong> — ataque/skill em andamento, do atacante ao alvo.</li>
+    <li><strong>Linha vermelha pontilhada</strong> — ameaça: um monstro mirando no homúnculo, no dono ou num aliado.</li>
+    <li><strong>Linha azul tracejada</strong> — a intenção de movimento do homúnculo no tick.</li>
+    <li><strong>Quadrado pontilhado</strong> — o alcance de aggro do monstro selecionado.</li>
+  </ul>
+  <p>Passe o mouse sobre qualquer ator para abrir um <strong>tooltip</strong> com seus dados (id, tipo, HP/SP, e — no monstro — a classe com o nome do cadastro e o estado agressivo/passivo/provocado). O tooltip atualiza em tempo real enquanto a simulação roda.</p>
+
+  <h2 id="efeitos">Efeitos de skill (dados Renewal)</h2>
+  <p>As skills aplicam <strong>efeitos representativos</strong> baseados nos dados Renewal (ratemyserver), não um dano genérico. O homúnculo tem <strong>ATK</strong> e <strong>MATK</strong> editáveis (clique nele): skills físicas escalam por ATK e mágicas por MATK. Os efeitos modelados:</p>
+  <ul>
+    <li><strong>Dano direto</strong> — % do ATK/MATK por nível, em alvo único ou área.</li>
+    <li><strong>Dano fixo</strong> — combos grappler da Eleanor.</li>
+    <li><strong>% do HP máximo</strong> — Self Destruction.</li>
+    <li><strong>Dano por segundo (DoT)</strong> — Lava Slide, Blast Forge e Poison Mist criam uma área no chão que causa dano a cada intervalo; você vê o HP do monstro caindo a cada tick.</li>
+    <li><strong>Cura</strong> — por % do HP do alvo (Healing Hands, Chaotic, Silent Breeze).</li>
+    <li><strong>Status/debuff</strong> — paralisia, atordoamento, cinzas, etc., marcados no monstro.</li>
+  </ul>
+  <p>Não são os números exatos do servidor, mas reproduzem o <strong>caráter</strong> de cada skill — burst vs. dano contínuo, cura, status. Os mesmos dados aparecem no editor por nível.</p>
+
+  <h2 id="blackboard">Inspetor de blackboard</h2>
+  <p>Mostra, ao vivo, o que a árvore “enxerga” naquele tick: <strong>self</strong> (HP%/SP%), <strong>owner</strong> (distância, HP%), <strong>monsters</strong> (quantos à vista), <strong>config</strong> (AggroDist, AggroHP, FleeHP, etc.), <strong>flags</strong> (berserk/standby), <strong>intent</strong> (a intenção emitida, ex.: “move · chase”) e <strong>target</strong> (id do alvo, 0 = nenhum).</p>
+  <figure class="inline">
+    <img src="img/sim-blackboard.png" alt="Painel de blackboard do simulador" />
+    <figcaption>O blackboard ao vivo: o estado que a árvore lê para decidir. Compare-o com a árvore colorida para entender cada escolha.</figcaption>
+  </figure>
+
+  <h2 id="arvore">Painel da árvore ao vivo</h2>
+  <p>A árvore inteira é renderizada como uma lista indentada, e <strong>cada nó é colorido pelo status do tick exibido</strong>:</p>
+  <ul>
+    <li><span class="sw ok"></span><strong>verde</strong> — SUCCESS (cumpriu o objetivo).</li>
+    <li><span class="sw run"></span><strong>amarelo</strong> — RUNNING (ação em andamento, em destaque).</li>
+    <li><span class="sw fail"></span><strong>fundo vermelho</strong> — uma ação que falhou.</li>
+    <li><span class="sw none"></span><strong>cinza</strong> — FAILURE de condição ou nó não avaliado naquele tick.</li>
+  </ul>
+  <figure class="inline">
+    <img src="img/sim-arvore-viva.png" alt="Painel da árvore de comportamento colorida ao vivo" />
+    <figcaption>Em um tick de combate: o ramo <b>Engajar</b> venceu (verde), <b>?InAttackRange → !AttackTarget</b> estão rodando (amarelo), as skills indisponíveis falharam (fundo vermelho) e os ramos não avaliados ficam cinza.</figcaption>
+  </figure>
+  <p>Isso mostra de imediato <strong>qual ramo a raiz escolheu</strong> e por quê. Combinado com a timeline, você “rebobina” até o tick onde o comportamento divergiu e vê exatamente qual condição falhou.</p>
+  <div class="box key">
+    <div class="h">★ Nós desativados não aparecem aqui</div>
+    <p>Como o simulador é um espelho do jogo e os nós desativados não vão para os arquivos Lua, eles <strong>também não aparecem na árvore ao vivo</strong>. Se você desativou um ramo no editor e não o vê no simulador, é o esperado. Para vê-lo de novo, reative-o no editor (botão <strong>Ativar</strong> ou tecla <kbd>D</kbd>) e clique <strong>▶ Simular</strong> outra vez.</p>
+  </div>
+
+  <h2 id="log">Skills, buffs e log</h2>
+  <p>O painel <strong>Skills / Buffs</strong> lista os cooldowns em andamento, os buffs ativos e os efeitos de área ainda no chão, cada um com uma barra de tempo restante — útil para confirmar recasts e janelas de recarga. O painel <strong>Log</strong> mostra as chamadas de <code>TraceAI</code> da árvore no formato <code>[tick] mensagem</code>, com as linhas de falha destacadas. Como tudo é gravado por frame, o log acompanha o replay.</p>
+
+  <h2 id="cenarios">Salvar e carregar cenários</h2>
+  <p>Um cenário é um mundo completo (mapa, entidades, config, tipo de homúnculo). Na versão estática, <strong>salvar baixa um arquivo</strong> e <strong>carregar/importar envia um arquivo</strong>:</p>
+  <ul>
+    <li><strong>💾 salvar cenário</strong> — captura o estado ao vivo atual e <strong>baixa</strong> um <code>.json</code>.</li>
+    <li><strong>📤 Importar cenário</strong> — <strong>envia</strong> um <code>.json</code> e o carrega no mapa.</li>
+    <li><strong>baixar exemplo</strong> — baixa um cenário pronto; depois use <strong>Importar</strong> para abri-lo.</li>
+  </ul>
+  <p>Cenários são seus <strong>casos de regressão</strong>: todo bug reproduzido vira um cenário salvo, que você reabre para confirmar a correção. Detalhes do modelo carregar/salvar: <a href="primeiros-passos.html#dados">Primeiros passos</a>.</p>
+
+  <h2 id="editor">Vindo do editor</h2>
+  <p>No editor, <strong>▶ Simular</strong> envia a árvore atual (com o contexto de tipo/base) ao simulador e abre esta tela — sem exportar arquivo manualmente. É o laço de iteração mais rápido: edite → simule → ajuste.</p>
+
+  <h2>O que o simulador modela (e o que não)</h2>
+  <p><strong>Modela bem:</strong> a lógica da árvore e da decisão, com alta fidelidade — movimento célula a célula, alcance, aggro, HP/SP, skills resolvidas pelos mesmos metadados do jogo, tempo determinístico.</p>
+  <p><strong>Não substitui o jogo:</strong> comportamentos que dependem de quirks do servidor real (lag de posição, timing fino de cast, detecção heurística de fim de skill) ainda exigem validação final no cliente. O simulador <strong>reduz</strong>, mas não elimina, esse passo — e cada divergência encontrada no jogo deve virar um cenário de regressão.</p>
+</main>
+
+<footer>
+  BR-AI — Documentação da versão estática · <a href="index.html">voltar ao índice</a> · <a href="referencia-nos.html">Referência de nós →</a>
+</footer>
+</body>
+</html>

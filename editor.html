@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>BR-AI — Editor de Árvores (web)</title>
+  <link rel="stylesheet" href="assets/editor_css.04f0bc4094.css" />
+  <link rel="stylesheet" href="assets/static.4ebe8688aa.css" />
+  <style>
+    #braibar { display:flex; align-items:center; gap:10px; padding:6px 10px; background:#101417; color:#cfd6dd; border-bottom:1px solid #263038; font:13px system-ui, sans-serif; }
+    #braibar button { font:13px system-ui; padding:4px 10px; cursor:pointer; }
+    #braibar .muted { color:#8a97a2; }
+  </style>
+</head>
+<body>
+
+
+  <header>
+    <strong>BR-AI</strong> · Editor de Árvores <span class="tag">web</span>
+    <a class="nav" href="./index.html">← Simulador</a>
+    <a class="nav" href="docs/index.html" target="_blank" rel="noopener" title="Abrir a documentação (nova aba)">❔ Documentação</a>
+    <span id="valid" class="valid"></span>
+    <span id="status" class="status"></span>
+  </header>
+
+  <div id="toolbar">
+    <select id="addKind" title="Tipo de nó a adicionar">
+      <optgroup label="Composite"><option value="selector">selector</option><option value="sequence">sequence</option><option value="parallel">parallel</option></optgroup>
+      <optgroup label="Decorator"><option value="inverter">inverter</option><option value="succeeder">succeeder</option><option value="cooldown">cooldown</option><option value="limiter">limiter</option></optgroup>
+      <optgroup label="Condicional"><option value="check">check (condição + filho)</option><option value="monsterCheck">monsterCheck (alvo é/está no grupo)</option></optgroup>
+      <optgroup label="Folha"><option value="action">action</option></optgroup>
+    </select>
+    <span class="ctx">homún
+      <select id="ctxHomun" title="Homúnculo (define as skills disponíveis)">
+        <option value="4">Vanilmirth</option><option value="1">Lif</option><option value="2">Amistr</option><option value="3">Filir</option>
+        <option value="48">Eira</option><option value="49">Bayeri</option><option value="50">Sera</option><option value="51">Dieter</option><option value="52">Eleanor</option>
+      </select>
+      base <select id="ctxBase" disabled title="Forma base (Homunculus S herda as skills da base)">
+        <option value="0">—</option><option value="4">Vanilmirth</option><option value="2">Amistr</option><option value="3">Filir</option><option value="1">Lif</option>
+      </select>
+    </span>
+    <button id="btnUndo" title="Desfazer (Ctrl+Z)" disabled>↶</button>
+    <button id="btnRedo" title="Refazer (Ctrl+Y)" disabled>↷</button>
+    <button id="btnAddChild">+ filho</button>
+    <button id="btnAddSibling">+ irmão</button>
+    <button id="btnDelete">excluir</button>
+    <button id="btnLayout" title="Reorganizar automaticamente">⤢ organizar</button>
+    <span class="sep"></span>
+    <input id="treeName" class="treename" placeholder="nome da árvore" title="Nome → pasta trees/<nome>/" />
+    <button id="btnNew">Nova</button>
+    <select id="treeList" title="Árvores salvas em trees/"><option value="">— salvas —</option></select>
+    <button id="btnOpen">Abrir</button>
+    <button id="btnSaveTree">Salvar</button>
+    <button id="btnBuildTree">Gerar Lua</button>
+    <button id="btnMonsters" title="Cadastro de monstros e grupos">Monstros</button>
+    <button id="btnSkills" title="Escolher skills por homúnculo (Homunculus S)">Skills</button>
+    <button id="btnCombos" title="Configurar os combos da Eleanor (Homunculus S)">Combos</button>
+    <button id="btnLoadDefault" title="Carregar a árvore padrão embutida">Padrão</button>
+    <button id="btnSimulate" class="primary">▶ Simular</button>
+  </div>
+
+  <div id="app">
+    <section id="graphwrap">
+      <div id="graph">
+        <div id="gview">
+          <svg id="edges" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div id="nodes"></div>
+        </div>
+      </div>
+      <div id="ghint" class="muted">Arraste o nó p/ mover · Arraste os <b>pontos na base do pai</b> p/ reordenar/reparentar · Roda = zoom · Fundo = pan · <span id="zoomlbl">100%</span></div>
+    </section>
+    <aside id="side">
+      <h3>Inspetor</h3>
+      <div id="inspector"></div>
+      <h3>Validação</h3>
+      <div id="validation"></div>
+    </aside>
+  </div>
+
+  <script>window.BRAI_SIM_URL = './index.html';</script>
+  <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
+  <script src="assets/build_tree_web.09258e3865.js"></script>
+  <script src="assets/zip_web.8114b4c800.js"></script>
+  <script src="assets/lua_host_core.e39837dc12.js"></script>
+  <script src="assets/lua-bundle.45016e7943.js"></script>
+  <script src="assets/static_host.cf05239916.js"></script>
+  <script src="assets/bridge_core.f33c9ac3a0.js"></script>
+  <script src="assets/s3_backend.fe5ccd5e2e.js"></script>
+  <script src="assets/static_ui.f2c7829bf3.js"></script>
+  <script src="assets/editor.2553ecefee.js"></script>
+</body>
+</html>

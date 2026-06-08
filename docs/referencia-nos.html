@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Referência de nós — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="editor.html">Editor</a>
+      <a href="simulador.html">Simulador</a>
+      <a href="referencia-nos.html" class="cur">Referência de nós</a>
+      <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="conceitos.html">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="crumbs"><a href="index.html">Início</a> › Referência de nós</div>
+  <h1>Referência de nós</h1>
+  <p class="lead">O catálogo de todos os nós disponíveis para montar árvores. As condições e ações vêm do mesmo registry que o editor usa para montar a paleta e validar — então as descrições aqui refletem exatamente o que o jogo e o simulador executam.</p>
+
+  <div class="toc">
+    <div class="h">Nesta página</div>
+    <ul>
+      <li><a href="#status">Status</a></li>
+      <li><a href="#composites">Composites</a></li>
+      <li><a href="#decorators">Decorators</a></li>
+      <li><a href="#check">Condição (check)</a></li>
+      <li><a href="#monstercheck">monsterCheck</a></li>
+      <li><a href="#condicoes">Folhas: condições</a></li>
+      <li><a href="#acoes">Folhas: ações</a></li>
+      <li><a href="#adapta">Skills por homúnculo</a></li>
+      <li><a href="#exemplo">Exemplo de árvore</a></li>
+    </ul>
+  </div>
+
+  <h2 id="status">Status</h2>
+  <p>Todo nó retorna um destes a cada avaliação:</p>
+  <ul>
+    <li><span class="sw ok"></span><strong>SUCCESS</strong> — cumpriu o objetivo neste tick.</li>
+    <li><span class="sw none"></span><strong>FAILURE</strong> — não se aplica ou não conseguiu agir.</li>
+    <li><span class="sw run"></span><strong>RUNNING</strong> — ação em andamento; continua no próximo tick.</li>
+  </ul>
+
+  <h2 id="composites">Composites</h2>
+  <p>Aceitam vários filhos. São <strong>reativos</strong> (sem memória): a árvore reavalia tudo a cada tick.</p>
+  <table>
+    <thead><tr><th>Nó</th><th>Campos</th><th>Semântica</th></tr></thead>
+    <tbody>
+      <tr><td><strong>selector</strong></td><td><code>children</code>, <code>label?</code></td><td>OU de prioridade. Tica os filhos em ordem; vence o primeiro com SUCCESS ou RUNNING; falha só se todos falharem. <strong>A ordem dos filhos é a prioridade.</strong></td></tr>
+      <tr><td><strong>sequence</strong></td><td><code>children</code>, <code>label?</code></td><td>E. Tica em ordem; para no primeiro FAILURE ou RUNNING; sucesso só se todos passarem.</td></tr>
+      <tr><td><strong>parallel</strong></td><td><code>children</code>, <code>policy</code>, <code>label?</code></td><td>Tica todos os filhos. <code>policy="all"</code> → sucesso se todos; <code>policy="any"</code> → sucesso se ao menos um.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="decorators">Decorators</h2>
+  <p>Aceitam <strong>um</strong> filho.</p>
+  <table>
+    <thead><tr><th>Nó</th><th>Campos</th><th>Semântica</th></tr></thead>
+    <tbody>
+      <tr><td><strong>inverter</strong></td><td><code>child</code></td><td>Troca SUCCESS↔FAILURE; RUNNING passa.</td></tr>
+      <tr><td><strong>succeeder</strong></td><td><code>child</code></td><td>Força SUCCESS (exceto quando RUNNING). Torna um ramo opcional.</td></tr>
+      <tr><td><strong>cooldown</strong></td><td><code>ms</code>, <code>child</code></td><td>Bloqueia (FAILURE) por <code>ms</code> milissegundos após o filho ter SUCCESS. Mantém estado.</td></tr>
+      <tr><td><strong>limiter</strong></td><td><code>max</code>, <code>child</code>, <code>key?</code></td><td>Permite no máximo <code>max</code> sucessos do filho; depois falha.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="check">Condição (check)</h2>
+  <p>O nó <strong>Condição</strong> (<code>check</code>) é um condicional com <strong>um filho opcional</strong>.</p>
+  <table>
+    <thead><tr><th>Nó</th><th>Campos</th><th>Semântica</th></tr></thead>
+    <tbody>
+      <tr><td><strong>check</strong></td><td><code>name</code>, <code>params?</code>, <code>child?</code></td><td>Avalia a condição <code>name</code>. Se verdadeira e há <code>child</code>, executa-o e devolve o status dele; se verdadeira e não há <code>child</code>, devolve SUCCESS. Se falsa, devolve FAILURE sem executar o filho.</td></tr>
+    </tbody>
+  </table>
+  <p>Na prática, <code>check</code> é como a árvore amarra “se condição X, então faça Y” num único nó (ex.: <code>HasOwnerCommand → HandleOwnerCommand</code>).</p>
+
+  <h2 id="monstercheck">monsterCheck — condicional por monstro-alvo</h2>
+  <p><code>monsterCheck</code> executa seu <strong>único filho</strong> dependendo de <strong>qual monstro é o alvo atual</strong>. Ele olha a <em>classe</em> do monstro alvo e a compara com um monstro e/ou grupo cadastrados (veja <a href="monstros-e-skills.html">Monstros &amp; skills</a>).</p>
+  <table>
+    <thead><tr><th>Nó</th><th>Campos</th><th>Semântica</th></tr></thead>
+    <tbody>
+      <tr><td><strong>monsterCheck</strong></td><td><code>monster</code> (id, 0=nenhum), <code>group</code> (id, 0=nenhum), <code>negate</code> (bool), <code>child</code></td><td>Casa quando o alvo <strong>é</strong> o monstro <code>monster</code> <strong>ou está</strong> no grupo <code>group</code>. Com <code>negate</code>, casa quando não é e não está. Se casa e há <code>child</code>, executa-o; sem <code>child</code>, devolve SUCCESS; se não casa, FAILURE. <strong>Sem alvo atual, sempre FAILURE.</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="condicoes">Folhas: condições</h2>
+  <p>Uma condição (dentro de uma <strong>Condição</strong>/check) referencia uma destas pelo <code>name</code>. As que têm parâmetros recebem-nos em <code>params</code>.</p>
+  <table>
+    <thead><tr><th>Condição</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><code>HasOwnerCommand</code></td><td>—</td><td>Há comando do dono pendente neste tick.</td></tr>
+      <tr><td><code>HpBelow</code></td><td><code>pct</code></td><td>HP% do homúnculo abaixo de <code>pct</code>.</td></tr>
+      <tr><td><code>HpAbove</code></td><td><code>pct</code></td><td>HP% do homúnculo ≥ <code>pct</code>.</td></tr>
+      <tr><td><code>SpAbove</code></td><td><code>pct</code></td><td>SP% do homúnculo ≥ <code>pct</code>.</td></tr>
+      <tr><td><code>BeingAttacked</code></td><td>—</td><td>Algum monstro mira no homúnculo.</td></tr>
+      <tr><td><code>OwnerUnderAttack</code></td><td><code>count?</code></td><td>O dono está sendo atacado por pelo menos <code>count</code> monstros (padrão 1).</td></tr>
+      <tr><td><code>HasValidTarget</code></td><td>—</td><td>Existe alvo válido (em vista, vivo, alcançável).</td></tr>
+      <tr><td><code>InAttackRange</code></td><td>—</td><td>Alvo atual dentro do alcance de ataque normal.</td></tr>
+      <tr><td><code>TooFarFromOwner</code></td><td><code>dist</code></td><td>Distância do dono acima do limite.</td></tr>
+      <tr><td><code>CanEngage</code></td><td>—</td><td>Condições gerais para buscar alvo (HP/SP, não SuperPassive, não standby).</td></tr>
+      <tr><td><code>ShouldFlee</code></td><td>—</td><td>HP abaixo de FleeHP e sob ataque.</td></tr>
+      <tr><td><code>OwnerHpBelow</code></td><td><code>pct</code></td><td>HP% do dono abaixo de <code>pct</code> (ex.: curar o dono).</td></tr>
+      <tr><td><code>OwnerHpAbove</code></td><td><code>pct</code></td><td>HP% do dono ≥ <code>pct</code>.</td></tr>
+      <tr><td><code>Mobbed</code></td><td><code>count</code></td><td>Pelo menos <code>count</code> monstros atacando o homúnculo (marca berserk).</td></tr>
+      <tr><td><code>StyleIs</code></td><td><code>style</code> (<code>power</code>|<code>grapple</code>)</td><td>O estilo atual (Eleanor) é o pedido.</td></tr>
+      <tr><td><code>SafeToGrapple</code></td><td><code>radius</code>, <code>limit</code></td><td>Seguro p/ Agarrão: nº de monstros no raio ≤ <code>limit</code>.</td></tr>
+      <tr><td><code>TargetIsBoss</code></td><td>—</td><td>O monstro alvo é Boss/MVP. Útil p/ proibir skills em boss ou trocar de tática.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="acoes">Folhas: ações</h2>
+  <h3>Combate e movimento</h3>
+  <table>
+    <thead><tr><th>Ação</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><code>AcquireTarget</code></td><td><code>by</code> (<code>nearest</code>|<code>lowestHp</code>|<code>ownerAttacker</code>)</td><td>Seleciona o alvo por prioridade, respeitando o modo de KS.</td></tr>
+      <tr><td><code>ReacquireIfBetter</code></td><td><code>by</code></td><td>Mantém o alvo atual; troca por um melhor se aparecer (oportunista).</td></tr>
+      <tr><td><code>AcquireOwnerAttacker</code></td><td>—</td><td>Mira no monstro que está atacando o dono (resgate).</td></tr>
+      <tr><td><code>ChaseTarget</code></td><td><code>dist</code>, <code>giveUp</code></td><td>Persegue até a distância <code>dist</code>; com <code>giveUp</code>, desiste se não houver progresso.</td></tr>
+      <tr><td><code>DanceAttack</code></td><td>—</td><td>Ataca enquanto reposiciona: alterna golpe e passo lateral.</td></tr>
+      <tr><td><code>Kite</code></td><td><code>dist</code>, <code>step</code>, <code>bounds</code></td><td>Afasta-se para manter a distância (kiting), respeitando os limites do dono.</td></tr>
+      <tr><td><code>AttackTarget</code></td><td>—</td><td>Ataque normal no alvo atual.</td></tr>
+      <tr><td><code>Flee</code></td><td>—</td><td>Afasta-se do agressor mais próximo.</td></tr>
+    </tbody>
+  </table>
+  <h3>Comandos e ocioso</h3>
+  <table>
+    <thead><tr><th>Ação</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><code>HandleOwnerCommand</code></td><td>Executa o comando pendente do dono (move/attack/follow).</td></tr>
+      <tr><td><code>MoveToOwner</code></td><td>Aproxima-se do dono até FollowStayBack.</td></tr>
+      <tr><td><code>Idle</code></td><td>Ocioso (sem ação).</td></tr>
+    </tbody>
+  </table>
+  <h3>Skills automáticas (dirigidas pelo perfil do homúnculo)</h3>
+  <p>Estas ações resolvem qual skill usar a partir do perfil do tipo de homúnculo — você não indica IDs.</p>
+  <table>
+    <thead><tr><th>Ação</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><code>UseMainSkill</code></td><td>Usa a skill ofensiva single-target no alvo.</td></tr>
+      <tr><td><code>UseAoESkill</code></td><td>Usa a skill de AoE quando há mobs suficientes (AutoMobCount).</td></tr>
+      <tr><td><code>UseOffensiveBuff</code></td><td>Recasta auto-buffs ofensivos expirados (Bloodlust, Flitting, Pyroclastic, ...).</td></tr>
+      <tr><td><code>UseDefensiveBuff</code></td><td>Recasta auto-buffs defensivos expirados (Amistr Bulwark, Granitic Armor, ...).</td></tr>
+      <tr><td><code>UseHealSelf</code></td><td>Cura a si quando HP% &lt; HealSelfHP (Chaotic Blessing).</td></tr>
+      <tr><td><code>UseHealOwner</code></td><td>Cura o dono quando HP% &lt; HealOwnerHP (Healing Hands/Silent Breeze/Chaotic).</td></tr>
+      <tr><td><code>UseOwnerBuff</code></td><td>Mantém buff no dono (Painkiller da Sera).</td></tr>
+      <tr><td><code>UseSummon</code></td><td>Invoca minions contra o alvo (Summon Legion).</td></tr>
+      <tr><td><code>UseCastling</code></td><td>Castling para tirar mobs do dono quando ele está cercado (Amistr).</td></tr>
+    </tbody>
+  </table>
+  <h3>Skills explícitas (você escolhe a skill)</h3>
+  <p>Use estas para comportamentos customizados apontando uma skill específica. No editor, o campo <code>skill</code> é preenchido pelo seletor de skills por categoria.</p>
+  <table>
+    <thead><tr><th>Ação</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><code>UseSkill</code></td><td><code>skill</code>, <code>level</code>, <code>on</code> (<code>enemy</code>|<code>owner</code>)</td><td>Usa uma skill de dano em alvo único ou área. <code>on</code> define o centro das skills de área.</td></tr>
+      <tr><td><code>UseSkillBuff</code></td><td><code>skill</code>, <code>level</code></td><td>Usa um buff em si mesmo (não recasta enquanto durar).</td></tr>
+      <tr><td><code>SetStyle</code></td><td><code>style</code> (<code>power</code>|<code>grapple</code>)</td><td>Garante o estilo (Eleanor): conjura Style Change se necessário.</td></tr>
+      <tr><td><code>UseCombo</code></td><td><code>combo</code>, <code>window</code></td><td>Executa um combo no alvo (sequência de golpes).</td></tr>
+      <tr><td><code>UseEleanorOffense</code></td><td><code>style</code>, <code>comboSpheres</code>, <code>window</code>, ...</td><td><strong>Eleanor:</strong> combo + estilo + esferas + segurança do Agarrão num só nó. Veja <a href="monstros-e-skills.html#eleanor">Monstros &amp; skills</a>.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="adapta">Como os nós de skill se adaptam por homúnculo</h2>
+  <p>A mesma árvore atende os 9 tipos de homúnculo. As ações automáticas resolvem a skill concreta pelo <strong>perfil</strong> do tipo, obtido do homúnculo (e, para Homunculus S, do tipo base). Por exemplo, <code>UseMainSkill</code> vira Caprice no Vanilmirth, Moonlight no Filir, Stahl Horn no Bayeri; <code>UseHealOwner</code> só faz algo no Lif; <code>UseCastling</code> só no Amistr. Por isso você monta a árvore uma vez e ela serve a todos os tipos — basta trocar o homúnculo no contexto.</p>
+
+  <h2 id="exemplo">Exemplo de árvore</h2>
+  <p>Trecho da árvore padrão mostrando <code>check</code>, <code>selector</code>, <code>sequence</code> e folhas:</p>
+  <pre><code>{
+  "type": "selector",
+  "label": "root",
+  "children": [
+    { "type": "check", "name": "HasOwnerCommand", "label": "comando",
+      "child": { "type": "action", "name": "HandleOwnerCommand" } },
+    { "type": "check", "name": "ShouldFlee", "label": "sobrevivencia",
+      "child": { "type": "action", "name": "Flee" } },
+    { "type": "sequence", "label": "Engajar", "children": [
+        { "type": "selector", "label": "Definir alvo", "children": [
+            { "type": "check", "name": "OwnerUnderAttack",
+              "child": { "type": "action", "name": "AcquireOwnerAttacker" } },
+            { "type": "check", "name": "HasValidTarget" },
+            { "type": "check", "name": "CanEngage",
+              "child": { "type": "action", "name": "AcquireTarget" } } ] },
+        { "type": "selector", "label": "combate-acao", "children": [
+            { "type": "action", "name": "UseAoESkill" },
+            { "type": "action", "name": "UseMainSkill" },
+            { "type": "check", "name": "InAttackRange",
+              "child": { "type": "action", "name": "AttackTarget" } },
+            { "type": "action", "name": "ChaseTarget" } ] } ] }
+  ]
+}</code></pre>
+</main>
+
+<footer>
+  BR-AI — Documentação da versão estática · <a href="index.html">voltar ao índice</a> · <a href="monstros-e-skills.html">Monstros &amp; skills →</a>
+</footer>
+</body>
+</html>

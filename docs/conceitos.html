@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Conceitos — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="editor.html">Editor</a>
+      <a href="simulador.html">Simulador</a>
+      <a href="referencia-nos.html">Referência de nós</a>
+      <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="conceitos.html" class="cur">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="crumbs"><a href="index.html">Início</a> › Conceitos</div>
+  <h1>Conceitos</h1>
+  <p class="lead">Cinco ideias que explicam por que o homúnculo se comporta como se comporta — e que tornam o editor e o simulador fáceis de raciocinar.</p>
+
+  <h2>1. O que é uma árvore de comportamento</h2>
+  <p>Uma <strong>árvore de comportamento</strong> (BT) é uma forma de descrever decisões como uma hierarquia de blocos. A cada instante do jogo (um <strong>tick</strong>), a árvore é percorrida <strong>do topo (raiz) para baixo</strong>, e cada bloco diz se conseguiu resolver a situação ou não. O resultado é uma única decisão: o que o homúnculo deve fazer agora.</p>
+  <p>O ponto-chave é que a árvore é <strong>reavaliada inteira a cada tick</strong>. Ela não “fica presa” num estado: se a situação muda (o dono se afasta, um monstro aparece, o HP cai), na próxima avaliação a árvore já reage. Isso elimina toda uma classe de bugs de “a IA travou num modo”.</p>
+
+  <h2>2. A árvore só decide — ela não age</h2>
+  <p>Cada tick, a árvore lê o estado do mundo e escreve <strong>uma única intenção</strong>: “mover para ali”, “atacar aquele alvo”, “usar a skill tal”. Quem executa de fato a intenção é a camada do jogo, depois. A árvore nunca chama o jogo diretamente.</p>
+  <p>Na prática, isso significa que <strong>o homúnculo faz uma coisa por tick</strong>, e essa coisa é sempre a de maior prioridade que se aplica naquele instante. É por isso que, no <a href="simulador.html">simulador</a>, o painel <strong>intent</strong> do blackboard mostra exatamente o que a árvore decidiu — e o mapa mostra aquilo acontecendo.</p>
+
+  <h2>3. Como ler os status (SUCCESS / FAILURE / RUNNING)</h2>
+  <p>Todo bloco devolve um destes três resultados a cada avaliação. Entendê-los é o que torna a árvore colorida do simulador legível:</p>
+  <ul>
+    <li><span class="sw ok"></span><strong>SUCCESS</strong> (verde) — o bloco resolveu a situação neste tick.</li>
+    <li><span class="sw run"></span><strong>RUNNING</strong> (amarelo) — o bloco começou algo que leva mais de um tick (ex.: perseguir, conjurar) e continua no próximo.</li>
+    <li><span class="sw none"></span><strong>FAILURE</strong> (cinza) — o bloco não se aplica agora, ou uma condição deu falso. A árvore segue para a próxima opção.</li>
+  </ul>
+  <p>Uma <strong>ação que falhou</strong> ganha fundo vermelho no painel — é um sinal de “tentei e não consegui” (ex.: usar uma skill sem SP). Já o cinza é só “não era a vez deste ramo”.</p>
+  <figure class="inline">
+    <img src="img/sim-arvore-viva.png" alt="Árvore colorida ao vivo no simulador" />
+    <figcaption>A mesma árvore, colorida pelo tick atual: o verde mostra o caminho que venceu, o amarelo o que está em andamento, o vermelho o que falhou e o cinza o que nem foi avaliado.</figcaption>
+  </figure>
+
+  <h2>4. Prioridade é a ordem dos filhos</h2>
+  <p>O bloco mais comum é o <strong>selector</strong>: ele tenta os filhos <strong>na ordem em que estão</strong> e fica com o primeiro que dá certo. Então a <strong>ordem é a prioridade</strong>. Numa árvore típica, a raiz é um selector com mais ou menos esta ordem:</p>
+  <ol>
+    <li>obedecer ao comando do dono;</li>
+    <li>sobreviver (fugir com HP baixo);</li>
+    <li>curar (a si ou ao dono);</li>
+    <li>engajar inimigos;</li>
+    <li>ficar perto do dono / ocioso.</li>
+  </ol>
+  <p>Como tudo é reavaliado a cada tick, basta a situação mais importante deixar de se aplicar para a árvore “descer” para a próxima — e voltar a subir assim que ela reaparecer. <strong>Reordenar os filhos no editor muda a prioridade</strong>; é uma das edições mais comuns. O outro bloco básico é o <strong>sequence</strong> (um “E”: só segue se o anterior teve sucesso). Detalhes de todos os blocos: <a href="referencia-nos.html">Referência de nós</a>.</p>
+
+  <h2>5. A mesma árvore roda no jogo e no simulador</h2>
+  <p>O simulador não é uma imitação da IA: ele roda <strong>exatamente o mesmo motor</strong> que roda dentro do cliente do RO. A única diferença é de onde vêm os “sentidos” e para onde vão as “ações” — no jogo, do cliente real; no simulador, de um mundo de mentira. A árvore não sabe a diferença.</p>
+  <p>É por isso que vale a pena testar no simulador antes de levar ao jogo: o que você vê ali é, com altíssima fidelidade, o que vai acontecer no RO. (Alguns detalhes finos do servidor real — lag, timing de cast — ainda pedem um teste final no jogo; veja a última seção do <a href="simulador.html">Guia do Simulador</a>.)</p>
+  <div class="box tip">
+    <div class="h">✓ Por isso o pacote gerado é confiável</div>
+    <p>Quando você clica <strong>Gerar Lua</strong>, o pacote leva esse mesmo motor mais a sua árvore. Nenhuma “tradução” acontece no caminho — o que foi testado é o que roda. Nós desativados são simplesmente removidos do pacote (e por isso somem do simulador também).</p>
+  </div>
+
+  <p style="margin-top:2em">Com esses conceitos, o resto da documentação fica natural: comece pelos <a href="primeiros-passos.html">Primeiros passos</a>, monte no <a href="editor.html">Editor</a> e prove no <a href="simulador.html">Simulador</a>.</p>
+</main>
+
+<footer>
+  BR-AI — Documentação da versão estática · <a href="index.html">voltar ao índice</a>
+</footer>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "monsters": [
+    { "id": 1002, "desc": "Poring" },
+    { "id": 1063, "desc": "Lunatic" },
+    { "id": 1113, "desc": "Drops" },
+    { "id": 1031, "desc": "Poporing" },
+    { "id": 1039, "desc": "Baphomet" },
+    { "id": 1086, "desc": "Golden Thief Bug" },
+    { "id": 1038, "desc": "Osiris" }
+  ],
+  "groups": [
+    { "id": 1, "name": "Comuns", "members": [1002, 1063, 1113, 1031] },
+    { "id": 2, "name": "Chefes", "members": [1039, 1086, 1038] }
+  ]
+}

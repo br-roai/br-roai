@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Documentação — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html" class="cur">Início</a>
+      <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="editor.html">Editor</a>
+      <a href="simulador.html">Simulador</a>
+      <a href="referencia-nos.html">Referência de nós</a>
+      <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="conceitos.html">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <img src="img/logo-hero.png" alt="Avatar do BR-AI" />
+    <div class="t">
+      <h1>Documentação do BR-AI</h1>
+      <p class="lead">Crie, teste e gere a IA do seu homúnculo de Ragnarok Online — direto no navegador, sem instalar nada.</p>
+    </div>
+  </div>
+
+  <p>O <strong>BR-AI</strong> é uma IA de homúnculos construída sobre uma <strong>árvore de comportamento</strong>. Você monta a árvore arrastando blocos no <strong>editor</strong>, testa o comportamento contra um mundo de mentira no <strong>simulador</strong>, e quando estiver bom <strong>gera o pacote Lua</strong> para colocar no cliente do jogo. A mesma árvore que você vê rodando no simulador é a que roda no RO — nada muda no caminho.</p>
+
+  <p>Esta documentação cobre a <strong>versão estática</strong> (a que abre no navegador). Você não precisa de Node, Electron, terminal nem instalar dependências: tudo roda na própria página.</p>
+
+  <div class="box tip">
+    <div class="h">▶ Como abrir as ferramentas</div>
+    <p>São duas páginas: o <strong>Simulador</strong> (a página inicial, <code>index.html</code>) e o <strong>Editor</strong> (<code>editor.html</code>). No topo de cada uma há um link para a outra e para esta documentação. Esta doc abre sempre em uma <strong>nova aba</strong>, então você pode consultá-la sem perder seu trabalho.</p>
+  </div>
+
+  <h2>Do zero ao jogo em 5 passos</h2>
+  <ol class="steps">
+    <li><strong>Abra o Editor</strong> e clique em <strong>Padrão</strong> para começar de uma árvore que já funciona (ou monte do zero).</li>
+    <li><strong>Escolha o homúnculo</strong> no seletor de contexto — isso define quais skills aparecem.</li>
+    <li><strong>Ajuste a árvore</strong>: adicione ramos, troque skills, reordene prioridades, desative o que não quer testar.</li>
+    <li><strong>Clique em ▶ Simular</strong> para abrir o Simulador com a sua árvore, pinte um cenário (dono, monstros) e veja o homúnculo agir, com a árvore colorida ao vivo.</li>
+    <li class="last"><strong>Volte, refine e clique em Gerar Lua</strong> para baixar o pacote pronto para a pasta da IA do RO.</li>
+  </ol>
+
+  <h2>Por onde seguir</h2>
+  <div class="cards">
+    <a class="card" href="primeiros-passos.html">
+      <div class="k">Comece aqui</div>
+      <h3>Primeiros passos</h3>
+      <p>As duas telas, como navegar entre elas e o modelo <em>carregar = upload / salvar = download</em> da versão estática.</p>
+    </a>
+    <a class="card" href="editor.html">
+      <div class="k">Construir</div>
+      <h3>Guia do Editor</h3>
+      <p>Montar a árvore: nós, arrastar/reparentar, inspetor, skills, desativar nós, validação e gerar o Lua.</p>
+    </a>
+    <a class="card" href="simulador.html">
+      <div class="k">Testar</div>
+      <h3>Guia do Simulador</h3>
+      <p>Rodar a árvore num mundo falso: controle de tempo, mapa, blackboard, árvore colorida ao vivo e cenários.</p>
+    </a>
+    <a class="card" href="referencia-nos.html">
+      <div class="k">Consultar</div>
+      <h3>Referência de nós</h3>
+      <p>O catálogo completo: composites, decorators, condições e ações, com parâmetros e semântica.</p>
+    </a>
+    <a class="card" href="monstros-e-skills.html">
+      <div class="k">Avançado</div>
+      <h3>Monstros &amp; skills</h3>
+      <p>Reagir ao monstro-alvo, escolher skills por homúnculo e configurar os combos da Eleanor.</p>
+    </a>
+    <a class="card" href="conceitos.html">
+      <div class="k">Entender</div>
+      <h3>Conceitos</h3>
+      <p>O que é uma árvore de comportamento, por que ela é só decisão e como ler os status dos nós.</p>
+    </a>
+  </div>
+
+  <h2>Atalhos rápidos de teclado</h2>
+  <table>
+    <thead><tr><th>Onde</th><th>Atalho</th><th>O que faz</th></tr></thead>
+    <tbody>
+      <tr><td>Editor</td><td><kbd>D</kbd></td><td>Ativa / desativa o nó selecionado (e seus filhos)</td></tr>
+      <tr><td>Editor</td><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>Desfazer / refazer</td></tr>
+      <tr><td>Editor</td><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicar o nó selecionado</td></tr>
+      <tr><td>Simulador</td><td><kbd>Espaço</kbd></td><td>Play / pause</td></tr>
+      <tr><td>Simulador</td><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Voltar / avançar 1 frame</td></tr>
+      <tr><td>Simulador</td><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Primeiro frame / ir ao vivo</td></tr>
+    </tbody>
+  </table>
+</main>
+
+<footer>
+  BR-AI — IA de homúnculos do Ragnarok Online sobre árvore de comportamento. Documentação da versão estática (navegador).
+</footer>
+</body>
+</html>

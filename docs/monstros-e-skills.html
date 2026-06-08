@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Monstros &amp; skills — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="editor.html">Editor</a>
+      <a href="simulador.html">Simulador</a>
+      <a href="referencia-nos.html">Referência de nós</a>
+      <a href="monstros-e-skills.html" class="cur">Monstros &amp; skills</a>
+      <a href="conceitos.html">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="crumbs"><a href="index.html">Início</a> › Monstros &amp; skills</div>
+  <h1>Monstros &amp; skills</h1>
+  <p class="lead">Recursos avançados do editor: reagir ao monstro que está sendo o alvo, escolher qual skill cada papel usa por homúnculo, e configurar os combos da Eleanor.</p>
+
+  <div class="toc">
+    <div class="h">Nesta página</div>
+    <ul>
+      <li><a href="#monstros">Monstros e grupos</a></li>
+      <li><a href="#monstercheck">O nó monsterCheck</a></li>
+      <li><a href="#skills">Skills por homúnculo</a></li>
+      <li><a href="#eleanor">Combos da Eleanor</a></li>
+      <li><a href="#sera">Invocações da Sera</a></li>
+    </ul>
+  </div>
+
+  <h2 id="monstros">Monstros e grupos</h2>
+  <p>Por padrão a árvore decide só pelo <strong>tipo de homúnculo</strong>. Quando você precisa de ações diferentes conforme <strong>o monstro que está sendo o alvo</strong>, há um cadastro de monstros e grupos e um nó que reage a eles. Clique em <strong>Monstros</strong> na barra de ferramentas do editor para abrir o gerenciador:</p>
+  <ul>
+    <li><strong>Cadastro de monstros</strong> — informe o <strong>ID</strong> (a classe do monstro no jogo, o <code>V_TYPE</code>) e uma <strong>descrição</strong>, e clique em cadastrar. Há uma <strong>busca</strong> por nome ou ID, e cada monstro pode ser removido.</li>
+    <li><strong>Grupos</strong> — crie um grupo com um nome; selecione-o e marque, na lista, <strong>quais monstros cadastrados pertencem a ele</strong>. Você pode renomear ou excluir o grupo (excluir limpa as referências nos nós da árvore).</li>
+  </ul>
+  <p>O cadastro é <strong>global do projeto</strong>: é compartilhado por todas as árvores e <strong>fica lembrado no navegador</strong>. Você pode levá-lo de um computador a outro com os botões <strong>⬆ importar</strong> / <strong>⬇ exportar</strong> ao lado do botão Monstros (veja <a href="primeiros-passos.html#dados">Primeiros passos</a>).</p>
+
+  <h2 id="monstercheck">O nó monsterCheck</h2>
+  <p>Adicione um nó <strong>monsterCheck</strong> (tem <strong>um único filho</strong>). No inspetor você escolhe:</p>
+  <ul>
+    <li><strong>Monstro alvo</strong> — um monstro do cadastro (ou nenhum).</li>
+    <li><strong>Grupo</strong> — um grupo do cadastro (ou nenhum).</li>
+    <li><strong>negar</strong> — inverte a condição.</li>
+  </ul>
+  <p>O filho roda quando o monstro alvo <strong>é</strong> o monstro escolhido <strong>ou está</strong> no grupo escolhido. Com <strong>negar</strong> marcado, roda quando <strong>não é e não está</strong>. Sem alvo atual, o nó sempre falha. Assim você monta, por exemplo, “se o alvo é um chefe, use a skill X” ou “ataque normalmente, exceto contra o grupo Y”.</p>
+  <div class="box note">
+    <div class="h">ℹ Testar e levar para o jogo</div>
+    <p>Ao <strong>▶ Simular</strong>, o catálogo é enviado ao simulador automaticamente; lá, defina a <strong>classe (ID)</strong> de cada monstro no painel do monstro para ver o nó disparar. Ao <strong>Gerar Lua</strong>, o catálogo vai embutido no pacote — o cliente o carrega sozinho.</p>
+  </div>
+
+  <h2 id="skills">Skills por homúnculo</h2>
+  <p>As ações automáticas (<code>UseMainSkill</code>, <code>UseAoESkill</code>, <code>UseOffensiveBuff</code>, ...) resolvem a skill concreta pelo <strong>perfil</strong> do tipo de homúnculo. A maioria dos tipos tem uma escolha óbvia por papel — mas alguns <strong>Homunculus S</strong> têm duas ou mais skills no mesmo papel. Por exemplo, o Dieter pode usar Lava Slide ou Blast Forge como AoE; Pyroclastic ou Tempering como buff ofensivo.</p>
+  <p>O botão <strong>Skills</strong> na barra de ferramentas abre a tela onde você define <strong>qual skill cada papel usa</strong>, por tipo de homúnculo. Para cada papel (dano alvo único, AoE, buff ofensivo, buff defensivo) a tela lista os candidatos, o padrão do perfil e a sua escolha. Papel não configurado usa o padrão.</p>
+  <p>Essa escolha é <strong>global</strong> (vale no jogo, no simulador e no pacote gerado) e <strong>fica lembrada no navegador</strong>; pode ser importada/exportada pelos botões ⬆/⬇ ao lado de Skills.</p>
+
+  <h2 id="eleanor">Combos da Eleanor</h2>
+  <p>A Eleanor é o caso mais complexo: dano de alvo único em <strong>dois estilos mutuamente exclusivos</strong>, alternados por Style Change:</p>
+  <ul>
+    <li><strong>Combate</strong> (Power): Sonic Claw → Silvervein Rush → Midnight Frenzy.</li>
+    <li><strong>Agarrão</strong> (Grapple): Tinder Breaker → C.B.C. → E.Q.C.</li>
+  </ul>
+  <p>Tudo é encapsulado no nó <strong><code>UseEleanorOffense</code></strong> e configurado pelo painel <strong>Combos</strong> da barra de ferramentas. Os pontos que valem entender:</p>
+  <ul>
+    <li><strong>Esferas Espirituais (estimadas).</strong> A API do cliente não expõe a contagem de esferas, então a IA <strong>estima</strong> (sobe com ataques e dano recebido, desce pelo custo de cada golpe). A “barragem” só <strong>inicia</strong> um combo quando há esferas estimadas para fechar o finalizador — evitando disparar um finalizador sem recurso.</li>
+    <li><strong>Segurança do Agarrão.</strong> O Tinder Breaker zera o Flee da Eleanor; em multidão isso é fatal. O nó só libera o Agarrão quando há poucos monstros no raio (limite configurável); caso contrário, recua para o Combate.</li>
+    <li><strong>E.Q.C. em Boss/MVP.</strong> O finalizador do Agarrão é <strong>podado</strong> contra Boss/MVP (proibido pelo servidor), via flag de percepção ou um grupo de boss do catálogo.</li>
+    <li><strong>Robustez.</strong> O combo reinicia ao trocar/perder o alvo (não herda golpes no alvo errado) e ao estourar a janela; a troca de estilo tem trava anti-loop.</li>
+  </ul>
+  <div class="box tip">
+    <div class="h">✓ Visualização dedicada no simulador</div>
+    <p>Ao simular uma Eleanor, o painel lateral mostra as <strong>esferas</strong> estimadas e a <strong>sequência do combo</strong> em andamento, desenhados sobre o sprite — ótimo para entender por que um finalizador disparou (ou não).</p>
+  </div>
+
+  <h2 id="sera">Invocações da Sera</h2>
+  <p>A Sera invoca uma legião de minions (Summon Legion) via a ação <code>UseSummon</code>. Os parâmetros de invocação (nível, quando reinvocar, contagem mínima, só contra boss, etc.) ficam na configuração de <strong>invocações</strong>, que acompanha a tela de Skills e também é lembrada no navegador (com importar/exportar). No simulador, ao usar uma Sera, um painel lateral mostra a <strong>legião invocada</strong> e seu estado.</p>
+
+  <p style="margin-top:2em">Para a semântica exata de cada nó citado aqui, veja a <a href="referencia-nos.html">Referência de nós</a>.</p>
+</main>
+
+<footer>
+  BR-AI — Documentação da versão estática · <a href="index.html">voltar ao índice</a> · <a href="conceitos.html">Conceitos →</a>
+</footer>
+</body>
+</html>
