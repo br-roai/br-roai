@@ -78,11 +78,10 @@ async function monImportCfg(file) {
 // ação automática (UseAoESkill, UseOffensiveBuff, ...) usa. Global, na raiz.
 let skillChoice = { choices: {} };
 let scHomun = null;
-let spHomun = null;   // homún selecionado no modal de Parâmetros (#spModal)
-let spParams = { params: {} };   // parâmetros de skill por homún/papel (homun_skill_params.json)
+let spParams = { params: {} };   // parâmetros GLOBAIS das ações de skill, por papel (homun_skill_params.json)
 let summonCfg = { choices: {} };
 const HOMUN_NAMES = { 1: 'Lif', 2: 'Amistr', 3: 'Filir', 4: 'Vanilmirth', 48: 'Eira', 49: 'Bayeri', 50: 'Sera', 51: 'Dieter', 52: 'Eleanor' };
-const SC_ROLE_LABEL = { mainAtk: 'Main skill (alvo único)', aoeAtk: 'Skill em área (AoE)', offBuff: 'Buff ofensivo', defBuff: 'Buff defensivo' };
+const SC_ROLE_LABEL = { mainAtk: 'Main skill (alvo único)', aoeAtk: 'Skill em área (AoE)', offBuff: 'Buff ofensivo', defBuff: 'Buff defensivo', healSelf: 'Cura própria', healOwner: 'Cura do dono', ownerBuff: 'Buff no dono', castling: 'Castling' };
 const SC_HOMUN_ORDER = [51, 49, 50, 48, 52, 4, 1, 2, 3];  // Homunculus S primeiro
 let comboInfoCache = null;   // dados dos combos da Eleanor (BRAI.comboInfo)
 let comboNodeUid = null;     // nó UseEleanorOffense ligado ao painel
@@ -115,16 +114,13 @@ async function scImportSkills(file) {
 function normParams(p) { p = p || {}; return { params: (p.params && typeof p.params === 'object') ? p.params : {} }; }
 async function loadSkillParams() { try { const r = await window.skillParamsIO.load(); if (r && r.ok) spParams = normParams(JSON.parse(r.data)); } catch (e) { spParams = { params: {} }; } try { await callSim('setSkillParams', spParams); } catch (e) {} }
 async function saveSkillParams() { try { await window.skillParamsIO.save(JSON.stringify(spParams, null, 2)); } catch (e) {} try { await callSim('setSkillParams', spParams); } catch (e) {} }
-function spGetRole(homun, role) { const k = String(homun); return (spParams.params[k] && spParams.params[k][role]) || {}; }
-function spSetKnob(homun, role, key, value) {
-  const k = String(homun);
-  spParams.params[k] = spParams.params[k] || {};
-  spParams.params[k][role] = spParams.params[k][role] || {};
+function spGetRole(role) { return spParams.params[role] || {}; }
+function spSetKnob(role, key, value) {
+  spParams.params[role] = spParams.params[role] || {};
   if (value === null || value === undefined) {
-    delete spParams.params[k][role][key];
-    if (!Object.keys(spParams.params[k][role]).length) delete spParams.params[k][role];
-    if (spParams.params[k] && !Object.keys(spParams.params[k]).length) delete spParams.params[k];
-  } else { spParams.params[k][role][key] = value; }
+    delete spParams.params[role][key];
+    if (!Object.keys(spParams.params[role]).length) delete spParams.params[role];
+  } else { spParams.params[role][key] = value; }
 }
 function spIoMsg(t, isErr) { const m = document.getElementById('spIoMsg'); if (m) { m.textContent = t || ''; m.className = 'sc-io-msg ' + (isErr ? 'err' : 'ok'); } }
 function spExportParams() {
@@ -145,20 +141,20 @@ async function spImportParams(file) {
     spIoMsg('Parâmetros importados.', false);
   } catch (e) { spIoMsg('Arquivo de parâmetros inválido.', true); }
 }
-// campo de um knob no modal: number (com dica do global) ou booleano TRI-ESTADO (herdar|sim|não)
+// campo de um knob no modal GLOBAL: number (vazio = usa o padrão) ou booleano sim/não (sem "herdar")
 function spKnobField(role, knob) {
-  const cur = spGetRole(spHomun, role)[knob.key];
+  const cur = spGetRole(role)[knob.key];
   const gv = knob.default;
   if (knob.type === 'boolean') {
-    const selv = (cur != null) ? (cur ? 'true' : 'false') : '';
-    const o = [['', 'herdar' + (gv !== undefined ? ' (' + fmtCfg(gv) + ')' : '')], ['true', 'sim'], ['false', 'não']];
+    const selv = ((cur != null) ? cur : !!gv) ? 'true' : 'false';   // sem "herdar": mostra o valor efetivo
+    const o = [['true', 'sim'], ['false', 'não']];
     return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + '</label>' +
       '<select class="spKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="boolean">' +
       o.map(x => '<option value="' + x[0] + '"' + (x[0] === selv ? ' selected' : '') + '>' + esc(x[1]) + '</option>').join('') + '</select></div>';
   }
   const v = (cur != null) ? cur : '';
   const ph = (gv !== undefined) ? ' placeholder="' + esc(String(gv)) + '"' : '';
-  return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + (gv !== undefined ? ' <span class="sp-gl">· global: ' + esc(fmtCfg(gv)) + '</span>' : '') + '</label>' +
+  return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + (gv !== undefined ? ' <span class="sp-gl">· padrão: ' + esc(fmtCfg(gv)) + '</span>' : '') + '</label>' +
     '<input class="spKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="number" type="number" value="' + v + '"' + ph + ' /></div>';
 }
 async function loadSummonChoice() { try { const r = await window.summonIO.load(); if (r && r.ok) summonCfg = normChoice(JSON.parse(r.data)); } catch (e) { summonCfg = { choices: {} }; } try { await callSim('setSummonChoice', summonCfg); } catch (e) {} }
@@ -1050,13 +1046,13 @@ function renderInspector() {
       html += '<div class="field insp-links">' +
         '<button id="iSkillCfg" type="button">\u2699 Configurar skills\u2026</button>' +
         '<button id="iParamCfg" type="button">\u2699 Par\u00e2metros desta skill\u2026</button></div>';
-      // override por nó (#4) RECOLHIDO — em geral, ajuste por homúnculo em "Parâmetros". [C6]
+      // override por nó (#4) RECOLHIDO — em geral, ajuste em "Parâmetros" (global). [C6]
       const sc = paramsSchema(sel.name);
       const hasOv = Object.keys(sc).some(f => sel.params[f] != null);
       const knobsHtml = Object.keys(sc).map(f => paramFieldHtml(f, sc[f], sel)).join('');
       html += '<details class="insp-adv"' + (hasOv ? ' open' : '') + '>' +
         '<summary>\u2699 Avan\u00e7ado: sobrescrever s\u00f3 neste n\u00f3</summary>' +
-        '<div class="desc">Em geral, ajuste por homúnculo em <b>Par\u00e2metros</b>. Aqui voc\u00ea for\u00e7a um valor s\u00f3 para ESTE n\u00f3 (vence o resto).</div>' +
+        '<div class="desc">Em geral, ajuste em <b>Par\u00e2metros</b> (global). Aqui voc\u00ea for\u00e7a um valor s\u00f3 para ESTE n\u00f3 (vence o resto).</div>' +
         knobsHtml + '</details>';
     } else if (sel.type === 'action' && PARAM_EXTRA[sel.name]) {
       sel.params = sel.params || {};
@@ -1113,7 +1109,7 @@ function wireInspector(sel) {
   const irs = $('iReset'); if (irs) irs.onchange = () => { if (irs.checked) sel.params.reset = true; else delete sel.params.reset; renderAll(); };
   const ep = $('iEleanorPanel'); if (ep) ep.onclick = () => openComboManager();
   const isc = $('iSkillCfg'); if (isc) isc.onclick = () => openSkillManager();
-  const ipc = $('iParamCfg'); if (ipc) ipc.onclick = () => { spHomun = ctxHomun || 51; openSkillParams(ACTION_ROLE[sel.name] || PARAM_EXTRA[sel.name]); };
+  const ipc = $('iParamCfg'); if (ipc) ipc.onclick = () => openSkillParams(ACTION_ROLE[sel.name] || PARAM_EXTRA[sel.name]);
   document.querySelectorAll('.iParamSkill').forEach(sk => {
     sk.onchange = () => { const id = parseInt(sk.value, 10); sel.params = sel.params || {}; if (id) sel.params.skill = id; else delete sel.params.skill; renderAll(); };
   });
@@ -1602,7 +1598,6 @@ function renderMonManager() {
 // ===== Tela: Parâmetros das skills por homúnculo (modal #spModal) ==========
 // Casca (C3): seletor de homún + close. As seções por papel + knobs + export/import vêm no C4.
 async function openSkillParams(focusRole) {
-  if (spHomun == null) spHomun = ctxHomun || 51;
   await loadSkillParams();
   let ov = document.getElementById('spModal');
   if (!ov) { ov = document.createElement('div'); ov.id = 'spModal'; ov.className = 'mm-overlay'; document.body.appendChild(ov); }
@@ -1616,30 +1611,15 @@ async function openSkillParams(focusRole) {
 function closeSkillParams() { const ov = document.getElementById('spModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
 async function renderSkillParamsModal() {
   const ov = document.getElementById('spModal'); if (!ov) return;
-  const spBase = (spHomun === ctxHomun) ? (ctxBase || 0) : 0;   // a forma base é por árvore (só do ctxHomun) [C7]
   let pc = [];
-  try { pc = await callSim('paramConfig', { homunType: spHomun, baseType: spBase }); } catch (e) { pc = []; }
-  let spCat = [];
-  try { spCat = await callSim('skillCatalog', { homunType: spHomun, baseType: spBase }); } catch (e) { spCat = []; }
-  const spIsS = (typeof S_TYPES_E !== 'undefined') && S_TYPES_E.includes(spHomun);
-  const baseNote = spIsS ? ('<div class="sp-basenote">Homunculus S: <b>cura, Painkiller e Castling</b> vêm da <b>forma base</b>' +
-    (spBase ? (' (' + esc(HOMUN_NAMES[spBase] || spBase) + ')') : ' — defina a forma base no contexto para ver as skills herdadas') + '. Os parâmetros valem mesmo assim.</div>') : '';
-  const spCatById = {}; (spCat || []).forEach(sk => { spCatById[sk.id] = sk; });
-  const homunOpts = SC_HOMUN_ORDER.map(t => '<option value="' + t + '"' + (t === spHomun ? ' selected' : '') + '>' + esc(HOMUN_NAMES[t] || ('#' + t)) + '</option>').join('');
+  try { pc = await callSim('paramConfig'); } catch (e) { pc = []; }
   const sections = (pc || []).map(r => {
-    const cards = r.hasSkill
-      ? r.skills.map(sk => spCatById[sk.id] ? skillInfoHtml(spCatById[sk.id], sk.maxLevel) : ('<span class="sp-skill">' + esc(sk.name) + '</span>')).join('')
-      : '<div class="sc-none">— sem skill para este papel —</div>';
     const knobs = r.knobs.map(k => spKnobField(r.role, k)).join('');
-    return '<div class="sp-row' + (r.hasSkill ? '' : ' sp-empty') + '" data-role="' + r.role + '">' +
+    return '<div class="sp-row" data-role="' + r.role + '">' +
       '<div class="sp-role"><b>' + esc(r.label) + '</b></div>' +
-      '<div class="sp-cards">' + cards + '</div>' +
+      (r.desc ? '<div class="sp-desc">' + esc(r.desc) + '</div>' : '') +
       '<div class="sp-knobs">' + knobs + '</div></div>';
   }).join('');
-  let links = '';
-  if (spHomun === 52) links += '<button id="spComboLink" type="button">✦ Combos da Eleanor…</button>';
-  if (spHomun === 50) links += '<button id="spSummonLink" type="button">✦ Invocações da Sera…</button>';
-  const linkBar = links ? '<div class="sp-links">' + links + '</div>' : '';
   const ioBar = '<div class="sc-io"><span class="sc-io-lbl">Config:</span>' +
     '<button id="spExport" type="button">⬇ exportar parâmetros</button>' +
     '<button id="spImport" type="button">⬆ importar parâmetros</button>' +
@@ -1650,35 +1630,28 @@ async function renderSkillParamsModal() {
       '<div class="mm-head"><strong>Parâmetros das skills</strong><button id="spClose" class="mm-x">fechar ✕</button></div>' +
       '<div class="mm-body sc-body">' +
         ioBar +
-        '<div class="sc-pick"><label>Homúnculo: <select id="spHomunSel">' + homunOpts + '</select></label>' +
-          '<span class="sc-note">Ajuste os parâmetros de cada papel <b>por homúnculo</b>. Vazio/<b>herdar</b> = usa a Config global. Precedência: nó &gt; aqui &gt; Config global &gt; padrão.</span></div>' +
-        baseNote +
+        '<div class="sc-note sp-globalnote">Parâmetros <b>globais</b> das ações de skill: valem para <b>todos os homúnculos</b> que têm a skill do papel — esta é a única fonte da verdade. Precedência: override no nó &gt; estes parâmetros &gt; Config global &gt; padrão.</div>' +
         '<div class="sp-rows" id="spRows">' + sections + '</div>' +
-        linkBar +
       '</div>' +
       '<div class="mm-foot"><button id="spSave" class="mm-save" type="button">💾 Salvar</button></div>' +
     '</div>';
   document.getElementById('spClose').onclick = closeSkillParams;
   { const b = document.getElementById('spSave'); if (b) b.onclick = async () => { await saveSkillParams(); await refreshTreeLabels('Parâmetros salvos — valem na árvore, no Lua e no simulador.'); }; }
   ov.onclick = (e) => { if (e.target === ov) closeSkillParams(); };
-  const hs = document.getElementById('spHomunSel');
-  if (hs) hs.onchange = async () => { spHomun = parseInt(hs.value, 10) || 51; await renderSkillParamsModal(); };
   ov.querySelectorAll('.spKnob').forEach(el => {
     el.onchange = async () => {
       const role = el.dataset.role, key = el.dataset.key, type = el.dataset.type;
       let value;
-      if (type === 'boolean') value = (el.value === '') ? null : (el.value === 'true');
+      if (type === 'boolean') value = (el.value === 'true');
       else { const raw = String(el.value).trim(); const n = parseFloat(raw); value = (raw === '' || Number.isNaN(n)) ? null : n; }
-      spSetKnob(spHomun, role, key, value);
+      spSetKnob(role, key, value);
       await saveSkillParams();
-      spIoMsg('Parâmetro atualizado (' + (HOMUN_NAMES[spHomun] || spHomun) + ').', false);
+      spIoMsg('Parâmetro atualizado.', false);
     };
   });
   const ex = document.getElementById('spExport'); if (ex) ex.onclick = spExportParams;
   const im = document.getElementById('spImport'), imf = document.getElementById('spImportFile');
   if (im && imf) { im.onclick = () => imf.click(); imf.onchange = () => { if (imf.files && imf.files[0]) spImportParams(imf.files[0]); imf.value = ''; }; }
-  const cl = document.getElementById('spComboLink'); if (cl) cl.onclick = () => { closeSkillParams(); openComboManager(); };
-  const sl = document.getElementById('spSummonLink'); if (sl) sl.onclick = () => { closeSkillParams(); openSkillManager(); };
 }
 
 // ===== Tela: Skills por homúnculo (modal) =================================
@@ -1696,7 +1669,7 @@ function closeSkillManager() { const ov = document.getElementById('scModal'); if
 async function renderSkillManager() {
   const ov = document.getElementById('scModal'); if (!ov) return;
   let roles = [];
-  try { roles = await callSim('roleConfig', { homunType: scHomun }); } catch (e) { roles = []; }
+  try { roles = await callSim('roleConfig', { homunType: scHomun, baseType: (scHomun === ctxHomun ? (ctxBase || 0) : 0) }); } catch (e) { roles = []; }
 
   const homunOpts = SC_HOMUN_ORDER.map(t => '<option value="' + t + '"' + (t === scHomun ? ' selected' : '') + '>' + esc(HOMUN_NAMES[t] || ('#' + t)) + '</option>').join('');
 
@@ -1714,12 +1687,20 @@ async function renderSkillManager() {
       '<button class="sc-rm" type="button" data-role="' + role + '" data-skill="' + sk.id + '" title="remover">✕</button>' +
       '</div>';
   };
+  const roSkillLine = (role, sk) => '<div class="sc-skill sc-skill-ro" data-role="' + role + '" data-skill="' + sk.id + '">' +
+    '<span class="sc-skill-hot" data-role="' + role + '" data-skill="' + sk.id + '"><span class="sc-skill-name">' + esc(sk.name) + '</span></span></div>';
   const rows = (roles || []).map(r => {
     const label = esc(SC_ROLE_LABEL[r.key] || r.key);
+    if (r.fixed) {
+      const effF = r.effective || [];
+      if (!effF.length) return '';   // homúnculo não tem essa skill fixa → oculta (não é necessário)
+      const bodyF = effF.map(sk => roSkillLine(r.key, sk)).join('');
+      return '<div class="sc-row"><span class="sc-role">' + label + ' <span class="sc-fixed-tag" title="Skill fixa do perfil. Os parâmetros desta ação ficam em Parâmetros (global).">fixa</span></span>' +
+             '<span class="sc-ctrl"><button class="sc-paramlink" type="button" data-role="' + r.key + '" title="Abrir os parâmetros globais desta ação">⚙ parâmetros</button></span></div>' +
+             '<div class="sc-skills" data-role="' + r.key + '">' + bodyF + '</div>';
+    }
     const cands = r.candidates || [];
-    if (cands.length === 0)
-      return '<div class="sc-row"><span class="sc-role">' + label + '</span>' +
-             '<span class="sc-none">Não há skill de ' + label.toLowerCase() + ' para este homúnculo.</span></div>';
+    if (cands.length === 0) return '';   // homúnculo não tem skill deste papel → oculta (não é necessário)
     const eff = r.effective || [];
     const effIds = eff.map(s => s.id);
     const addable = cands.filter(c => effIds.indexOf(c.id) < 0);
@@ -1754,7 +1735,7 @@ async function renderSkillManager() {
         ioBar +
         '<div class="sc-pick"><label>Homúnculo: <select id="scHomunSel">' + homunOpts + '</select></label>' +
           '<span class="sc-note">Adicione/remova as skills de cada papel (0 ou mais). <b>Padrão</b> = as skills do perfil. Passe o mouse no nome ou no nível para ver os detalhes.</span></div>' +
-        '<div class="sc-rows">' + inner + '</div>' +
+        '<div class="sc-rows" data-homun="' + scHomun + '">' + inner + '</div>' +
       '</div>' +
       '<div class="mm-foot"><button id="scSave" class="mm-save" type="button">💾 Salvar</button></div>' +
     '</div>';
@@ -1784,6 +1765,7 @@ async function renderSkillManager() {
     await saveSkillChoice(); setStatus('Papel voltou ao padrão (' + (HOMUN_NAMES[scHomun] || scHomun) + ').');
     await renderSkillManager();
   });
+  ov.querySelectorAll('.sc-paramlink').forEach(btn => btn.onclick = () => { closeSkillManager(); openSkillParams(btn.dataset.role); });
   ov.querySelectorAll('.sc-skill-lvl').forEach(sel => sel.onchange = async () => {
     scSetSkillLevel(scHomun, parseInt(sel.dataset.skill, 10), parseInt(sel.value, 10) || 0);
     await saveSkillChoice(); setStatus('Nível de skill atualizado (' + (HOMUN_NAMES[scHomun] || scHomun) + ').');

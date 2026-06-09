@@ -243,6 +243,14 @@ button:disabled{opacity:.45;cursor:default}
 .sp-knob input,.sp-knob select{width:100%}
 .sp-gl{color:var(--muted)}
 .sp-links{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.sp-desc{margin:0 0 8px;font-size:12px;color:var(--muted);line-height:1.45}
+.sp-globalnote{margin:6px 0 2px}
+/* Skills por homúnculo: papéis FIXOS (cura/buff do dono/castling) — só leitura */
+.sc-fixed-tag{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-left:4px;vertical-align:middle}
+.sc-paramlink{font-size:11px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:5px;padding:2px 7px;cursor:pointer}
+.sc-paramlink:hover{color:#6cc6ff;border-color:#6cc6ff}
+.sc-skill.sc-skill-ro{opacity:.92}
+.sc-skill.sc-skill-ro .sc-skill-name{cursor:help}
 
 /* C6: inspetor decluttered */
 .insp-links{display:flex;gap:6px;flex-wrap:wrap}

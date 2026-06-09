@@ -186,17 +186,10 @@
   function generateSkillParams(params) {
     var src = (params && params.params) ? params.params : (params || {});
     var data = {};
-    Object.keys(src).forEach(function (k) {
-      var roles = src[k] || {}, r = {};
-      Object.keys(roles).forEach(function (role) {
-        var knobs = roles[role];
-        if (knobs && typeof knobs === 'object') {
-          var rr = {};
-          Object.keys(knobs).forEach(function (key) { var v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; });
-          if (Object.keys(rr).length) r[role] = rr;
-        }
-      });
-      if (Object.keys(r).length) data[String(k)] = r;
+    Object.keys(src).forEach(function (role) {
+      var knobs = src[role] || {}, rr = {};
+      Object.keys(knobs).forEach(function (key) { var v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; });
+      if (Object.keys(rr).length) data[role] = rr;
     });
     return [
       '-- skill_params.lua — GERADO por BR-AI (web). Nao editar a mao.',
