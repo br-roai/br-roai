@@ -184,18 +184,19 @@
     ].join('\n');
   }
   function generateSkillParams(params) {
-    var src = (params && params.params) ? params.params : (params || {});
-    var data = {};
-    Object.keys(src).forEach(function (role) {
-      var knobs = src[role] || {}, rr = {};
-      Object.keys(knobs).forEach(function (key) { var v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; });
-      if (Object.keys(rr).length) data[role] = rr;
-    });
+    var src = params || {};
+    var gIn = src.params || src.global || {};
+    var oIn = src.overrides || src.byHomun || {};
+    var clean = function (knobs) { var rr = {}; Object.keys(knobs || {}).forEach(function (key) { var v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; }); return rr; };
+    var global = {};
+    Object.keys(gIn).forEach(function (role) { var rr = clean(gIn[role]); if (Object.keys(rr).length) global[role] = rr; });
+    var overrides = {};
+    Object.keys(oIn).forEach(function (h) { var roles = oIn[h] || {}, hr = {}; Object.keys(roles).forEach(function (role) { var rr = clean(roles[role]); if (Object.keys(rr).length) hr[role] = rr; }); if (Object.keys(hr).length) overrides[String(h)] = hr; });
     return [
       '-- skill_params.lua — GERADO por BR-AI (web). Nao editar a mao.',
       'BRAI = BRAI or {}',
       '',
-      'local params = ' + luaValue({ params: data }, 0),
+      'local params = ' + luaValue({ params: global, overrides: overrides }, 0),
       '',
       'if BRAI.setSkillParams then BRAI.setSkillParams(params) end',
       'BRAI.skillParamsRaw = params',

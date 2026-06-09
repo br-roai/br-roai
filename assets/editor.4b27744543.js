@@ -79,6 +79,7 @@ async function monImportCfg(file) {
 let skillChoice = { choices: {} };
 let scHomun = null;
 let spParams = { params: {} };   // parâmetros GLOBAIS das ações de skill, por papel (homun_skill_params.json)
+let spTab = null;   // papel (aba) ativo no modal de Parâmetros (#spModal)
 let summonCfg = { choices: {} };
 const HOMUN_NAMES = { 1: 'Lif', 2: 'Amistr', 3: 'Filir', 4: 'Vanilmirth', 48: 'Eira', 49: 'Bayeri', 50: 'Sera', 51: 'Dieter', 52: 'Eleanor' };
 const SC_ROLE_LABEL = { mainAtk: 'Main skill (alvo único)', aoeAtk: 'Skill em área (AoE)', offBuff: 'Buff ofensivo', defBuff: 'Buff defensivo', healSelf: 'Cura própria', healOwner: 'Cura do dono', ownerBuff: 'Buff no dono', castling: 'Castling' };
@@ -111,10 +112,29 @@ async function scImportSkills(file) {
   } catch (e) { scIoMsg('Arquivo de skills inválido.', true); }
 }
 // ---- Parâmetros de skill por homúnculo/papel (#spModal) ----
-function normParams(p) { p = p || {}; return { params: (p.params && typeof p.params === 'object') ? p.params : {} }; }
+function normParams(p) { p = p || {}; return { params: (p.params && typeof p.params === 'object') ? p.params : {}, overrides: (p.overrides && typeof p.overrides === 'object') ? p.overrides : {} }; }
 async function loadSkillParams() { try { const r = await window.skillParamsIO.load(); if (r && r.ok) spParams = normParams(JSON.parse(r.data)); } catch (e) { spParams = { params: {} }; } try { await callSim('setSkillParams', spParams); } catch (e) {} }
 async function saveSkillParams() { try { await window.skillParamsIO.save(JSON.stringify(spParams, null, 2)); } catch (e) {} try { await callSim('setSkillParams', spParams); } catch (e) {} }
 function spGetRole(role) { return spParams.params[role] || {}; }
+// --- camada de OVERRIDE por homúnculo (editada no modal de Skills; persiste em spParams.overrides) ---
+function ovEnsure(homun) { spParams.overrides = spParams.overrides || {}; const k = String(homun); spParams.overrides[k] = spParams.overrides[k] || {}; return spParams.overrides[k]; }
+function ovEnable(homun, role, knobs) { const h = ovEnsure(homun); const r = {}; (knobs || []).forEach(k => { if (k.globalValue != null) r[k.key] = k.globalValue; }); h[role] = r; }
+function ovDisable(homun, role) { const k = String(homun); if (spParams.overrides && spParams.overrides[k]) { delete spParams.overrides[k][role]; if (!Object.keys(spParams.overrides[k]).length) delete spParams.overrides[k]; } }
+function ovSetKnob(homun, role, key, value) { const h = ovEnsure(homun); h[role] = h[role] || {}; h[role][key] = value; }
+// campo de knob da sobreposição (SEM dica de padrão): number ou booleano sim/não, pré-preenchido c/ o valor efetivo
+function ovKnobField(role, knob) {
+  const v = (knob.value != null) ? knob.value : knob.globalValue;
+  const gv = (knob.globalValue != null) ? knob.globalValue : '';
+  if (knob.type === 'boolean') {
+    const selv = v ? 'true' : 'false';
+    return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + '</label>' +
+      '<select class="ovKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="boolean">' +
+      '<option value="true"' + (selv === 'true' ? ' selected' : '') + '>sim</option>' +
+      '<option value="false"' + (selv === 'false' ? ' selected' : '') + '>não</option></select></div>';
+  }
+  return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + '</label>' +
+    '<input class="ovKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="number" data-gv="' + esc(String(gv)) + '" type="number" value="' + esc(String(v != null ? v : '')) + '" /></div>';
+}
 function spSetKnob(role, key, value) {
   spParams.params[role] = spParams.params[role] || {};
   if (value === null || value === undefined) {
@@ -1599,45 +1619,46 @@ function renderMonManager() {
 // Casca (C3): seletor de homún + close. As seções por papel + knobs + export/import vêm no C4.
 async function openSkillParams(focusRole) {
   await loadSkillParams();
+  if (focusRole) spTab = focusRole;
   let ov = document.getElementById('spModal');
   if (!ov) { ov = document.createElement('div'); ov.id = 'spModal'; ov.className = 'mm-overlay'; document.body.appendChild(ov); }
   await renderSkillParamsModal();
   ov.style.display = 'flex';
-  if (focusRole) {
-    const row = ov.querySelector('.sp-row[data-role="' + focusRole + '"]');
-    if (row) { row.classList.add('sp-focus'); try { row.scrollIntoView({ block: 'center' }); } catch (e) {} }
-  }
 }
 function closeSkillParams() { const ov = document.getElementById('spModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
 async function renderSkillParamsModal() {
   const ov = document.getElementById('spModal'); if (!ov) return;
   let pc = [];
   try { pc = await callSim('paramConfig'); } catch (e) { pc = []; }
-  const sections = (pc || []).map(r => {
-    const knobs = r.knobs.map(k => spKnobField(r.role, k)).join('');
-    return '<div class="sp-row" data-role="' + r.role + '">' +
-      '<div class="sp-role"><b>' + esc(r.label) + '</b></div>' +
-      (r.desc ? '<div class="sp-desc">' + esc(r.desc) + '</div>' : '') +
-      '<div class="sp-knobs">' + knobs + '</div></div>';
-  }).join('');
+  const roles = pc || [];
+  if (!spTab || !roles.some(r => r.role === spTab)) spTab = roles.length ? roles[0].role : null;
+  const tabs = roles.map(r => '<button type="button" class="sp-tab' + (r.role === spTab ? ' active' : '') + '" data-role="' + r.role + '">' + esc(r.label) + '</button>').join('');
+  const active = roles.find(r => r.role === spTab);
+  const body = active
+    ? '<div class="sp-row" data-role="' + active.role + '">' +
+        (active.desc ? '<div class="sp-desc">' + esc(active.desc) + '</div>' : '') +
+        '<div class="sp-knobs">' + active.knobs.map(k => spKnobField(active.role, k)).join('') + '</div></div>'
+    : '';
   const ioBar = '<div class="sc-io"><span class="sc-io-lbl">Config:</span>' +
     '<button id="spExport" type="button">⬇ exportar parâmetros</button>' +
     '<button id="spImport" type="button">⬆ importar parâmetros</button>' +
     '<input id="spImportFile" type="file" accept="application/json,.json" style="display:none">' +
     '<span class="sc-io-msg" id="spIoMsg"></span></div>';
   ov.innerHTML =
-    '<div class="mm-panel sc-panel">' +
+    '<div class="mm-panel sc-panel sp-panel">' +
       '<div class="mm-head"><strong>Parâmetros das skills</strong><button id="spClose" class="mm-x">fechar ✕</button></div>' +
       '<div class="mm-body sc-body">' +
         ioBar +
         '<div class="sc-note sp-globalnote">Parâmetros <b>globais</b> das ações de skill: valem para <b>todos os homúnculos</b> que têm a skill do papel — esta é a única fonte da verdade. Precedência: override no nó &gt; estes parâmetros &gt; Config global &gt; padrão.</div>' +
-        '<div class="sp-rows" id="spRows">' + sections + '</div>' +
+        '<div class="sp-tabs" id="spTabs">' + tabs + '</div>' +
+        '<div class="sp-rows" id="spRows">' + body + '</div>' +
       '</div>' +
       '<div class="mm-foot"><button id="spSave" class="mm-save" type="button">💾 Salvar</button></div>' +
     '</div>';
   document.getElementById('spClose').onclick = closeSkillParams;
   { const b = document.getElementById('spSave'); if (b) b.onclick = async () => { await saveSkillParams(); await refreshTreeLabels('Parâmetros salvos — valem na árvore, no Lua e no simulador.'); }; }
   ov.onclick = (e) => { if (e.target === ov) closeSkillParams(); };
+  ov.querySelectorAll('.sp-tab').forEach(t => t.onclick = async () => { spTab = t.dataset.role; await renderSkillParamsModal(); });
   ov.querySelectorAll('.spKnob').forEach(el => {
     el.onchange = async () => {
       const role = el.dataset.role, key = el.dataset.key, type = el.dataset.type;
@@ -1658,6 +1679,7 @@ async function renderSkillParamsModal() {
 async function openSkillManager() {
   await loadSkillChoice();
   await loadSummonChoice();
+  await loadSkillParams();
   if (scHomun == null) scHomun = ctxHomun || 51;
   let ov = document.getElementById('scModal');
   if (!ov) { ov = document.createElement('div'); ov.id = 'scModal'; ov.className = 'mm-overlay'; document.body.appendChild(ov); }
@@ -1670,6 +1692,10 @@ async function renderSkillManager() {
   const ov = document.getElementById('scModal'); if (!ov) return;
   let roles = [];
   try { roles = await callSim('roleConfig', { homunType: scHomun, baseType: (scHomun === ctxHomun ? (ctxBase || 0) : 0) }); } catch (e) { roles = []; }
+  let ovc = [];
+  try { ovc = await callSim('overrideConfig', { homunType: scHomun }); } catch (e) { ovc = []; }
+  const ovByRole = {}; (ovc || []).forEach(o => { ovByRole[o.role] = o; });
+  const ovArea = (role) => { const oc = ovByRole[role]; if (!oc) return ''; const checked = !!oc.hasOverride; return '<div class="sc-ovwrap" data-role="' + role + '"><label class="sc-ovchk"><input type="checkbox" class="sc-ovtoggle" data-role="' + role + '"' + (checked ? ' checked' : '') + '> sobrepor parâmetros</label>' + (checked ? '<div class="sc-ovknobs" data-role="' + role + '">' + oc.knobs.map(k => ovKnobField(role, k)).join('') + '</div>' : '') + '</div>'; };
 
   const homunOpts = SC_HOMUN_ORDER.map(t => '<option value="' + t + '"' + (t === scHomun ? ' selected' : '') + '>' + esc(HOMUN_NAMES[t] || ('#' + t)) + '</option>').join('');
 
@@ -1697,7 +1723,7 @@ async function renderSkillManager() {
       const bodyF = effF.map(sk => roSkillLine(r.key, sk)).join('');
       return '<div class="sc-row"><span class="sc-role">' + label + ' <span class="sc-fixed-tag" title="Skill fixa do perfil. Os parâmetros desta ação ficam em Parâmetros (global).">fixa</span></span>' +
              '<span class="sc-ctrl"><button class="sc-paramlink" type="button" data-role="' + r.key + '" title="Abrir os parâmetros globais desta ação">⚙ parâmetros</button></span></div>' +
-             '<div class="sc-skills" data-role="' + r.key + '">' + bodyF + '</div>';
+             '<div class="sc-skills" data-role="' + r.key + '">' + bodyF + '</div>' + ovArea(r.key);
     }
     const cands = r.candidates || [];
     if (cands.length === 0) return '';   // homúnculo não tem skill deste papel → oculta (não é necessário)
@@ -1713,7 +1739,7 @@ async function renderSkillManager() {
       : '<div class="sc-empty-skill">nenhuma skill — este papel não age</div>';
     return '<div class="sc-row"><span class="sc-role">' + label + '</span>' +
            '<span class="sc-ctrl">' + addCtrl + resetBtn + '</span></div>' +
-           '<div class="sc-skills' + (eff.length > 1 ? ' multi' : '') + '" data-role="' + r.key + '">' + skillLines + '</div>';
+           '<div class="sc-skills' + (eff.length > 1 ? ' multi' : '') + '" data-role="' + r.key + '">' + skillLines + '</div>' + ovArea(r.key);
   }).join('');
 
   let si = null; try { si = await callSim('summonInfo', { homunType: scHomun }); } catch (e) {}
@@ -1766,6 +1792,22 @@ async function renderSkillManager() {
     await renderSkillManager();
   });
   ov.querySelectorAll('.sc-paramlink').forEach(btn => btn.onclick = () => { closeSkillManager(); openSkillParams(btn.dataset.role); });
+  ov.querySelectorAll('.sc-ovtoggle').forEach(cb => cb.onchange = async () => {
+    const role = cb.dataset.role, oc = ovByRole[role];
+    if (cb.checked) ovEnable(scHomun, role, oc ? oc.knobs : []); else ovDisable(scHomun, role);
+    await saveSkillParams();
+    setStatus((cb.checked ? 'Sobreposição ligada' : 'Sobreposição removida') + ' (' + (HOMUN_NAMES[scHomun] || scHomun) + ' · ' + role + ').');
+    await renderSkillManager();
+  });
+  ov.querySelectorAll('.ovKnob').forEach(el => el.onchange = async () => {
+    const role = el.dataset.role, key = el.dataset.key, type = el.dataset.type;
+    let value;
+    if (type === 'boolean') value = (el.value === 'true');
+    else { const raw = String(el.value).trim(); let nn = parseFloat(raw); if (raw === '' || Number.isNaN(nn)) { nn = parseFloat(el.dataset.gv); if (Number.isNaN(nn)) nn = 0; el.value = nn; } value = nn; }
+    ovSetKnob(scHomun, role, key, value);
+    await saveSkillParams();
+    setStatus('Override atualizado (' + (HOMUN_NAMES[scHomun] || scHomun) + ').');
+  });
   ov.querySelectorAll('.sc-skill-lvl').forEach(sel => sel.onchange = async () => {
     scSetSkillLevel(scHomun, parseInt(sel.dataset.skill, 10), parseInt(sel.value, 10) || 0);
     await saveSkillChoice(); setStatus('Nível de skill atualizado (' + (HOMUN_NAMES[scHomun] || scHomun) + ').');

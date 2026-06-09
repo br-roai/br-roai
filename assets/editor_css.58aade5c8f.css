@@ -143,6 +143,17 @@ button:disabled{opacity:.45;cursor:default}
 
 /* ===== Tela: Skills por homúnculo ===== */
 .sc-panel{width:min(560px,92vw)}
+.sp-panel{width:min(900px,94vw)}
+/* Abas por papel no modal de Parâmetros */
+.sp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 6px}
+.sp-tab{font-size:12px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+.sp-tab:hover{color:#cdd9e5;border-color:#6cc6ff66}
+.sp-tab.active{color:#fff;background:#1f6feb;border-color:#1f6feb}
+/* Sobreposição de parâmetros por homúnculo (modal de Skills) */
+.sc-ovwrap{margin:5px 0 2px;padding:6px 0 2px;border-top:1px dashed var(--line)}
+.sc-ovchk{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+.sc-ovchk input{cursor:pointer}
+.sc-ovknobs{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .sc-body{flex-direction:column;gap:14px}
 .sc-pick{display:flex;flex-direction:column;gap:6px}
 .sc-pick select{width:220px}
