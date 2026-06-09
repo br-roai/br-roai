@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Passo a passo: da ideia à árvore — BR-AI</title>
+<link rel="stylesheet" href="help.css" />
+<link rel="icon" href="img/logo.svg" />
+<style>
+  /* realces locais só desta página (não mexe no help.css) */
+  figure a{display:block} figure a:hover{text-decoration:none}
+  .ideia{counter-reset:none; background:var(--card2); border:1px solid var(--line); border-radius:11px; padding:14px 20px; margin:1.1em 0}
+  .ideia ol{margin:.3em 0}
+  .ideia ol ol{margin:.2em 0}
+  .pill{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:2px 8px; border-radius:20px; border:1px solid var(--line2); color:var(--ink2); background:#101820; margin-left:8px; vertical-align:middle}
+  .pill.basico{color:#6fe0a0; border-color:#27543c} .pill.inter{color:#ffcf5c; border-color:#5a4a1e} .pill.avanc{color:#c9a6ff; border-color:#45336b}
+  .legend{font-size:13px;color:var(--mut)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="row">
+    <a class="brand" href="index.html"><img src="img/logo.svg" alt="" /> BR-AI <span class="muted" style="font-weight:500">· Documentação</span></a>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="primeiros-passos.html">Primeiros passos</a>
+      <a href="passo-a-passo.html" class="cur">Passo a passo</a>
+      <a href="migrar.html">Migrar AzzyAI</a>
+      <a href="editor.html">Editor</a>
+      <a href="simulador.html">Simulador</a>
+      <a href="referencia-nos.html">Referência de nós</a>
+      <a href="monstros-e-skills.html">Monstros &amp; skills</a>
+      <a href="conceitos.html">Conceitos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="crumbs"><a href="index.html">Início</a> › Passo a passo: da ideia à árvore</div>
+  <h1>Passo a passo: da ideia à árvore</h1>
+  <p class="lead">Você tem uma ideia de como o homúnculo deve agir — "primeiro obedeça, depois ataque, e quando estiver à toa volte para o dono". Esta página mostra, com prints de cada passo, como transformar essa ideia em uma árvore de comportamento no editor. Começamos com um exemplo bem simples e vamos subindo até combos, invocação e ajuste fino.</p>
+
+  <div class="box tip">
+    <div class="h">▶ A receita, em uma frase</div>
+    <p>Escreva o que o homúnculo deve fazer como uma <strong>lista de prioridades</strong> (o mais importante em cima). Cada item vira um nó: um <strong>Seletor</strong> para a lista, uma <strong>Condição</strong> para o "se…", e uma <strong>Ação</strong> para o "faça…". É isso. O resto é repetir.</p>
+  </div>
+
+  <div class="toc">
+    <div class="h">Nesta página</div>
+    <ul>
+      <li><a href="#mental">O modelo mental</a></li>
+      <li><a href="#basico">1. Exemplo básico (do zero)</a></li>
+      <li><a href="#dieter">2. Exemplo completo: o Dieter</a></li>
+      <li><a href="#blastforge">2b. Blast Forge: dois jeitos</a></li>
+      <li><a href="#amistr">3. Amistr tanque</a></li>
+      <li><a href="#eira">4. Suporte e reagir a chefes</a></li>
+      <li><a href="#eleanor">5. Combos da Eleanor</a></li>
+      <li><a href="#sera">6. Invocação da Sera</a></li>
+      <li><a href="#avancado">7. Recursos avançados</a></li>
+      <li><a href="#proximos">Próximos passos</a></li>
+    </ul>
+  </div>
+
+  <!-- ===================== MODELO MENTAL ===================== -->
+  <h2 id="mental">O modelo mental</h2>
+  <p>A árvore é só <strong>decisão</strong>: a cada instante ela é percorrida de cima para baixo e decide <em>uma</em> coisa para fazer. Três peças resolvem quase tudo (a lista completa está na <a href="referencia-nos.html">Referência de nós</a>):</p>
+  <table>
+    <thead><tr><th>Peça</th><th>Para que serve</th><th>Na sua ideia, é o…</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Seletor</strong></td><td>Tenta os filhos de cima para baixo e <strong>para no primeiro que dá certo</strong>.</td><td>"lista de prioridades"</td></tr>
+      <tr><td><strong>Condição</strong> <span class="legend">(check)</span></td><td>Testa algo (tem alvo? HP baixo?) e só roda o filho se for verdade.</td><td>"caso / quando / se…"</td></tr>
+      <tr><td><strong>Ação</strong></td><td>Faz algo no jogo: atacar, usar skill, mover, curar, ficar parado.</td><td>"use / ataque / persiga…"</td></tr>
+    </tbody>
+  </table>
+  <div class="box note">
+    <div class="h">Por que a ordem importa</div>
+    <p>Num Seletor, o <strong>primeiro filho que "dá certo" vence</strong> e o resto é ignorado naquele instante. Por isso emergências (curar, fugir, obedecer) ficam em cima e o "ficar à toa" fica por último. Ações que <em>não dão certo agora</em> (uma skill em recarga, um buff que já está ativo) "falham" de propósito e deixam a árvore seguir para o próximo item — é isso que faz a lista de prioridades funcionar.</p>
+  </div>
+
+  <h3>As áreas do editor</h3>
+  <p>Você monta a árvore no <strong>canvas</strong> e ajusta cada nó no <strong>inspetor</strong> à direita. No topo ficam os botões para adicionar nós, o seletor de <strong>homúnculo</strong> (que define quais skills aparecem) e os painéis de configuração.</p>
+  <figure>
+    <a href="img/tut-visao-geral.png" target="_blank" rel="noopener"><img src="img/tut-visao-geral.png" alt="Editor com as cinco áreas destacadas" /></a>
+    <figcaption><b>1</b> adicionar nós e gerenciar a árvore · <b>2</b> tipo do homúnculo · <b>3</b> painéis (Skills, Combos, Parâmetros, Config) · <b>4</b> canvas · <b>5</b> inspetor do nó selecionado.</figcaption>
+  </figure>
+
+  <!-- ===================== 1. BÁSICO ===================== -->
+  <h2 id="basico">1. Exemplo básico: obedecer, atacar, voltar <span class="pill basico">básico</span></h2>
+  <p>Vamos montar a árvore mínima de qualquer homúnculo de combate. A ideia:</p>
+  <div class="ideia">
+    <ol>
+      <li>Siga o comando do dono</li>
+      <li>Se já tem um alvo: ataque (ou persiga até o alcance)</li>
+      <li>Se pode engajar: escolha um alvo</li>
+      <li>Senão, fique parado</li>
+    </ol>
+  </div>
+
+  <h3>1.1 Comece pela raiz</h3>
+  <p>Toda árvore nasce de um <strong>Seletor</strong> (a "lista de prioridades"). Selecione um nó, escolha o <strong>tipo</strong> no menu da barra e clique em <strong>+ filho</strong> para pendurar um nó abaixo dele. O contexto (homúnculo) aqui é o <strong>Filir</strong>.</p>
+  <figure>
+    <a href="img/tut-basico-inicio.png" target="_blank" rel="noopener"><img src="img/tut-basico-inicio.png" alt="Editor com apenas o nó raiz e os controles de adicionar nó destacados" /></a>
+    <figcaption><b>1</b> escolha o tipo do nó · <b>2</b> "+ filho" adiciona abaixo do selecionado · <b>3</b> tudo começa num Seletor.</figcaption>
+  </figure>
+
+  <h3>1.2 Uma Condição (o "se…")</h3>
+  <p>Para "se já tem um alvo", use um nó <strong>Condição</strong>. No inspetor você troca o <strong>tipo</strong> para <em>Condição</em> e escolhe <em>qual</em> condição testar — aqui, <code>Tem alvo válido</code>. O filho da condição só roda quando ela é verdadeira.</p>
+  <figure>
+    <a href="img/tut-basico-condicao.png" target="_blank" rel="noopener"><img src="img/tut-basico-condicao.png" alt="Nó de condição selecionado com o inspetor mostrando tipo e condição" /></a>
+    <figcaption><b>1</b> o nó no canvas · <b>2</b> tipo do nó: Condição · <b>3</b> qual condição testar.</figcaption>
+  </figure>
+
+  <h3>1.3 Uma Ação (o "faça…")</h3>
+  <p>Para "persiga o alvo", use um nó <strong>Ação</strong>. A lista de ações é <strong>agrupada por tema</strong> (Alvo, Ataque, Movimento, Skills, Buffs…), o que facilita achar a que você quer.</p>
+  <figure>
+    <a href="img/tut-basico-acao.png" target="_blank" rel="noopener"><img src="img/tut-basico-acao.png" alt="Nó de ação selecionado com a lista agrupada de ações" /></a>
+    <figcaption><b>1</b> o nó no canvas · <b>2</b> a ação, escolhida numa lista agrupada por tema.</figcaption>
+  </figure>
+
+  <h3>1.4 A árvore básica pronta</h3>
+  <p>Juntando tudo num Seletor, na ordem de prioridade. Repare como ela lê de cima para baixo, igual à sua lista.</p>
+  <figure>
+    <a href="img/tut-basico-geral.png" target="_blank" rel="noopener"><img src="img/tut-basico-geral.png" alt="Árvore básica completa com as quatro prioridades numeradas" /></a>
+    <figcaption><b>1</b> obedecer → <b>2</b> atacar o alvo → <b>3</b> buscar alvo → <b>4</b> ficar parado.</figcaption>
+  </figure>
+
+  <!-- ===================== 2. DIETER ===================== -->
+  <h2 id="dieter">2. Exemplo completo: o Dieter <span class="pill inter">intermediário</span></h2>
+  <p>Agora a ideia completa de um <strong>Dieter</strong> (Homunculus S, base Amistr), que é a que motivou esta página:</p>
+  <div class="ideia">
+    <ol>
+      <li>Siga o comando do dono</li>
+      <li>Use <strong>Tempering lv10</strong> (mantenha o buff)</li>
+      <li>Caso tenha um alvo definido:
+        <ol>
+          <li>Use <strong>Blast Forge lv10</strong></li>
+          <li>Caso esteja ao alcance do ataque básico: use o ataque básico</li>
+          <li>Persiga o alvo</li>
+        </ol>
+      </li>
+      <li>Caso possa engajar: escolha o alvo com <strong>menor vida</strong></li>
+      <li>Quando estiver ocioso:
+        <ol>
+          <li>Se está a mais de 3 quadrados do dono: aproxime-se do dono</li>
+          <li>Use <strong>Magma Flow</strong></li>
+          <li>Fique parado</li>
+        </ol>
+      </li>
+    </ol>
+  </div>
+  <p>Antes de montar, escolha o homúnculo no topo: <strong>Dieter</strong> e base <strong>Amistr</strong>. Isso faz o editor mostrar só as skills que esse homúnculo realmente tem.</p>
+
+  <h3>2.1 Passo 2 — manter o Tempering lv10</h3>
+  <p>O Tempering é um <strong>buff no próprio homúnculo</strong>. Para uma skill específica como essa, use a ação <code>Usar buff específico</code>, escolha a skill e o nível. Como é um buff, ela "falha" enquanto o efeito está ativo — então não atrapalha o resto da lista; só recasta quando expira.</p>
+  <figure>
+    <a href="img/tut-dieter-tempering.png" target="_blank" rel="noopener"><img src="img/tut-dieter-tempering.png" alt="Inspetor configurando UseSkillBuff com Tempering nível 10" /></a>
+    <figcaption><b>1</b> ação "Usar buff específico" · <b>2</b> skill: Tempering · <b>3</b> nível: 10. O card mostra os dados da skill naquele nível.</figcaption>
+  </figure>
+
+  <h3>2.2 Passo 4 — escolher o alvo de menor vida</h3>
+  <p>"Escolha o alvo com menor vida" é a ação <code>Escolher alvo</code> com a <strong>prioridade</strong> trocada para <em>Menor HP</em> (as outras opções são "Mais próximo" e "Atacante do dono").</p>
+  <figure>
+    <a href="img/tut-dieter-alvo.png" target="_blank" rel="noopener"><img src="img/tut-dieter-alvo.png" alt="Inspetor da ação Escolher alvo com prioridade Menor HP" /></a>
+    <figcaption><b>1</b> ação "Escolher alvo" · <b>2</b> prioridade de alvo: Menor HP.</figcaption>
+  </figure>
+
+  <h3>2.3 A árvore do Dieter, completa</h3>
+  <p>Cada número abaixo é uma prioridade do Seletor raiz — exatamente a sua lista, de cima para baixo.</p>
+  <figure>
+    <a href="img/tut-dieter-geral.png" target="_blank" rel="noopener"><img src="img/tut-dieter-geral.png" alt="Árvore completa do Dieter com as cinco prioridades numeradas" /></a>
+    <figcaption><b>1</b> obedecer · <b>2</b> manter Tempering · <b>3</b> se tem alvo: Blast Forge / atacar / perseguir · <b>4</b> se pode engajar: alvo de menor vida · <b>5</b> ocioso: voltar ao dono / Magma Flow / parado.</figcaption>
+  </figure>
+  <div class="box note">
+    <div class="h">Sobre a ordem dos passos 3 e 4</div>
+    <p>Na primeira passada sem alvo, o passo 3 ("tem alvo?") falha e a árvore cai no passo 4, que <strong>escolhe</strong> um alvo. Na passada seguinte o passo 3 já é verdadeiro e entra no combate. Esse "vai e volta" de um tick é normal e funciona bem.</p>
+  </div>
+
+  <!-- ===================== 2b. BLAST FORGE DOIS JEITOS ===================== -->
+  <h2 id="blastforge">2b. Blast Forge: dois jeitos de usar a mesma skill <span class="pill inter">intermediário</span></h2>
+  <p>O passo 3.1 ("use Blast Forge lv10") pode ser feito de <strong>dois jeitos</strong>. Saber a diferença é o pulo do gato para usar o editor bem.</p>
+
+  <h3>Jeito A — skill específica (você escolhe a skill no nó)</h3>
+  <p>Use a ação <code>Usar skill específica</code> e escolha <em>Blast Forge</em>, nível 10. Como é uma skill de <strong>área</strong>, aparece também o "alvo do solo" (onde centrar a área): no monstro-alvo. É direto e não depende de configuração nenhuma — o nó "amarra" a skill.</p>
+  <figure>
+    <a href="img/tut-dieter-blastforge-a.png" target="_blank" rel="noopener"><img src="img/tut-dieter-blastforge-a.png" alt="Inspetor com UseSkill, Blast Forge nível 10 e alvo do solo no monstro" /></a>
+    <figcaption><b>1</b> ação "Usar skill específica" · <b>2</b> Blast Forge (Dano em área) · <b>3</b> nível 10 · <b>4</b> centro da área: no monstro-alvo.</figcaption>
+  </figure>
+
+  <h3>Jeito B — ação genérica + skills padrão do homúnculo</h3>
+  <p>Use a ação genérica <code>Skill em área (AoE)</code>. Ela não pede uma skill: usa as <strong>skills de área padrão do homúnculo</strong>, na ordem de prioridade. O Dieter já vem com <em>Lava Slide</em> e <em>Blast Forge</em> nesse papel — o inspetor mostra isso e oferece o botão <strong>Configurar skills</strong>.</p>
+  <figure>
+    <a href="img/tut-dieter-blastforge-b.png" target="_blank" rel="noopener"><img src="img/tut-dieter-blastforge-b.png" alt="Inspetor da ação genérica Skill em área mostrando as skills padrão e o botão Configurar skills" /></a>
+    <figcaption><b>1</b> ação genérica "Skill em área (AoE)" — note "Lava Slide Lv10 · Blast Forge Lv10" como padrão · <b>2</b> botão "Configurar skills…".</figcaption>
+  </figure>
+  <p>Clicando em <strong>Configurar skills</strong> abre a tela <strong>Skills por homúnculo</strong>. No papel <em>Skill em área (AoE)</em> do Dieter você vê Lava Slide e Blast Forge; pode ajustar o nível, remover uma, ou deixar só a Blast Forge se quiser que a IA priorize ela.</p>
+  <figure>
+    <a href="img/tut-dieter-skills.png" target="_blank" rel="noopener"><img src="img/tut-dieter-skills.png" alt="Tela Skills por homúnculo do Dieter com o papel AoE destacado" /></a>
+    <figcaption><b>1</b> o papel "Skill em área (AoE)" com as duas skills · <b>2</b> adicionar / priorizar / remover skills do papel.</figcaption>
+  </figure>
+  <div class="box tip">
+    <div class="h">Qual jeito usar?</div>
+    <p><strong>Jeito A</strong> quando você quer uma skill <em>exata</em> num ponto da árvore (ex.: um nuke específico contra chefe). <strong>Jeito B</strong> para o ataque do dia a dia: a mesma árvore serve para vários homúnculos, porque cada um usa a sua própria skill de área. As <strong>skills configuradas</strong> valem tanto no simulador quanto no Lua gerado.</p>
+  </div>
+
+  <!-- ===================== 3. AMISTR ===================== -->
+  <h2 id="amistr">3. Amistr tanque: proteger o dono <span class="pill inter">intermediário</span></h2>
+  <p>O Amistr é o tanque. A ideia muda o foco de "matar" para "segurar aggro e proteger o dono": trocar de lugar com o dono quando ele é cercado (<strong>Castling</strong>), manter os buffs e mirar em quem ataca o dono.</p>
+  <figure>
+    <a href="img/tut-amistr-geral.png" target="_blank" rel="noopener"><img src="img/tut-amistr-geral.png" alt="Árvore do Amistr tanque com Castling, buffs em paralelo e proteção do dono" /></a>
+    <figcaption><b>1</b> Castling: troca de posição com o dono quando ele está cercado · <b>2</b> nó <em>Paralelo</em> mantém Bulwark + Bloodlust · <b>3</b> mira em quem ataca o dono.</figcaption>
+  </figure>
+  <p>Ações automáticas como Castling, buffs e cura <strong>não pedem skill no nó</strong>: elas usam a skill padrão do papel daquele homúnculo. O ajuste fino (ex.: a partir de quantos monstros no dono o Castling dispara) fica no botão <strong>Parâmetros</strong> — veja a seção avançada.</p>
+  <figure class="inline">
+    <a href="img/tut-amistr-castling.png" target="_blank" rel="noopener"><img src="img/tut-amistr-castling.png" alt="Inspetor da ação Castling com o botão Parâmetros" /></a>
+    <figcaption><b>1</b> ação "Castling" (skill padrão do Amistr) · <b>2</b> "Parâmetros desta skill" para o ajuste fino.</figcaption>
+  </figure>
+
+  <!-- ===================== 4. EIRA / MONSTERCHECK ===================== -->
+  <h2 id="eira">4. Suporte e reagir a chefes <span class="pill inter">intermediário</span></h2>
+  <p>A Eira (base Lif) é suporte: cuida do dono antes de pensar em atacar. A ideia: <strong>curar o dono</strong> se ele cair de vida (Silent Breeze), fugir se ela mesma estiver em apuros, manter o buff e, no combate, ter um <strong>ramo especial contra chefes</strong>.</p>
+  <figure>
+    <a href="img/tut-eira-geral.png" target="_blank" rel="noopener"><img src="img/tut-eira-geral.png" alt="Árvore da Eira suporte com cura do dono e ramo contra chefe" /></a>
+    <figcaption><b>1</b> cura o dono quando ele cai abaixo de 70% · <b>2</b> ramo que só roda quando o alvo é um chefe.</figcaption>
+  </figure>
+
+  <h3>4.1 Reagir a um monstro/grupo: o nó Monstro</h3>
+  <p>Para "se o alvo é um chefe, faça X", use o nó <strong>Monstro</strong> (monsterCheck). Ele roda o filho só quando o alvo atual <em>é</em> o monstro escolhido <em>ou está</em> no grupo escolhido. Os monstros e grupos (ex.: o grupo <strong>Chefes</strong>) são cadastrados no botão <strong>Monstros</strong> — veja <a href="monstros-e-skills.html">Monstros &amp; skills</a>.</p>
+  <figure>
+    <a href="img/tut-monstercheck.png" target="_blank" rel="noopener"><img src="img/tut-monstercheck.png" alt="Inspetor do nó Monstro com grupo Chefes selecionado" /></a>
+    <figcaption><b>1</b> um monstro específico… · <b>2</b> …ou um grupo (ex.: Chefes) · <b>3</b> "negar" inverte (todos menos esse).</figcaption>
+  </figure>
+
+  <!-- ===================== 5. ELEANOR ===================== -->
+  <h2 id="eleanor">5. Combos da Eleanor <span class="pill avanc">avançado</span></h2>
+  <p>A Eleanor luta com <strong>combos</strong> e dois estilos (Combate/Power e Agarrão/Grapple). Em vez de montar cada golpe na mão, ela usa um único nó guarda-chuva, <code>Ofensiva da Eleanor</code>, que cuida de estilo + esferas + combo de uma vez.</p>
+  <figure class="inline">
+    <a href="img/tut-eleanor-no.png" target="_blank" rel="noopener"><img src="img/tut-eleanor-no.png" alt="Inspetor do nó Ofensiva da Eleanor com o botão de abrir o painel de combos" /></a>
+    <figcaption><b>1</b> ação "Ofensiva da Eleanor" · <b>2</b> "Abrir painel de Combos".</figcaption>
+  </figure>
+  <p>No painel de <strong>Combos da Eleanor</strong> você define o estilo padrão, a <strong>barragem de esferas</strong> (quantas esferas estimadas antes de começar o combo, para garantir o finalizador), a janela de encadeamento e o limite de ameaça para liberar o Agarrão. Embaixo, as duas cadeias (Power e Grapple) com o <strong>nível de cada golpe</strong> — note o aviso de que o E.Q.C. é proibido em Boss/MVP.</p>
+  <figure>
+    <a href="img/tut-eleanor-combos.png" target="_blank" rel="noopener"><img src="img/tut-eleanor-combos.png" alt="Painel de Combos da Eleanor com estilo, esferas, ameaça e as cadeias Power e Grapple" /></a>
+    <figcaption><b>1</b> estilo (Combate / Agarrão / Auto) · <b>2</b> esferas mínimas para iniciar · <b>3</b> limite de ameaça para o Agarrão · <b>4</b> as duas cadeias e o nível de cada golpe.</figcaption>
+  </figure>
+  <div class="box note">
+    <div class="h">Estilo "Auto"</div>
+    <p>No estilo <strong>Auto</strong>, a Eleanor entra no Agarrão só quando está isolada (poucos monstros perto, dentro do "limite de ameaça"); em multidão, fica no Combate. Isso evita a armadilha do Tinder Breaker, que zera o Flee.</p>
+  </div>
+
+  <!-- ===================== 6. SERA ===================== -->
+  <h2 id="sera">6. Invocação da Sera <span class="pill avanc">avançado</span></h2>
+  <p>A Sera invoca uma <strong>Legião</strong> de insetos. A ação <code>Invocar/manter Legião</code> decide sozinha quando (re)invocar. No nó você define os parâmetros que <strong>sobrepõem</strong> o padrão: nível, política de re-invocação (<code>onExpire</code>, <code>keepFull</code>, <code>minCount</code>) e o número mínimo de inimigos por perto.</p>
+  <figure>
+    <a href="img/tut-sera-no.png" target="_blank" rel="noopener"><img src="img/tut-sera-no.png" alt="Inspetor do nó Invocar Legião da Sera com os parâmetros" /></a>
+    <figcaption><b>1</b> ação "Invocar/manter Legião (Sera)" · <b>2</b> parâmetros do nó (nível, re-invocação, mín. de inimigos) — sobrepõem o padrão.</figcaption>
+  </figure>
+  <p>O <strong>padrão</strong> da invocação fica na tela de <strong>Skills</strong>, no painel de invocação: ali você vê quantos insetos saem por nível e configura a política com controles mais amigáveis (o nó na árvore tem prioridade sobre isso).</p>
+  <figure>
+    <a href="img/tut-sera-summon.png" target="_blank" rel="noopener"><img src="img/tut-sera-summon.png" alt="Painel de invocação da Sera dentro da tela de Skills" /></a>
+    <figcaption><b>1</b> quantos insetos por nível · <b>2</b> o padrão da invocação: política de re-invocação, nível, mín. de inimigos, só em Boss/MVP.</figcaption>
+  </figure>
+
+  <!-- ===================== 7. AVANÇADO ===================== -->
+  <h2 id="avancado">7. Recursos avançados <span class="pill avanc">avançado</span></h2>
+
+  <h3 id="cooldown">7.1 Recarga (cooldown): "a cada X segundos"</h3>
+  <p>O decorator <strong>Recarga</strong> deixa o filho agir e depois o <strong>bloqueia por alguns ms</strong>. Ótimo para temporizar algo — por exemplo, jogar um debuff de chefe só a cada 12 segundos, em vez de toda hora.</p>
+  <figure>
+    <a href="img/tut-cooldown.png" target="_blank" rel="noopener"><img src="img/tut-cooldown.png" alt="Inspetor de um nó Recarga com o campo de milissegundos" /></a>
+    <figcaption><b>1</b> o nó Recarga no canvas · <b>2</b> bloqueia o filho por 12000 ms após cada uso.</figcaption>
+  </figure>
+
+  <h3 id="limiter">7.2 Limitador: "no máximo N vezes"</h3>
+  <p>O decorator <strong>Limitador</strong> deixa o filho dar certo no máximo N vezes. Útil para algo que só deve acontecer poucas vezes (um setup inicial, por exemplo). A <em>chave</em> agrupa o limite quando você quer compartilhá-lo entre nós.</p>
+  <figure>
+    <a href="img/tut-limiter.png" target="_blank" rel="noopener"><img src="img/tut-limiter.png" alt="Inspetor de um nó Limitador com máximo e chave" /></a>
+    <figcaption><b>1</b> o nó Limitador no canvas · <b>2</b> máximo de sucessos · <b>3</b> chave opcional.</figcaption>
+  </figure>
+
+  <h3 id="parametros">7.3 Parâmetros por papel: ajuste fino sem mexer na árvore</h3>
+  <p>O botão <strong>Parâmetros</strong> abre um painel com uma <strong>aba por papel</strong> (skill de área, buff, cura…). Ali você ajusta <em>quando e como</em> cada skill dispara — por exemplo, a partir de quantos monstros agrupados a AoE vale a pena, ou a reserva de SP. É global do homúnculo e vale no simulador e no Lua.</p>
+  <figure>
+    <a href="img/tut-parametros.png" target="_blank" rel="noopener"><img src="img/tut-parametros.png" alt="Painel de Parâmetros das skills com abas por papel" /></a>
+    <figcaption><b>1</b> uma aba por papel · <b>2</b> os ajustes (AutoMobCount, reserva de SP, nível fixo…).</figcaption>
+  </figure>
+
+  <h3 id="desativar">7.4 Desativar um nó para testar</h3>
+  <p>Quer testar uma versão da árvore sem um ramo, mas sem apagá-lo? <strong>Desative</strong> o nó (botão no inspetor ou tecla <kbd>D</kbd>). Ele fica cinza, não executa e <strong>some do Lua</strong> ao gerar — depois é só reativar.</p>
+  <figure>
+    <a href="img/tut-desativar.png" target="_blank" rel="noopener"><img src="img/tut-desativar.png" alt="Árvore com um ramo desativado em cinza" /></a>
+    <figcaption><b>1</b> liga/desliga o nó (e os filhos) · <b>2</b> o ramo desativado fica cinza e não entra no Lua gerado.</figcaption>
+  </figure>
+
+  <!-- ===================== PRÓXIMOS PASSOS ===================== -->
+  <h2 id="proximos">Próximos passos: testar e levar ao jogo</h2>
+  <p>Com a árvore montada, o fluxo é sempre o mesmo:</p>
+  <ol class="steps">
+    <li><strong>Salve</strong> a árvore (dê um nome no topo).</li>
+    <li>Clique em <strong>▶ Simular</strong> e teste num cenário (dono + monstros). Veja a árvore acender ao vivo e confira se cada prioridade dispara como você imaginou — detalhes no <a href="simulador.html">Guia do Simulador</a>.</li>
+    <li>Volte, ajuste (reordene prioridades, troque skills, desative ramos) e repita.</li>
+    <li class="last">Quando estiver bom, clique em <strong>Gerar Lua</strong> para baixar o pacote pronto para a pasta da IA do RO — veja o <a href="editor.html#gerar">Guia do Editor</a>.</li>
+  </ol>
+  <div class="box tip">
+    <div class="h">Resumo</div>
+    <p>Escreva a ideia como lista de prioridades → Seletor na raiz, Condição para os "se…", Ação para os "faça…", de cima (mais urgente) para baixo (ocioso). Skills específicas pelo nó, skills do dia a dia pelos papéis. Teste no simulador e gere o Lua. Pronto.</p>
+  </div>
+</main>
+
+<footer>
+  BR-AI — IA de homúnculos do Ragnarok Online sobre árvore de comportamento. Veja também o <a href="editor.html">Guia do Editor</a>, o <a href="simulador.html">Simulador</a> e a <a href="referencia-nos.html">Referência de nós</a>.
+</footer>
+</body>
+</html>
