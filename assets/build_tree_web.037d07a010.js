@@ -55,6 +55,17 @@
     if (DEC_REQ[out.type] && out.child == null) return null;
     return out;
   }
+  // treeUsesMonsterCheck: espelho de tools/build_tree.js (paridade obrigatoria). [PLANO-GERACAO-LUA #2]
+  function treeUsesMonsterCheck(spec) {
+    if (!spec || typeof spec !== 'object') return false;
+    if (spec.disabled) return false;
+    if (spec.type === 'monsterCheck') return true;
+    if (Array.isArray(spec.children)) {
+      for (var i = 0; i < spec.children.length; i++) if (treeUsesMonsterCheck(spec.children[i])) return true;
+    }
+    if (spec.child && treeUsesMonsterCheck(spec.child)) return true;
+    return false;
+  }
   function generate(spec) {
     spec = pruneDisabled(spec) || { type: 'selector', children: [] };
     return [
@@ -172,7 +183,35 @@
       '',
     ].join('\n');
   }
-  var api = { generate: generate, generateConfig: generateConfig, generateMonsters: generateMonsters, generateSkillChoice: generateSkillChoice, generateSummonChoice: generateSummonChoice };
+  function generateSkillParams(params) {
+    var src = (params && params.params) ? params.params : (params || {});
+    var data = {};
+    Object.keys(src).forEach(function (k) {
+      var roles = src[k] || {}, r = {};
+      Object.keys(roles).forEach(function (role) {
+        var knobs = roles[role];
+        if (knobs && typeof knobs === 'object') {
+          var rr = {};
+          Object.keys(knobs).forEach(function (key) { var v = knobs[key]; if (typeof v === 'number' || typeof v === 'boolean') rr[key] = v; });
+          if (Object.keys(rr).length) r[role] = rr;
+        }
+      });
+      if (Object.keys(r).length) data[String(k)] = r;
+    });
+    return [
+      '-- skill_params.lua — GERADO por BR-AI (web). Nao editar a mao.',
+      'BRAI = BRAI or {}',
+      '',
+      'local params = ' + luaValue({ params: data }, 0),
+      '',
+      'if BRAI.setSkillParams then BRAI.setSkillParams(params) end',
+      'BRAI.skillParamsRaw = params',
+      '',
+      'return params',
+      '',
+    ].join('\n');
+  }
+  var api = { generate: generate, generateConfig: generateConfig, generateMonsters: generateMonsters, generateSkillChoice: generateSkillChoice, generateSummonChoice: generateSummonChoice, generateSkillParams: generateSkillParams, treeUsesMonsterCheck: treeUsesMonsterCheck };
   if (typeof window !== 'undefined') window.BRAI_BUILD = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })();

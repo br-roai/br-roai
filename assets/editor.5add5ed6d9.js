@@ -5,7 +5,7 @@
 const COMPOSITES = ['selector', 'sequence', 'parallel'];
 const DECORATORS = ['inverter', 'succeeder', 'cooldown', 'limiter'];
 const LEAVES = ['condition', 'action'];
-const NW = 150, NH = 58, GX = 28, GY = 66; // largura/altura do nó + gaps de layout
+const NW = 200, NH = 58, GX = 28, GY = 66; // largura/altura do nó + gaps de layout
 
 const $ = (id) => document.getElementById(id);
 let registry = {};
@@ -20,7 +20,31 @@ let cfgDefaults = null;  // BRAI.defaultConfig() (do sim), p/ o painel Config  /
 const S_TYPES_E = [48, 49, 50, 51, 52];
 const CAT_LABEL = { single: 'Dano alvo único', aoe: 'Dano em área', buff: 'Buff', heal: 'Cura', special: 'Especial', passive: 'Passiva' };
 const CAT_ORDER = ['single', 'aoe', 'buff', 'heal', 'special', 'passive'];
-async function loadCatalog() { try { catalog = await callSim('skillCatalog', { homunType: ctxHomun, baseType: ctxBase }); } catch (e) { catalog = []; } }
+// #5: skills efetivas por papel do homún do contexto (p/ o rótulo do nó). Cache recarregado com o catálogo.
+let roleCfgCache = null;
+let actionSkillsCache = null;   // S3: skills+estado das 8 ações automáticas (rótulo do nó)
+const ACTION_ROLE = { UseAoESkill: 'aoeAtk', UseMainSkill: 'mainAtk', UseOffensiveBuff: 'offBuff', UseDefensiveBuff: 'defBuff' };
+const PARAM_EXTRA = { UseHealSelf: 'healSelf', UseHealOwner: 'healOwner', UseOwnerBuff: 'ownerBuff', UseCastling: 'castling' };   // ações de skill sem knobs por nó, mas com params por homún [C8]
+async function loadCatalog() {
+  try { catalog = await callSim('skillCatalog', { homunType: ctxHomun, baseType: ctxBase }); } catch (e) { catalog = []; }
+  try { roleCfgCache = await callSim('roleConfig', { homunType: ctxHomun }); } catch (e) { roleCfgCache = null; }   // #5
+  try { actionSkillsCache = await callSim('actionSkillsAll', { homunType: ctxHomun, baseType: ctxBase }); } catch (e) { actionSkillsCache = null; }   // S3
+}
+// rótulo das skills efetivas de uma ação automática (nome + nível). Vazio (ex.: Dieter mainAtk) => ''.
+function roleSkillsLabel(actionName) {
+  const role = ACTION_ROLE[actionName];
+  if (!role || !roleCfgCache) return '';
+  const rc = roleCfgCache.find(r => r.key === role);
+  if (!rc || !rc.effective || !rc.effective.length) return '';
+  return rc.effective.map(e => e.name + ' Lv' + (e.level > 0 ? e.level : (e.maxLevel || '?'))).join(' · ');
+}
+// Após editar/salvar um modal de config, recarrega o cache do contexto (roleCfgCache via loadCatalog)
+// e re-renderiza a árvore/inspetor — assim os rótulos refletem o que está no host (e no Lua/sim).
+async function refreshTreeLabels(msg) {
+  await loadCatalog();
+  renderInspector(); renderAll();
+  if (msg) setStatus(msg);
+}
 // catálogo GLOBAL de monstros/grupos (cadastro do usuário) p/ os nós monsterCheck.
 let monCatalog = { monsters: [], groups: [] };
 function normCatalog(c) { c = c || {}; return { monsters: Array.isArray(c.monsters) ? c.monsters : [], groups: Array.isArray(c.groups) ? c.groups : [] }; }
@@ -54,6 +78,8 @@ async function monImportCfg(file) {
 // ação automática (UseAoESkill, UseOffensiveBuff, ...) usa. Global, na raiz.
 let skillChoice = { choices: {} };
 let scHomun = null;
+let spHomun = null;   // homún selecionado no modal de Parâmetros (#spModal)
+let spParams = { params: {} };   // parâmetros de skill por homún/papel (homun_skill_params.json)
 let summonCfg = { choices: {} };
 const HOMUN_NAMES = { 1: 'Lif', 2: 'Amistr', 3: 'Filir', 4: 'Vanilmirth', 48: 'Eira', 49: 'Bayeri', 50: 'Sera', 51: 'Dieter', 52: 'Eleanor' };
 const SC_ROLE_LABEL = { mainAtk: 'Main skill (alvo único)', aoeAtk: 'Skill em área (AoE)', offBuff: 'Buff ofensivo', defBuff: 'Buff defensivo' };
@@ -84,6 +110,56 @@ async function scImportSkills(file) {
     await renderSkillManager();   // recria o modal a partir do importado
     scIoMsg('Skills importadas.', false);
   } catch (e) { scIoMsg('Arquivo de skills inválido.', true); }
+}
+// ---- Parâmetros de skill por homúnculo/papel (#spModal) ----
+function normParams(p) { p = p || {}; return { params: (p.params && typeof p.params === 'object') ? p.params : {} }; }
+async function loadSkillParams() { try { const r = await window.skillParamsIO.load(); if (r && r.ok) spParams = normParams(JSON.parse(r.data)); } catch (e) { spParams = { params: {} }; } try { await callSim('setSkillParams', spParams); } catch (e) {} }
+async function saveSkillParams() { try { await window.skillParamsIO.save(JSON.stringify(spParams, null, 2)); } catch (e) {} try { await callSim('setSkillParams', spParams); } catch (e) {} }
+function spGetRole(homun, role) { const k = String(homun); return (spParams.params[k] && spParams.params[k][role]) || {}; }
+function spSetKnob(homun, role, key, value) {
+  const k = String(homun);
+  spParams.params[k] = spParams.params[k] || {};
+  spParams.params[k][role] = spParams.params[k][role] || {};
+  if (value === null || value === undefined) {
+    delete spParams.params[k][role][key];
+    if (!Object.keys(spParams.params[k][role]).length) delete spParams.params[k][role];
+    if (spParams.params[k] && !Object.keys(spParams.params[k]).length) delete spParams.params[k];
+  } else { spParams.params[k][role][key] = value; }
+}
+function spIoMsg(t, isErr) { const m = document.getElementById('spIoMsg'); if (m) { m.textContent = t || ''; m.className = 'sc-io-msg ' + (isErr ? 'err' : 'ok'); } }
+function spExportParams() {
+  try {
+    const blob = new Blob([JSON.stringify(spParams || { params: {} }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'homun_skill_params.json';
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    spIoMsg('Parâmetros exportados (download).', false);
+  } catch (e) { spIoMsg('Falha ao exportar.', true); }
+}
+async function spImportParams(file) {
+  try {
+    const obj = JSON.parse(await file.text());
+    if (!obj || typeof obj !== 'object' || typeof obj.params !== 'object') throw new Error('fmt');
+    spParams = normParams(obj);
+    await saveSkillParams();
+    await renderSkillParamsModal();
+    spIoMsg('Parâmetros importados.', false);
+  } catch (e) { spIoMsg('Arquivo de parâmetros inválido.', true); }
+}
+// campo de um knob no modal: number (com dica do global) ou booleano TRI-ESTADO (herdar|sim|não)
+function spKnobField(role, knob) {
+  const cur = spGetRole(spHomun, role)[knob.key];
+  const gv = knob.default;
+  if (knob.type === 'boolean') {
+    const selv = (cur != null) ? (cur ? 'true' : 'false') : '';
+    const o = [['', 'herdar' + (gv !== undefined ? ' (' + fmtCfg(gv) + ')' : '')], ['true', 'sim'], ['false', 'não']];
+    return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + '</label>' +
+      '<select class="spKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="boolean">' +
+      o.map(x => '<option value="' + x[0] + '"' + (x[0] === selv ? ' selected' : '') + '>' + esc(x[1]) + '</option>').join('') + '</select></div>';
+  }
+  const v = (cur != null) ? cur : '';
+  const ph = (gv !== undefined) ? ' placeholder="' + esc(String(gv)) + '"' : '';
+  return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + (gv !== undefined ? ' <span class="sp-gl">· global: ' + esc(fmtCfg(gv)) + '</span>' : '') + '</label>' +
+    '<input class="spKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="number" type="number" value="' + v + '"' + ph + ' /></div>';
 }
 async function loadSummonChoice() { try { const r = await window.summonIO.load(); if (r && r.ok) summonCfg = normChoice(JSON.parse(r.data)); } catch (e) { summonCfg = { choices: {} }; } try { await callSim('setSummonChoice', summonCfg); } catch (e) {} }
 async function saveSummonChoice() { try { await window.summonIO.save(JSON.stringify(summonCfg, null, 2)); } catch (e) {} try { await callSim('setSummonChoice', summonCfg); } catch (e) {} }
@@ -238,6 +314,26 @@ async function callSim(method, obj) {
 function setStatus(msg, isErr) { const e = $('status'); e.textContent = msg || ''; e.style.color = isErr ? 'var(--red)' : 'var(--muted)'; }
 function esc(s) { return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
 function namesByKind(kind) { return Object.keys(registry).filter(n => registry[n].kind === kind).sort(); }
+// nomes LEGÍVEIS + GRUPOS das folhas (registry.title/group via leaf_meta.lua). Código mantido como value.
+const LEAF_GROUP_ORDER = ['Vida (HP/SP)', 'Ameaça', 'Alvo', 'Ataque', 'Movimento', 'Skills ofensivas', 'Buffs, cura & defesa', 'Skills (manual)', 'Dono', 'Eleanor & Sera'];
+function leafTitle(name) { return (registry[name] && registry[name].title) || name || ''; }
+function leafGroup(name) { return (registry[name] && registry[name].group) || 'Outros'; }
+function leafOptionsHtml(kind, selected) {
+  const byGroup = {};
+  namesByKind(kind).forEach(n => { (byGroup[leafGroup(n)] = byGroup[leafGroup(n)] || []).push(n); });
+  const groups = Object.keys(byGroup).sort((a, b) => {
+    const ia = LEAF_GROUP_ORDER.indexOf(a), ib = LEAF_GROUP_ORDER.indexOf(b);
+    return ((ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)) || a.localeCompare(b);
+  });
+  let html = '';
+  for (const g of groups) {
+    html += '<optgroup label="' + esc(g) + '">';
+    byGroup[g].sort((a, b) => leafTitle(a).localeCompare(leafTitle(b)));
+    for (const n of byGroup[g]) html += '<option value="' + esc(n) + '"' + (n === selected ? ' selected' : '') + ' title="' + esc(n) + '">' + esc(leafTitle(n)) + '</option>';
+    html += '</optgroup>';
+  }
+  return html;
+}
 function paramsSchema(name) { const p = registry[name] && registry[name].params; return (!p || Array.isArray(p)) ? {} : p; }
 function paramsOptional(name) { const o = registry[name] && registry[name].optional; return Array.isArray(o) ? o : []; }
 
@@ -491,10 +587,23 @@ function showHelpTip(x, y, text) {
 function hideHelpTip() { const t = document.getElementById('helptip'); if (t) t.style.display = 'none'; }
 function nodeTypeLabel(n) { return NODE_TYPE_LABEL[n.type] || n.type; }
 function nodeTypeClass(n) { const k = kindOf(n); return k === 'composite' ? 't-comp' : k === 'decorator' ? 't-dec' : k === 'check' ? 't-chk' : k === 'monstercheck' ? 't-mck' : k === 'leaf-cond' ? 't-cnd' : 't-act'; }
+function skLabel(s) { return (s.name || ('#' + s.id)) + ' Lv' + ((s.level && s.level > 0) ? s.level : (s.maxLevel || '?')); }
+// HTML das skills efetivas de uma ação automática (UMA por linha) + estado none/missing + overrides do nó.
+function nodeSkillsHtml(n) {
+  const as = actionSkillsCache && actionSkillsCache[n.name];
+  const lines = [];
+  if (as && as.state === 'ok') as.skills.forEach(s => lines.push('<span class="sk">' + esc(skLabel(s)) + '</span>'));
+  else if (as && as.state === 'none') lines.push('<span class="sk sk-warn">\u26a0 nenhuma skill selecionada</span>');
+  else if (as && as.state === 'missing') lines.push('<span class="sk sk-na">\u2014 sem skill p/ este tipo</span>');
+  const sc = paramsSchema(n.name);
+  const ks = Object.keys(sc).filter(k => n.params && n.params[k] != null);
+  if (ks.length) lines.push('<span class="sk sk-ov">' + esc(paramStr(n, ks)) + '</span>');
+  return lines.length ? lines.join('') : '<span class="sk sk-na">\u2014</span>';
+}
 function nodeMain(n) {
   if (n.type === 'action' && SKILL_ACTIONS[n.name] && n.params && n.params.skill) { const sk = catSkill(n.params.skill); return sk ? sk.iro : ('skill ' + n.params.skill); }
-  if (n.type === 'condition' || n.type === 'check') return n.label || n.name || '(condição)';
-  if (LEAVES.includes(n.type)) return n.label || n.name || '(sem nome)';
+  if (n.type === 'condition' || n.type === 'check') return n.label || leafTitle(n.name) || '(condição)';
+  if (LEAVES.includes(n.type)) return n.label || leafTitle(n.name) || '(sem nome)';
   if (n.type === 'monsterCheck') return (n.negate ? '\u2260 ' : '') + mcSummary(n);
   return n.label || ('(' + nodeTypeLabel(n).toLowerCase() + ')');
 }
@@ -524,7 +633,17 @@ function nodeSub(n) {
       if (n.params.interval) s += ' · a cada ' + n.params.interval + 'ms' + (n.params.reset ? ' (reset)' : '');
       return s;
     }
-    const sc = paramsSchema(n.name); const ks = Object.keys(sc);
+    // #5: ações automáticas mostram as skills efetivas do homún (nome+nível) + overrides explícitos
+    if (n.type === 'action' && ACTION_ROLE[n.name]) {
+      const skills = roleSkillsLabel(n.name);
+      const scA = paramsSchema(n.name);
+      const ksA = Object.keys(scA).filter(k => n.params && n.params[k] != null);   // só overrides definidos
+      const ov = ksA.length ? paramStr(n, ksA) : '';
+      return [skills, ov].filter(Boolean).join('  ·  ');
+    }
+    const sc = paramsSchema(n.name);
+    // só mostra knobs DEFINIDOS (override) ou obrigatórios; opcionais herdados não poluem o rótulo (#4)
+    const ks = Object.keys(sc).filter(k => (n.params && n.params[k] != null) || !paramsOptional(n.name).includes(k));
     let p = n.label ? n.name : '';
     if (ks.length) p += (p ? ' · ' : '') + paramStr(n, ks);
     return p || (registry[n.name] ? '' : '⚠ desconhecido');
@@ -596,8 +715,8 @@ function renderGraph() {
     parts.push('<div class="gnode ' + nodeClass(n) + (n.disabled ? ' gdisabled' : '') + (n._uid === selId ? ' sel' : '') + '" data-uid="' + n._uid +
       '" style="left:' + n._x + 'px;top:' + n._y + 'px">' +
       '<span class="type ' + nodeTypeClass(n) + '">' + esc(nodeTypeLabel(n)) + '</span>' +
-      '<span class="t">' + esc(nodeMain(n)) + '</span>' +
-      '<span class="s">' + esc(nodeSub(n)) + '</span>' + (canAddChild(n) ? '<span class="addbtn" title="Adicionar filho">+</span>' : '') + '</div>');
+      '<span class="t" title="' + esc((n.name ? n.name + (registry[n.name] && registry[n.name].desc ? ' — ' + registry[n.name].desc : '') : '')) + '">' + esc(nodeMain(n)) + '</span>' +
+      (n.type === 'action' && (ACTION_ROLE[n.name] || PARAM_EXTRA[n.name]) ? '<span class="s s-skills">' + nodeSkillsHtml(n) + '</span>' : '<span class="s">' + esc(nodeSub(n)) + '</span>') + (canAddChild(n) ? '<span class="addbtn" title="Adicionar filho">+</span>' : '') + '</div>');
     // pontos de ligação na BASE do pai — um por filho (na ordem): arrastar = reordenar/reparentar
     const kids = childrenOf(n);
     kids.forEach((c, i) => {
@@ -816,6 +935,14 @@ function endLinkDrag(ev) {
   }
 }
 
+// #4: valor EFETIVO de um knob de config global (treeConfig override > defaultConfig) p/ a dica de herança
+function effectiveGlobal(f) {
+  if (treeConfig && treeConfig[f] != null) return treeConfig[f];
+  if (cfgDefaults && cfgDefaults[f] != null) return cfgDefaults[f];
+  return undefined;
+}
+function fmtCfg(v) { return v === true ? 'sim' : v === false ? 'não' : String(v); }
+function cfgHint(f) { const gv = effectiveGlobal(f); return (gv !== undefined) ? ' · global: ' + fmtCfg(gv) : ''; }
 // monta o campo de um parâmetro; se for 'skill', usa um seletor de skill (por nome)
 function paramFieldHtml(f, type, sel) {
   if (f === 'skill') {
@@ -840,12 +967,24 @@ function paramFieldHtml(f, type, sel) {
     return field(f === 'combo' ? 'Combo' : 'Estilo', '<select class="iParam" data-f="' + f + '">' +
       o.map(x => '<option value="' + x[0] + '"' + (x[0] === cur ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select>');
   }
+  // #4: booleano TRI-ESTADO (herdar | sim | não) — ausente = herda a Config global
+  if (type === 'boolean') {
+    const curB = (sel.params && sel.params[f] != null) ? (sel.params[f] ? 'true' : 'false') : '';
+    const gvB = effectiveGlobal(f);
+    const o = [['', 'herdar' + (gvB !== undefined ? ' (' + fmtCfg(gvB) + ')' : '')], ['true', 'sim'], ['false', 'não']];
+    const selB = '<select class="iParamBool" data-f="' + f + '">' +
+      o.map(x => '<option value="' + x[0] + '"' + (x[0] === curB ? ' selected' : '') + '>' + esc(x[1]) + '</option>').join('') + '</select>';
+    const optB = paramsOptional(sel.name).includes(f);
+    return field('param: ' + f + ' (booleano)' + (optB ? ' — opcional' : ''), selB);
+  }
   const v = (sel.params && sel.params[f] != null) ? sel.params[f] : '';
+  const gv = effectiveGlobal(f);
+  const ph = (gv !== undefined) ? ' placeholder="' + esc(String(gv)) + '"' : '';
   const inp = type === 'number'
-    ? '<input class="iParam" data-f="' + f + '" type="number" value="' + v + '" />'
-    : '<input class="iParam" data-f="' + f + '" type="text" value="' + esc(v) + '" />';
+    ? '<input class="iParam" data-f="' + f + '" type="number" value="' + v + '"' + ph + ' />'
+    : '<input class="iParam" data-f="' + f + '" type="text" value="' + esc(v) + '"' + ph + ' />';
   const opt = paramsOptional(sel.name).includes(f);
-  return field('param: ' + f + ' (' + type + ')' + (opt ? ' — opcional' : ''), inp);
+  return field('param: ' + f + ' (' + type + ')' + (opt ? ' — opcional' : '') + cfgHint(f), inp);
 }
 // resumo dos params p/ o rótulo do nó (skill aparece pelo nome)
 function paramStr(n, ks) {
@@ -878,7 +1017,7 @@ function renderInspector() {
   if (sel.type === 'cooldown') html += field('Cooldown (ms)', '<input id="iMs" type="number" min="1" value="' + sel.ms + '" />');
   if (sel.type === 'limiter') { html += field('Máximo de usos', '<input id="iMax" type="number" min="1" value="' + sel.max + '" />'); html += field('Chave (opcional)', '<input id="iKey" type="text" value="' + esc(sel.key || '') + '" />'); }
   if (sel.type === 'check') {
-    html += field('Condição', '<select id="iCheckName">' + namesByKind('condition').map(n => '<option value="' + n + '"' + (n === sel.name ? ' selected' : '') + '>' + n + '</option>').join('') + '</select>');
+    html += field('Condição', '<select id="iCheckName">' + leafOptionsHtml('condition', sel.name) + '</select>');
     const cm = registry[sel.name];
     if (cm && cm.desc) html += '<div class="desc">' + esc(cm.desc) + '</div>';
     const sc = paramsSchema(sel.name);
@@ -894,7 +1033,7 @@ function renderInspector() {
     html += '<div class="field"><button id="iMonMgr" type="button">⚙ gerenciar monstros/grupos</button></div>';
   }
   if (LEAVES.includes(sel.type)) {
-    html += field(sel.type === 'condition' ? 'Condição' : 'Ação', '<select id="iName">' + namesByKind(sel.type).map(n => '<option value="' + n + '"' + (n === sel.name ? ' selected' : '') + '>' + n + '</option>').join('') + '</select>');
+    html += field(sel.type === 'condition' ? 'Condição' : 'Ação', '<select id="iName">' + leafOptionsHtml(sel.type, sel.name) + '</select>');
     const meta = registry[sel.name];
     if (meta && meta.desc) html += '<div class="desc">' + esc(meta.desc) + '</div>';
     if (sel.type === 'action' && SKILL_ACTIONS[sel.name]) {
@@ -903,6 +1042,25 @@ function renderInspector() {
     } else if (sel.type === 'action' && sel.name === 'UseEleanorOffense') {
       sel.params = sel.params || {};
       html += eleanorInspectorHtml(sel);
+    } else if (sel.type === 'action' && ACTION_ROLE[sel.name]) {
+      sel.params = sel.params || {};
+      const skills = roleSkillsLabel(sel.name);
+      html += '<div class="field"><label>Skill usada (padrão por homúnculo)</label><div class="desc">' +
+        (skills ? esc(skills) : '— este homúnculo não tem skill para este papel —') + '</div></div>';
+      html += '<div class="field insp-links">' +
+        '<button id="iSkillCfg" type="button">\u2699 Configurar skills\u2026</button>' +
+        '<button id="iParamCfg" type="button">\u2699 Par\u00e2metros desta skill\u2026</button></div>';
+      // override por nó (#4) RECOLHIDO — em geral, ajuste por homúnculo em "Parâmetros". [C6]
+      const sc = paramsSchema(sel.name);
+      const hasOv = Object.keys(sc).some(f => sel.params[f] != null);
+      const knobsHtml = Object.keys(sc).map(f => paramFieldHtml(f, sc[f], sel)).join('');
+      html += '<details class="insp-adv"' + (hasOv ? ' open' : '') + '>' +
+        '<summary>\u2699 Avan\u00e7ado: sobrescrever s\u00f3 neste n\u00f3</summary>' +
+        '<div class="desc">Em geral, ajuste por homúnculo em <b>Par\u00e2metros</b>. Aqui voc\u00ea for\u00e7a um valor s\u00f3 para ESTE n\u00f3 (vence o resto).</div>' +
+        knobsHtml + '</details>';
+    } else if (sel.type === 'action' && PARAM_EXTRA[sel.name]) {
+      sel.params = sel.params || {};
+      html += '<div class="field"><button id="iParamCfg" type="button">\u2699 Par\u00e2metros desta skill\u2026</button></div>';
     } else {
       const sc = paramsSchema(sel.name);
       for (const f of Object.keys(sc)) html += paramFieldHtml(f, sc[f], sel);
@@ -923,7 +1081,7 @@ function addSelectFilter(sel, ph) {
   inp.addEventListener('input', function (e) {
     e.stopPropagation();
     const q = inp.value.trim().toLowerCase();
-    sel.querySelectorAll('option').forEach(function (o) { if (o.value === '') return; o.hidden = !!q && o.textContent.toLowerCase().indexOf(q) < 0; });
+    sel.querySelectorAll('option').forEach(function (o) { if (o.value === '') return; var hay = (o.textContent + ' ' + (o.title || '')).toLowerCase(); o.hidden = !!q && hay.indexOf(q) < 0; });
     sel.querySelectorAll('optgroup').forEach(function (g) { g.hidden = ![].slice.call(g.children).some(function (o) { return !o.hidden; }); });
   });
 }
@@ -954,6 +1112,8 @@ function wireInspector(sel) {
   };
   const irs = $('iReset'); if (irs) irs.onchange = () => { if (irs.checked) sel.params.reset = true; else delete sel.params.reset; renderAll(); };
   const ep = $('iEleanorPanel'); if (ep) ep.onclick = () => openComboManager();
+  const isc = $('iSkillCfg'); if (isc) isc.onclick = () => openSkillManager();
+  const ipc = $('iParamCfg'); if (ipc) ipc.onclick = () => { spHomun = ctxHomun || 51; openSkillParams(ACTION_ROLE[sel.name] || PARAM_EXTRA[sel.name]); };
   document.querySelectorAll('.iParamSkill').forEach(sk => {
     sk.onchange = () => { const id = parseInt(sk.value, 10); sel.params = sel.params || {}; if (id) sel.params.skill = id; else delete sel.params.skill; renderAll(); };
   });
@@ -965,6 +1125,14 @@ function wireInspector(sel) {
         if (raw === '') { delete sel.params[f]; }          // vazio = parâmetro não informado (não grava NaN)
         else { const n = parseFloat(raw); if (Number.isNaN(n)) delete sel.params[f]; else sel.params[f] = n; }
       } else { sel.params[f] = inp.value; }
+      renderAll();
+    };
+  });
+  document.querySelectorAll('.iParamBool').forEach(selb => {
+    selb.onchange = () => {
+      const f = selb.dataset.f; sel.params = sel.params || {};
+      if (selb.value === '') delete sel.params[f];          // herdar (ausente) — #4 tri-estado
+      else sel.params[f] = (selb.value === 'true');
       renderAll();
     };
   });
@@ -1099,6 +1267,7 @@ async function simulateTree() {
   await callSim('setConfig', treeConfig);
   // passa homún/base p/ o simulador e guarda o estado do editor p/ a volta
   try { sessionStorage.setItem('brai.simContext', JSON.stringify({ homunType: ctxHomun, baseType: ctxBase })); } catch (e) {}
+  try { sessionStorage.setItem('brai.simConfig', JSON.stringify(treeConfig || {})); } catch (e) {}   // a config da árvore vale no simulador
   saveEditorState();
   window.location.href = (window.BRAI_SIM_URL || '../renderer/index.html');
 }
@@ -1189,13 +1358,15 @@ document.addEventListener('mousedown', function (e) { const m = document.getElem
 (async function boot() {
   try {
     registry = await callSim('registry');
+    try { cfgDefaults = await callSim('defaultConfig'); } catch (e) {}   // #4: dica de herança dos knobs por nó
     await loadMonsters();
     await loadSkillChoice();
     const bm = $('btnMonsters'); if (bm) bm.onclick = () => openMonsterManager();
     const bs = $('btnSkills'); if (bs) bs.onclick = () => openSkillManager();
     const bc = $('btnCombos'); if (bc) bc.onclick = () => openComboManager();
     const bcf = $('btnConfig'); if (bcf) bcf.onclick = () => openConfigManager();
-    $('ctxHomun').addEventListener('change', async () => { syncCtx(); await loadCatalog(); renderInspector(); });
+    const bsp = $('btnSkillParams'); if (bsp) bsp.onclick = () => openSkillParams();
+    $('ctxHomun').addEventListener('change', async () => { syncCtx(); await loadCatalog(); renderInspector(); renderAll(); });   // #5: atualiza rótulos
     $('ctxBase').addEventListener('change', async () => { syncCtx(); await loadCatalog(); renderInspector(); });
     window.addEventListener('beforeunload', saveEditorState);
 
@@ -1240,7 +1411,7 @@ async function openConfigManager() {
     renderConfigManager();          // re-renderiza com os knobs quando chegar
   }
 }
-function closeConfigManager() { const ov = document.getElementById('cfgModal'); if (ov) ov.style.display = 'none'; }
+function closeConfigManager() { const ov = document.getElementById('cfgModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
 function renderConfigManager() {
   const ov = document.getElementById('cfgModal'); if (!ov) return;
   const def = cfgDefaults || {};
@@ -1265,8 +1436,10 @@ function renderConfigManager() {
         '<div class="mm-list">' + (rows || '<div class="mm-empty">defaultConfig indisponível</div>') + '</div>' +
         '<div class="mm-add"><button id="cfgReset" class="mm-danger">restaurar tudo ao padrão</button></div>' +
       '</section></div>' +
+      '<div class="mm-foot"><button id="cfgSave" class="mm-save" type="button">💾 Salvar</button></div>' +
     '</div>';
   document.getElementById('cfgClose').onclick = closeConfigManager;
+  { const b = document.getElementById('cfgSave'); if (b) b.onclick = async () => { try { await callSim('setConfig', treeConfig); } catch (e) {} saveEditorState(); await refreshTreeLabels('Config salva — vale no Lua e no simulador.'); }; }
   ov.onclick = (e) => { if (e.target === ov) closeConfigManager(); };
   Array.prototype.forEach.call(ov.querySelectorAll('.cfg-in'), function (inp) {
     inp.onchange = function () {
@@ -1305,7 +1478,7 @@ function openMonsterManager() {
   renderMonManager();
   ov.style.display = 'flex';
 }
-function closeMonManager() { const ov = document.getElementById('monModal'); if (ov) ov.style.display = 'none'; }
+function closeMonManager() { const ov = document.getElementById('monModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
 
 function renderMonManager() {
   const ov = document.getElementById('monModal');
@@ -1354,10 +1527,12 @@ function renderMonManager() {
             : '<div class="mm-empty">nenhum grupo ainda</div>') +
         '</section>' +
       '</div>' +
+      '<div class="mm-foot"><button id="mmSave" class="mm-save" type="button">💾 Salvar</button></div>' +
     '</div>';
 
   // wiring
   document.getElementById('mmClose').onclick = closeMonManager;
+  { const b = document.getElementById('mmSave'); if (b) b.onclick = async () => { await saveMonsters(); try { await callSim('setMonsters', monCatalog); } catch (e) {} await refreshTreeLabels('Monstros salvos.'); }; }
   ov.onclick = (e) => { if (e.target === ov) closeMonManager(); };
   const _mex = document.getElementById('monExport'); if (_mex) _mex.onclick = monExportCfg;
   const _mim = document.getElementById('monImport'), _mimf = document.getElementById('monImportFile');
@@ -1424,6 +1599,88 @@ function renderMonManager() {
 }
 
 
+// ===== Tela: Parâmetros das skills por homúnculo (modal #spModal) ==========
+// Casca (C3): seletor de homún + close. As seções por papel + knobs + export/import vêm no C4.
+async function openSkillParams(focusRole) {
+  if (spHomun == null) spHomun = ctxHomun || 51;
+  await loadSkillParams();
+  let ov = document.getElementById('spModal');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'spModal'; ov.className = 'mm-overlay'; document.body.appendChild(ov); }
+  await renderSkillParamsModal();
+  ov.style.display = 'flex';
+  if (focusRole) {
+    const row = ov.querySelector('.sp-row[data-role="' + focusRole + '"]');
+    if (row) { row.classList.add('sp-focus'); try { row.scrollIntoView({ block: 'center' }); } catch (e) {} }
+  }
+}
+function closeSkillParams() { const ov = document.getElementById('spModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
+async function renderSkillParamsModal() {
+  const ov = document.getElementById('spModal'); if (!ov) return;
+  const spBase = (spHomun === ctxHomun) ? (ctxBase || 0) : 0;   // a forma base é por árvore (só do ctxHomun) [C7]
+  let pc = [];
+  try { pc = await callSim('paramConfig', { homunType: spHomun, baseType: spBase }); } catch (e) { pc = []; }
+  let spCat = [];
+  try { spCat = await callSim('skillCatalog', { homunType: spHomun, baseType: spBase }); } catch (e) { spCat = []; }
+  const spIsS = (typeof S_TYPES_E !== 'undefined') && S_TYPES_E.includes(spHomun);
+  const baseNote = spIsS ? ('<div class="sp-basenote">Homunculus S: <b>cura, Painkiller e Castling</b> vêm da <b>forma base</b>' +
+    (spBase ? (' (' + esc(HOMUN_NAMES[spBase] || spBase) + ')') : ' — defina a forma base no contexto para ver as skills herdadas') + '. Os parâmetros valem mesmo assim.</div>') : '';
+  const spCatById = {}; (spCat || []).forEach(sk => { spCatById[sk.id] = sk; });
+  const homunOpts = SC_HOMUN_ORDER.map(t => '<option value="' + t + '"' + (t === spHomun ? ' selected' : '') + '>' + esc(HOMUN_NAMES[t] || ('#' + t)) + '</option>').join('');
+  const sections = (pc || []).map(r => {
+    const cards = r.hasSkill
+      ? r.skills.map(sk => spCatById[sk.id] ? skillInfoHtml(spCatById[sk.id], sk.maxLevel) : ('<span class="sp-skill">' + esc(sk.name) + '</span>')).join('')
+      : '<div class="sc-none">— sem skill para este papel —</div>';
+    const knobs = r.knobs.map(k => spKnobField(r.role, k)).join('');
+    return '<div class="sp-row' + (r.hasSkill ? '' : ' sp-empty') + '" data-role="' + r.role + '">' +
+      '<div class="sp-role"><b>' + esc(r.label) + '</b></div>' +
+      '<div class="sp-cards">' + cards + '</div>' +
+      '<div class="sp-knobs">' + knobs + '</div></div>';
+  }).join('');
+  let links = '';
+  if (spHomun === 52) links += '<button id="spComboLink" type="button">✦ Combos da Eleanor…</button>';
+  if (spHomun === 50) links += '<button id="spSummonLink" type="button">✦ Invocações da Sera…</button>';
+  const linkBar = links ? '<div class="sp-links">' + links + '</div>' : '';
+  const ioBar = '<div class="sc-io"><span class="sc-io-lbl">Config:</span>' +
+    '<button id="spExport" type="button">⬇ exportar parâmetros</button>' +
+    '<button id="spImport" type="button">⬆ importar parâmetros</button>' +
+    '<input id="spImportFile" type="file" accept="application/json,.json" style="display:none">' +
+    '<span class="sc-io-msg" id="spIoMsg"></span></div>';
+  ov.innerHTML =
+    '<div class="mm-panel sc-panel">' +
+      '<div class="mm-head"><strong>Parâmetros das skills</strong><button id="spClose" class="mm-x">fechar ✕</button></div>' +
+      '<div class="mm-body sc-body">' +
+        ioBar +
+        '<div class="sc-pick"><label>Homúnculo: <select id="spHomunSel">' + homunOpts + '</select></label>' +
+          '<span class="sc-note">Ajuste os parâmetros de cada papel <b>por homúnculo</b>. Vazio/<b>herdar</b> = usa a Config global. Precedência: nó &gt; aqui &gt; Config global &gt; padrão.</span></div>' +
+        baseNote +
+        '<div class="sp-rows" id="spRows">' + sections + '</div>' +
+        linkBar +
+      '</div>' +
+      '<div class="mm-foot"><button id="spSave" class="mm-save" type="button">💾 Salvar</button></div>' +
+    '</div>';
+  document.getElementById('spClose').onclick = closeSkillParams;
+  { const b = document.getElementById('spSave'); if (b) b.onclick = async () => { await saveSkillParams(); await refreshTreeLabels('Parâmetros salvos — valem na árvore, no Lua e no simulador.'); }; }
+  ov.onclick = (e) => { if (e.target === ov) closeSkillParams(); };
+  const hs = document.getElementById('spHomunSel');
+  if (hs) hs.onchange = async () => { spHomun = parseInt(hs.value, 10) || 51; await renderSkillParamsModal(); };
+  ov.querySelectorAll('.spKnob').forEach(el => {
+    el.onchange = async () => {
+      const role = el.dataset.role, key = el.dataset.key, type = el.dataset.type;
+      let value;
+      if (type === 'boolean') value = (el.value === '') ? null : (el.value === 'true');
+      else { const raw = String(el.value).trim(); const n = parseFloat(raw); value = (raw === '' || Number.isNaN(n)) ? null : n; }
+      spSetKnob(spHomun, role, key, value);
+      await saveSkillParams();
+      spIoMsg('Parâmetro atualizado (' + (HOMUN_NAMES[spHomun] || spHomun) + ').', false);
+    };
+  });
+  const ex = document.getElementById('spExport'); if (ex) ex.onclick = spExportParams;
+  const im = document.getElementById('spImport'), imf = document.getElementById('spImportFile');
+  if (im && imf) { im.onclick = () => imf.click(); imf.onchange = () => { if (imf.files && imf.files[0]) spImportParams(imf.files[0]); imf.value = ''; }; }
+  const cl = document.getElementById('spComboLink'); if (cl) cl.onclick = () => { closeSkillParams(); openComboManager(); };
+  const sl = document.getElementById('spSummonLink'); if (sl) sl.onclick = () => { closeSkillParams(); openSkillManager(); };
+}
+
 // ===== Tela: Skills por homúnculo (modal) =================================
 async function openSkillManager() {
   await loadSkillChoice();
@@ -1434,7 +1691,7 @@ async function openSkillManager() {
   await renderSkillManager();
   ov.style.display = 'flex';
 }
-function closeSkillManager() { const ov = document.getElementById('scModal'); if (ov) ov.style.display = 'none'; }
+function closeSkillManager() { const ov = document.getElementById('scModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
 
 async function renderSkillManager() {
   const ov = document.getElementById('scModal'); if (!ov) return;
@@ -1499,9 +1756,11 @@ async function renderSkillManager() {
           '<span class="sc-note">Adicione/remova as skills de cada papel (0 ou mais). <b>Padrão</b> = as skills do perfil. Passe o mouse no nome ou no nível para ver os detalhes.</span></div>' +
         '<div class="sc-rows">' + inner + '</div>' +
       '</div>' +
+      '<div class="mm-foot"><button id="scSave" class="mm-save" type="button">💾 Salvar</button></div>' +
     '</div>';
 
   document.getElementById('scClose').onclick = closeSkillManager;
+  { const b = document.getElementById('scSave'); if (b) b.onclick = async () => { await saveSkillChoice(); await saveSummonChoice(); await refreshTreeLabels('Skills salvas — valem na árvore, no Lua e no simulador.'); }; }
   ov.onclick = (e) => { if (e.target === ov) closeSkillManager(); };
   const hs = document.getElementById('scHomunSel');
   if (hs) hs.onchange = async () => { scHomun = parseInt(hs.value, 10) || 51; await renderSkillManager(); };
@@ -1594,7 +1853,7 @@ async function openComboManager(mode) {
   renderComboManager();
   ov.style.display = 'flex';
 }
-function closeComboManager() { const ov = document.getElementById('ceModal'); if (ov) ov.style.display = 'none'; }
+function closeComboManager() { const ov = document.getElementById('ceModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
 
 function ceChainHtml(style, p) {
   const links = (comboInfoCache && comboInfoCache[style]) || [];
@@ -1631,6 +1890,7 @@ function renderComboManager() {
         '<div class="mm-empty">Nenhum nó <b>UseEleanorOffense</b> na árvore. Crie um agora (entra como filho do nó selecionado ou da raiz):</div>' +
         '<div class="ce-actions"><button id="ceCreate" type="button" class="primary">+ criar nó UseEleanorOffense</button></div></div></div>';
       document.getElementById('ceClose').onclick = closeComboManager;
+  { const b = document.getElementById('ceSave'); if (b) b.onclick = async () => { await saveSkillChoice(); await refreshTreeLabels('Combos salvos.'); }; }
       ov.onclick = (e) => { if (e.target === ov) closeComboManager(); };
       const cc = document.getElementById('ceCreate'); if (cc) cc.onclick = () => ceCreateNode();
       return;
@@ -1668,9 +1928,12 @@ function renderComboManager() {
           '<div class="ce-help">Desligado, a Eleanor usa só o estilo atual — evita o loop de Style Change que travava a AzzyAI.</div></div>' +
       '</div>' +
       '<div class="ce-chains">' + ceChainHtml('power', p) + ceChainHtml('grapple', p) + '</div>' +
-    '</div></div>';
+      '</div>' +
+      '<div class="mm-foot"><button id="ceSave" class="mm-save" type="button">💾 Salvar</button></div>' +
+    '</div>';
 
   document.getElementById('ceClose').onclick = closeComboManager;
+  { const b = document.getElementById('ceSave'); if (b) b.onclick = async () => { await saveSkillChoice(); await refreshTreeLabels('Combos salvos.'); }; }
   ov.onclick = (e) => { if (e.target === ov) closeComboManager(); };
   const persist = isDefault ? () => { saveSkillChoice(); } : () => { renderInspector(); renderGraph(); };
   document.getElementById('ceStyle').onchange = (e) => { p.style = e.target.value; persist(); };

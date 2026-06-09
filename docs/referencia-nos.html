@@ -28,6 +28,10 @@
   <div class="crumbs"><a href="index.html">Início</a> › Referência de nós</div>
   <h1>Referência de nós</h1>
   <p class="lead">O catálogo de todos os nós disponíveis para montar árvores. As condições e ações vêm do mesmo registry que o editor usa para montar a paleta e validar — então as descrições aqui refletem exatamente o que o jogo e o simulador executam.</p>
+  <div class="box note">
+    <div class="h">ℹ Nomes legíveis &amp; grupos</div>
+    <p>No editor e no simulador, cada condição/ação aparece com um <strong>nome legível</strong> em português (ex.: <em>Skill em área (AoE)</em>, <em>HP do dono (abaixo)</em>) e a paleta é organizada em <strong>grupos</strong> (Vida/SP, Ameaça, Alvo, Ataque, Movimento, Skills, Buffs/cura, Dono, Eleanor &amp; Sera). O <strong>código</strong> original (ex.: <code>UseAoESkill</code>) — que esta tabela usa na coluna <code>name</code> — continua sendo o identificador salvo na árvore e aparece na <strong>dica (tooltip)</strong> ao passar o mouse no nó ou na opção.</p>
+  </div>
 
   <div class="toc">
     <div class="h">Nesta página</div>
@@ -150,8 +154,8 @@
   <table>
     <thead><tr><th>Ação</th><th>Descrição</th></tr></thead>
     <tbody>
-      <tr><td><code>UseMainSkill</code></td><td>Usa a 1ª skill single-target <b>utilizável</b> da <b>lista de prioridade</b> do papel (0..N skills; <b>lista vazia ⇒ não age</b>). Gates: <code>UseHomunSSkillAttack</code> (em alcance) / <code>UseHomunSSkillChase</code> (aproximando).</td></tr>
-      <tr><td><code>UseAoESkill</code></td><td>Usa a 1ª AoE <b>utilizável</b> da <b>lista de prioridade</b> (0..N) com mobs suficientes (AutoMobCount); <b>lista vazia ⇒ não age</b>. <code>AutoMobMode=0</code> desliga; <code>AoEFixedLevel</code> fixa o nível; <code>AoEMaximizeTargets</code> mira no aglomerado.</td></tr>
+      <tr><td><code>UseMainSkill</code></td><td>Usa a 1ª skill single-target <b>utilizável</b> da <b>lista de prioridade</b> do papel (0..N skills; <b>lista vazia ⇒ não age</b>). Gates: <code>UseHomunSSkillAttack</code> (em alcance) / <code>UseHomunSSkillChase</code> (aproximando). Knobs aceitam <b>override por nó</b> (param do nó &gt; Config global).</td></tr>
+      <tr><td><code>UseAoESkill</code></td><td>Usa a 1ª AoE <b>utilizável</b> da <b>lista de prioridade</b> (0..N); <b>lista vazia ⇒ não age</b>. <b>Sem <code>mainAtk</code></b> (ex.: Dieter), a AoE é a ofensiva <b>principal</b> e dispara com <b>≥1 alvo</b>; <b>com <code>mainAtk</code></b> exige <code>AutoMobCount</code> alvos (economia de SP: single no isolado, AoE no aglomerado). <code>AutoMobMode=0</code> desliga; <code>AoEFixedLevel</code> fixa o nível; <code>AoEMaximizeTargets</code> mira no aglomerado.</td></tr>
       <tr><td><code>UseOffensiveBuff</code></td><td><b>Mantém TODOS</b> os buffs ofensivos da lista (0..N; recasta cada um ao expirar — ex.: Bayeri usa Golden Ferse <i>e</i> Angriff Modus; <b>vazia ⇒ nenhum</b>).</td></tr>
       <tr><td><code>UseDefensiveBuff</code></td><td><b>Mantém TODOS</b> os buffs defensivos da lista (0..N; Amistr Bulwark, Granitic Armor, Stein Wand, ...; <b>vazia ⇒ nenhum</b>). Nível por skill via tela de Skills.</td></tr>
       <tr><td><code>UseHealSelf</code></td><td>Cura a si quando HP% &lt; HealSelfHP (Chaotic Blessing).</td></tr>
@@ -175,7 +179,7 @@
   </table>
 
   <h2 id="adapta">Como os nós de skill se adaptam por homúnculo</h2>
-  <p>A mesma árvore atende os 9 tipos de homúnculo. As ações automáticas resolvem a skill concreta pelo <strong>perfil</strong> do tipo, obtido do homúnculo (e, para Homunculus S, do tipo base). Por exemplo, <code>UseMainSkill</code> vira Caprice no Vanilmirth, Moonlight no Filir, Stahl Horn no Bayeri; <code>UseHealOwner</code> só faz algo no Lif; <code>UseCastling</code> só no Amistr. Por isso você monta a árvore uma vez e ela serve a todos os tipos — basta trocar o homúnculo no contexto.</p>
+  <p>A mesma árvore atende os 9 tipos de homúnculo. As ações automáticas resolvem a skill concreta pelo <strong>perfil</strong> do tipo, obtido do homúnculo (e, para Homunculus S, do tipo base). Por exemplo, <code>UseMainSkill</code> vira Caprice no Vanilmirth, Moonlight no Filir, Stahl Horn no Bayeri; <code>UseHealOwner</code> só faz algo no Lif; <code>UseCastling</code> só no Amistr. Por isso você monta a árvore uma vez e ela serve a todos os tipos — basta trocar o homúnculo no contexto. No editor, o <strong>rótulo</strong> de cada ação automática mostra as <strong>skills efetivas</strong> (nome + nível) do homúnculo do contexto, e o <strong>inspetor</strong> traz um link <strong>“⚙ Parâmetros desta skill”</strong> para o modal de parâmetros <strong>por homúnculo</strong> (AutoMobCount, AttackRange, HealSelfHP, etc.). O override <strong>por nó</strong> fica recolhido em <strong>“⚙ Avançado”</strong>. A precedência é <strong>param do nó &gt; parâmetro por homúnculo &gt; Config global &gt; padrão</strong> (booleanos têm o estado “herdar”).</p>
 
   <h2 id="exemplo">Exemplo de árvore</h2>
   <p>Trecho da árvore padrão mostrando <code>check</code>, <code>selector</code>, <code>sequence</code> e folhas:</p>

@@ -58,18 +58,28 @@
           var sn = safeName(name); if (!sn) return { ok: false, error: 'nome da árvore vazio' };
           var ctx = { homunType: payload.homunType, baseType: payload.baseType, config: payload.config };
           var catalog = { monsters: [], groups: [] };
-          try { catalog = JSON.parse((await target.monsters.load()).data); } catch (e) {}
+          var rawMonsters = JSON.stringify(catalog);
+          try { rawMonsters = (await target.monsters.load()).data; catalog = JSON.parse(rawMonsters); } catch (e) {}
           var choices = { choices: {} };
-          try { choices = JSON.parse((await target.skillChoiceIO.load()).data); } catch (e) {}
+          var rawSkills = JSON.stringify(choices);
+          try { rawSkills = (await target.skillChoiceIO.load()).data; choices = JSON.parse(rawSkills); } catch (e) {}
+          // #3: escolha EFETIVA de TODOS os homuns (auto-descritivo), via o host Lua da pagina
+          try { choices = { choices: JSON.parse(await backend.host.dispatch('allSkillChoices', JSON.stringify(choices))) }; } catch (e) {}
           var summonChoices = { choices: {} };
           try { summonChoices = JSON.parse((await target.summonIO.load()).data); } catch (e) {}
+          var skillParams = { params: {} };
+          var rawSkillParams = JSON.stringify(skillParams);
+          try { rawSkillParams = (await target.skillParamsIO.load()).data; skillParams = JSON.parse(rawSkillParams); } catch (e) {}
           var gen = {
             'tree_homun.lua': target.BRAI_BUILD.generate(spec),
             'config.lua': target.BRAI_BUILD.generateConfig(ctx),
-            'monsters.lua': target.BRAI_BUILD.generateMonsters(catalog),
             'skill_choice.lua': target.BRAI_BUILD.generateSkillChoice(choices),
             'summon_choice.lua': target.BRAI_BUILD.generateSummonChoice(summonChoices),
+            'skill_params.lua': target.BRAI_BUILD.generateSkillParams(skillParams),
           };
+          // monsters.lua so no pacote se a arvore usa monsterCheck (#2) — espelha installer.js
+          var usesMon = target.BRAI_BUILD.treeUsesMonsterCheck ? target.BRAI_BUILD.treeUsesMonsterCheck(spec) : true;
+          if (usesMon) gen['monsters.lua'] = target.BRAI_BUILD.generateMonsters(catalog);
           for (var fn in gen) await writeArtifact('trees/' + sn + '/' + fn, gen[fn]);
 
           var runtime = await backend.readLuaTree();
@@ -78,7 +88,9 @@
             var rel = runtime[i].rel;
             entries.push({ name: rel === 'AI.lua' ? 'AI.lua' : ('brai/lua/' + rel), data: runtime[i].data });
           }
-          ['tree_homun.lua', 'config.lua', 'monsters.lua', 'skill_choice.lua'].forEach(function (f) {
+          var srcFiles = ['tree_homun.lua', 'config.lua', 'skill_choice.lua', 'summon_choice.lua', 'skill_params.lua'];
+          if (usesMon) srcFiles.push('monsters.lua');
+          srcFiles.forEach(function (f) {
             var zn = 'brai/lua/src/' + f, idx = -1;
             for (var k = 0; k < entries.length; k++) if (entries[k].name === zn) { idx = k; break; }
             if (idx >= 0) entries[idx].data = gen[f]; else entries.push({ name: zn, data: gen[f] });
@@ -89,6 +101,12 @@
             'INSTALAR: extraia AI.lua + a pasta brai/ em <RO>/AI/USER_AI/ e ative com /hoai.',
             'Homúnculo: ' + (hn[ctx.homunType] || ctx.homunType || '?') + (ctx.baseType ? (' / base ' + (hn[ctx.baseType] || ctx.baseType)) : '') + '.',
           ].join('\r\n') });
+
+          // #6: JSONs-fonte em source/ (referencia/re-importacao; AI.lua NAO os carrega)
+          entries.push({ name: 'source/tree.json', data: JSON.stringify({ name: sn, homunType: ctx.homunType, baseType: ctx.baseType, config: ctx.config, spec: spec }, null, 2) });
+          entries.push({ name: 'source/homun_skills.json', data: rawSkills });
+          entries.push({ name: 'source/homun_skill_params.json', data: rawSkillParams });
+          if (usesMon) entries.push({ name: 'source/monsters.json', data: rawMonsters });
 
           for (var e = 0; e < entries.length; e++) await writeArtifact('trees/' + sn + '/dist/' + entries[e].name, entries[e].data);
           var zipBytes = target.BRAI_ZIP.zipBytes(entries);
@@ -122,6 +140,12 @@
     target.summonIO = {
       load: async function () { await ready; try { return { ok: true, data: await backend.readText('homun_summons.json') }; } catch (e) { return { ok: true, data: JSON.stringify({ choices: {} }) }; } },
       save: async function (jsonText) { await ready; var n = need(); if (n) return n; try { await backend.writeData('homun_summons.json', jsonText); return { ok: true, path: 'homun_summons.json' }; } catch (e) { return { ok: false, error: String(e.message || e) }; } },
+    };
+
+    // ---- skillParamsIO (parametros de skill por homun/papel na raiz: homun_skill_params.json) ----
+    target.skillParamsIO = {
+      load: async function () { await ready; try { return { ok: true, data: await backend.readText('homun_skill_params.json') }; } catch (e) { return { ok: true, data: JSON.stringify({ params: {} }) }; } },
+      save: async function (jsonText) { await ready; var n = need(); if (n) return n; try { await backend.writeData('homun_skill_params.json', jsonText); return { ok: true, path: 'homun_skill_params.json' }; } catch (e) { return { ok: false, error: String(e.message || e) }; } },
     };
 
     // ---- files (fallbacks usados pelo editor) ----

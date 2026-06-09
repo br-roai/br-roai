@@ -114,6 +114,7 @@ h3 { margin: 10px 0 6px; font-size: 13px; color: #adbac7; text-transform: upperc
 #treetip{position:fixed;z-index:2500;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:8px 10px;font-size:12px;color:#e6edf3;max-width:280px;box-shadow:0 8px 26px rgba(0,0,0,.6);display:none}
 #treetip .tt-title{font-weight:600;margin-bottom:4px}
 #treetip .tt-kind{color:#8b98a5;font-weight:normal;font-size:11px}
+#treetip .tt-code{color:#6b7785;font-weight:normal;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
 #treetip .tt-exp{color:#adbac7;line-height:1.5}
 
 /* ===== Eleanor — Esferas & Combo (simulador) ===== */
@@ -159,3 +160,15 @@ h3 { margin: 10px 0 6px; font-size: 13px; color: #adbac7; text-transform: upperc
 .lg-stats span { background:var(--panel2,#0d1117); border:1px solid var(--line,#30363d); border-radius:6px; padding:2px 7px; }
 .tnode.tn-off{opacity:.5}
 .tnode.tn-off .tn-lbl{text-decoration:line-through;text-decoration-color:#5b646d;color:#6b7681}
+/* filhos sintéticos de skill (PLANO-SKILLS-NO-NO) */
+.tnode.tn-skill .tn-skill-mark{width:12px;text-align:center;flex:none;color:#6f8aa6;font-size:11px}
+.tnode.tn-skill .tn-lbl{font-size:11px;color:#9aa4ad}
+.tnode.tn-skill-on{background:#2b241022}
+.tnode.tn-skill-on .tn-lbl{color:var(--run);font-weight:600}
+.tnode.tn-skill-on .tn-skill-mark{color:var(--run)}
+.tnode.tn-skill-warn .tn-skill-mark{color:#c79a3a}
+.tnode.tn-skill-warn .tn-lbl{color:#b0863a;font-style:italic}
+.tnode.tn-needs-skill{border-left:2px solid #c79a3a66}
+#treetip .tt-skill{margin:4px 0;padding:4px 7px;border-radius:4px;font-size:12px;line-height:1.45}
+#treetip .tt-skill-missing{background:#c0392b22;color:#e3a89c}
+#treetip .tt-skill-none{background:#c79a3a22;color:#d8b35a}

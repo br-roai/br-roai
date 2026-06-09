@@ -105,7 +105,7 @@
   async function injectEditor() {
     var tb = $('toolbar'); if (!tb) return;
     var imp = mkImport('📤 Importar árvore', 'tree', 'braiImpTree', 'Carregar uma árvore .json do seu computador');
-    if ($('treeList')) tb.insertBefore(imp, $('treeList')); else tb.appendChild(imp);
+    if ($('treeList') && $('treeList').parentNode) $('treeList').parentNode.insertBefore(imp, $('treeList')); else tb.appendChild(imp);   // treeList agora vive em #tbRow1
     var exsel = document.createElement('select'); exsel.id = 'braiExTree'; exsel.style.display = 'none'; exsel.title = 'Exemplos de árvore — selecione para carregar'; exsel.addEventListener('change', function () { if (exsel.value) loadExample('tree', exsel.value); });
     var exb = mkBtn('baixar exemplo', function () { downloadExample('tree', exsel.value); }, 'Baixar a árvore de exemplo selecionada (.json)'); exb.id = 'braiExTreeDl'; exb.style.display = 'none';
     after(exb, $('btnSaveTree')); after(exsel, $('btnSaveTree'));

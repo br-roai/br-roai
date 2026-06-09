@@ -157,7 +157,7 @@ function syncBaseUI() {
   SCENARIO.config = Object.assign({}, SCENARIO.config, { BaseHomunType: isS ? (parseInt(baseSel.value, 10) || 0) : 0 });
   return t;
 }
-async function loadScenario() { stop(); syncBaseUI(); const s = await sim('load', SCENARIO); try { await sim('setMonsters', monCatalog); } catch (e) {} try { await sim('setSkillChoice', skillChoice); } catch (e) {} frames = [s]; viewIndex = 0; sel = null; renderEntityPanel(); render(); }
+async function loadScenario() { stop(); syncBaseUI(); const s = await sim('load', SCENARIO); try { await sim('setMonsters', monCatalog); } catch (e) {} try { await sim('setSkillChoice', skillChoice); } catch (e) {} try { await sim('setSkillParams', skillParams); } catch (e) {} try { await sim('setSummonChoice', summonCfg); } catch (e) {} frames = [s]; viewIndex = 0; sel = null; renderEntityPanel(); render(); }
 async function resetScenario() { stop(); const s = await sim('reset'); frames = [s]; viewIndex = 0; sel = null; renderEntityPanel(); render(); }
 
 // ---- cenários salvos (scenarios/<nome>.json) -----------------------------
@@ -354,12 +354,25 @@ const _KIND_COLOR = { selector: '#4d8fd6', sequence: '#4d8fd6', parallel: '#4d8f
 function renderTree(f) {
   const t = f.tree || [];
   $('tree').innerHTML = t.map((n, i) => ({ n: n, i: i })).filter((x) => !x.n.off).map(({ n, i }) => {
+    const pad = 6 + n.depth * 14;
+    // filho sintético de skill (PLANO-SKILLS-NO-NO): lista a skill da ação; acende a usada no
+    // tick (active); estados none/missing viram aviso discreto.
+    if (n.kind === 'skillRef') {
+      let scls = 'tnode tn-skill';
+      const warn = (n.skillState === 'none' || n.skillState === 'missing');
+      if (n.active) scls += ' tn-skill-on';
+      if (warn) scls += ' tn-skill-warn';
+      return '<div class="' + scls + '" data-idx="' + i + '" style="padding-left:' + pad + 'px">' +
+        '<span class="tn-skill-mark">' + (warn ? '\u26a0' : '\u2726') + '</span>' +
+        '<span class="tn-lbl">' + esc(n.label) + '</span></div>';
+    }
     let cls = n.status ? 's-' + n.status : 's-none';
     if (n.kind === 'action' && n.status === 'failure') cls += ' act-fail';
+    // ação cuja skill está ausente/não selecionada: destaque sutil no nó
+    if (n.kind === 'action' && (n.skillState === 'none' || n.skillState === 'missing')) cls += ' tn-needs-skill';
     const dotcls = n.status === 'running' ? 'tn-run' : n.status === 'success' ? 'tn-ok'
       : n.status === 'failure' ? (n.kind === 'action' ? 'tn-fail' : 'tn-no') : 'tn-none';
     const bar = _KIND_COLOR[n.kind] || '#5b6770';
-    const pad = 6 + n.depth * 14;
     return '<div class="tnode ' + cls + '" data-idx="' + i + '" style="padding-left:' + pad + 'px">' +
       '<span class="tn-dot ' + dotcls + '"></span>' +
       '<span class="tn-bar" style="background:' + bar + '"></span>' +
@@ -369,6 +382,11 @@ function renderTree(f) {
 
 function explainNode(n) {
   if (!n) return '';
+  if (n.kind === 'skillRef') {
+    if (n.skillState === 'missing') return 'Este tipo de hom\u00fanculo n\u00e3o tem skill para este papel \u2014 a a\u00e7\u00e3o \u00e9 ignorada.';
+    if (n.skillState === 'none') return 'Nenhuma skill selecionada para este papel \u2014 a a\u00e7\u00e3o n\u00e3o ser\u00e1 usada. Configure na tela \u201cSkills por hom\u00fanculo\u201d.';
+    return n.active ? '\u2726 Skill em uso neste tick.' : '\u2726 Skill configurada para esta a\u00e7\u00e3o.';
+  }
   const k = n.kind, st = n.status;
   if (st === 'success') return '✓ Deu certo neste tick.';
   if (st === 'running') return '▶ Está executando agora.';
@@ -383,7 +401,11 @@ function explainNode(n) {
 function showTreeTip(x, y, n) {
   let t = document.getElementById('treetip');
   if (!t) { t = document.createElement('div'); t.id = 'treetip'; document.body.appendChild(t); }
-  t.innerHTML = '<div class="tt-title">' + esc(n.label) + ' <span class="tt-kind">' + esc(n.kind || '') + '</span></div><div class="tt-exp">' + esc(explainNode(n)) + '</div>';
+  const kindTxt = (n.kind === 'skillRef') ? 'skill' : (n.kind || '');
+  let extra = '';
+  if (n.kind === 'action' && n.skillState === 'missing') extra = '<div class="tt-skill tt-skill-missing">\u26a0 Este hom\u00fanculo n\u00e3o tem skill para este papel \u2014 a a\u00e7\u00e3o \u00e9 ignorada.</div>';
+  else if (n.kind === 'action' && n.skillState === 'none') extra = '<div class="tt-skill tt-skill-none">\u26a0 Nenhuma skill selecionada \u2014 a a\u00e7\u00e3o n\u00e3o ser\u00e1 usada. Configure em \u201cSkills por hom\u00fanculo\u201d.</div>';
+  t.innerHTML = '<div class="tt-title">' + esc(n.label) + (n.name ? ' <span class="tt-code">' + esc(n.name) + '</span>' : '') + ' <span class="tt-kind">' + esc(kindTxt) + '</span></div>' + extra + '<div class="tt-exp">' + esc(explainNode(n)) + '</div>';
   t.style.display = 'block';
   const w = t.offsetWidth, h = t.offsetHeight;
   t.style.left = Math.min(x + 12, window.innerWidth - w - 8) + 'px';
@@ -818,6 +840,25 @@ async function loadSkillChoice() {
   try { await sim('setSkillChoice', skillChoice); } catch (e) {}
 }
 
+// Parâmetros de skill por homúnculo/papel (homun_skill_params.json) — knobs AutoMobCount, HealSelfHP, ...
+let skillParams = { params: {} };
+async function loadSkillParams() {
+  try { const r = await window.skillParamsIO.load(); if (r && r.ok) { const c = JSON.parse(r.data); skillParams = { params: (c && c.params) ? c.params : {} }; } } catch (e) { skillParams = { params: {} }; }
+  try { await sim('setSkillParams', skillParams); } catch (e) {}
+}
+
+// Config de invocações por homúnculo (homun_summons.json) — Legião da Sera.
+let summonCfg = { choices: {} };
+async function loadSummonChoice() {
+  try { const r = await window.summonIO.load(); if (r && r.ok) { const c = JSON.parse(r.data); summonCfg = { choices: (c && c.choices) ? c.choices : {} }; } } catch (e) { summonCfg = { choices: {} }; }
+  try { await sim('setSummonChoice', summonCfg); } catch (e) {}
+}
+
+// Config da ÁRVORE (treeConfig) passada pelo editor ao "Simular" — sobrepõe a config do cenário.
+async function loadSimConfig() {
+  try { const raw = sessionStorage.getItem('brai.simConfig'); if (!raw) return; const cfg = JSON.parse(raw); if (cfg && typeof cfg === 'object') await sim('setConfig', cfg); } catch (e) {}
+}
+
 // Aplica o homúnculo/base escolhidos no editor (passados via sessionStorage).
 function applySimContext() {
   try {
@@ -887,7 +928,7 @@ function restoreSetup() {
     window.addEventListener('beforeunload', persistSetup);  // salva o setup ao sair (igual ao editor)
     const restored = restoreSetup();           // restaura cenário + UI salvos (se houver)
     applySimContext();                          // "Simular" do editor tem prioridade no homún/base (one-shot)
-    await loadMonsters(); await loadSkillChoice();
+    await loadMonsters(); await loadSkillChoice(); await loadSkillParams(); await loadSummonChoice(); await loadSimConfig();
     try { const ci = await sim('comboInfo'); if (ci && ci.power && ci.grapple) eleanorChains = ci; } catch (e) {}
     await loadScenario();
     await refreshScenarioList();

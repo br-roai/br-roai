@@ -11,7 +11,7 @@
 //   luaFiles (map rel->src), host (BRAIHost), dataPrefix?
 (function (root) {
   'use strict';
-  var LS = { 'monsters.json': 'brai.monsters', 'homun_skills.json': 'brai.skills', 'homun_summons.json': 'brai.summons' };
+  var LS = { 'monsters.json': 'brai.monsters', 'homun_skills.json': 'brai.skills', 'homun_summons.json': 'brai.summons', 'homun_skill_params.json': 'brai.skillparams' };
 
   function isScenario(rel) { return /^scenarios\/.+\.json$/.test(rel); }
   function isTree(rel) { return /^trees\/.+\/tree\.json$/.test(rel); }

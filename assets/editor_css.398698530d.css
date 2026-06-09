@@ -9,7 +9,10 @@ header{padding:8px 14px;background:#0d1117;border-bottom:1px solid #222;display:
 .valid{font-size:13px;margin-left:8px}
 .valid.ok{color:var(--green)} .valid.err{color:var(--red)}
 .status{color:var(--muted);font-size:13px;margin-left:auto}
-#toolbar{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid #222;flex-wrap:wrap}
+#toolbar{display:flex;flex-direction:column;gap:6px;align-items:stretch;padding:10px 14px;border-bottom:1px solid #222}
+#tbRow1,#tbRow2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#tbRow2{padding-top:6px;border-top:1px solid var(--line)}
+.tb-grp{font-size:12px;color:var(--muted);font-weight:600;padding-right:2px}
 select,button,input{background:#21262d;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:13px}
 button{cursor:pointer} button:hover{background:#30363d}
 button.primary{background:#1f6feb;border-color:#1f6feb} button.primary:hover{background:#388bfd}
@@ -31,12 +34,17 @@ button.primary{background:#1f6feb;border-color:#1f6feb} button.primary:hover{bac
 #side{flex:0 0 340px;background:var(--panel);border-left:1px solid #222;padding:12px;overflow:auto}
 h3{margin:8px 0 6px;font-size:13px;color:#adbac7;text-transform:uppercase;letter-spacing:.04em}
 
-.gnode{position:absolute;width:150px;min-height:50px;padding:6px 9px;border-radius:8px;
+.gnode{position:absolute;width:200px;min-height:50px;padding:6px 9px;border-radius:8px;
   background:#161b22;border:2px solid var(--line);cursor:grab;user-select:none;
   font:12px ui-monospace,monospace;box-shadow:0 2px 6px #0006}
 .gnode:active{cursor:grabbing}
 .gnode .t{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gnode .s{color:var(--muted);font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gnode .s.s-skills{white-space:normal;overflow:visible;text-overflow:clip;display:flex;flex-direction:column;gap:1px;margin-top:1px}
+.gnode .sk{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:1.35;color:var(--muted)}
+.gnode .sk.sk-warn{color:#c79a3a}
+.gnode .sk.sk-na{color:#7a8590;font-style:italic}
+.gnode .sk.sk-ov{color:#46c46a}
 .gnode .type{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:0 5px;border-radius:4px;line-height:14px;margin-bottom:3px}
 .t-comp{background:#1c3554;color:#9fc8f0} .t-dec{background:#3a2f12;color:#e3c489} .t-chk{background:#2e1f4f;color:#cdaef5} .t-mck{background:#4a1f38;color:#f0a8cf} .t-cnd{background:#13344f;color:#9fd0f5} .t-act{background:#163a23;color:#9fe0b5}
 .g-composite{border-color:#3b6fb0}
@@ -219,3 +227,32 @@ button:disabled{opacity:.45;cursor:default}
 .sc-io-msg{font-size:12px;margin-left:4px}
 .sc-io-msg.ok{color:#46c46a}
 .sc-io-msg.err{color:#e06a6a}
+
+/* Modal de Parâmetros das skills (#spModal) */
+.sp-rows{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.sp-row{border:1px solid var(--line);border-radius:8px;padding:10px}
+.sp-row.sp-empty{opacity:.55}
+.sp-role{margin-bottom:8px;font-size:13px}
+.sp-cards{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.sp-cards .skillinfo{flex:1 1 240px;min-width:0}
+.sp-skill{color:#6cc6ff}
+.sp-skill-lv{color:var(--muted);font-size:11px}
+.sp-knobs{display:flex;flex-wrap:wrap;gap:8px}
+.sp-knob{display:flex;flex-direction:column;gap:2px;min-width:150px;flex:1 1 150px;max-width:230px}
+.sp-knob label{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-knob input,.sp-knob select{width:100%}
+.sp-gl{color:var(--muted)}
+.sp-links{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+
+/* C6: inspetor decluttered */
+.insp-links{display:flex;gap:6px;flex-wrap:wrap}
+.insp-adv{margin-top:8px;border-top:1px dashed var(--line);padding-top:6px}
+.insp-adv > summary{cursor:pointer;font-size:12px;color:var(--muted);user-select:none;list-style:revert}
+.sp-row.sp-focus{box-shadow:0 0 0 2px #6cc6ff;border-color:#6cc6ff}
+
+.sp-basenote{margin:6px 0;padding:6px 8px;border-radius:6px;background:rgba(108,198,255,.08);font-size:12px;color:var(--muted)}
+
+/* Botão Salvar nos modais (persiste + aplica na árvore/Lua/simulador) */
+.mm-foot{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:1px solid var(--line);flex:0 0 auto}
+.mm-save{background:#2d6a4f;border:1px solid #2d6a4f;color:#fff;font-weight:600;border-radius:6px;padding:7px 16px;cursor:pointer}
+.mm-save:hover{background:#358a63}
