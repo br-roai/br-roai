@@ -31,7 +31,7 @@
   <p class="lead">O catálogo de todos os nós disponíveis para montar árvores. As condições e ações vêm do mesmo registry que o editor usa para montar a paleta e validar — então as descrições aqui refletem exatamente o que o jogo e o simulador executam.</p>
   <div class="box note">
     <div class="h">ℹ Nomes legíveis &amp; grupos</div>
-    <p>No editor e no simulador, cada condição/ação aparece com um <strong>nome legível</strong> em português (ex.: <em>Skill em área (AoE)</em>, <em>HP do dono (abaixo)</em>) e a paleta é organizada em <strong>grupos</strong> (Vida/SP, Ameaça, Alvo, Ataque, Movimento, Skills, Buffs/cura, Dono, Eleanor &amp; Sera). O <strong>código</strong> original (ex.: <code>UseAoESkill</code>) — que esta tabela usa na coluna <code>name</code> — continua sendo o identificador salvo na árvore e aparece na <strong>dica (tooltip)</strong> ao passar o mouse no nó ou na opção.</p>
+    <p>No editor e no simulador, cada condição/ação aparece com um <strong>nome legível</strong> em português e a paleta é organizada em <strong>grupos</strong> (Vida/SP, Ameaça, Alvo, Ataque, Movimento, Skills, Buffs/cura, Dono, Eleanor &amp; Sera). Esta referência segue os mesmos nomes e grupos: cada linha traz o <strong>nome legível</strong> (em destaque) e, abaixo, o <strong>código</strong> (ex.: <code>UseAoESkill</code>) — que continua sendo o identificador salvo na árvore e aparece na <strong>dica (tooltip)</strong> ao passar o mouse no nó ou na opção. Os <strong>parâmetros</strong> (knobs como <code>AutoMobCount</code> ou <code>HealSelfHP</code>) também ganharam rótulos descritivos no editor (ex.: <em>Mín. de alvos p/ AoE</em>, <em>Curar a si abaixo de (HP%)</em>) — o código e uma dica aparecem ao passar o mouse.</p>
   </div>
 
   <div class="toc">
@@ -62,9 +62,9 @@
   <table>
     <thead><tr><th>Nó</th><th>Campos</th><th>Semântica</th></tr></thead>
     <tbody>
-      <tr><td><strong>selector</strong></td><td><code>children</code>, <code>label?</code></td><td>OU de prioridade. Tica os filhos em ordem; vence o primeiro com SUCCESS ou RUNNING; falha só se todos falharem. <strong>A ordem dos filhos é a prioridade.</strong></td></tr>
-      <tr><td><strong>sequence</strong></td><td><code>children</code>, <code>label?</code></td><td>E. Tica em ordem; para no primeiro FAILURE ou RUNNING; sucesso só se todos passarem.</td></tr>
-      <tr><td><strong>parallel</strong></td><td><code>children</code>, <code>policy</code>, <code>label?</code></td><td>Tica todos os filhos. <code>policy="all"</code> → sucesso se todos; <code>policy="any"</code> → sucesso se ao menos um.</td></tr>
+      <tr><td><strong>Seletor</strong><br><code>selector</code></td><td><code>children</code>, <code>label?</code></td><td>OU de prioridade. Tica os filhos em ordem; vence o primeiro com SUCCESS ou RUNNING; falha só se todos falharem. <strong>A ordem dos filhos é a prioridade.</strong></td></tr>
+      <tr><td><strong>Sequência</strong><br><code>sequence</code></td><td><code>children</code>, <code>label?</code></td><td>E. Tica em ordem; para no primeiro FAILURE ou RUNNING; sucesso só se todos passarem.</td></tr>
+      <tr><td><strong>Paralelo</strong><br><code>parallel</code></td><td><code>children</code>, <code>policy</code>, <code>label?</code></td><td>Tica todos os filhos. <code>policy="all"</code> → sucesso se todos; <code>policy="any"</code> → sucesso se ao menos um.</td></tr>
     </tbody>
   </table>
 
@@ -73,10 +73,10 @@
   <table>
     <thead><tr><th>Nó</th><th>Campos</th><th>Semântica</th></tr></thead>
     <tbody>
-      <tr><td><strong>inverter</strong></td><td><code>child</code></td><td>Troca SUCCESS↔FAILURE; RUNNING passa.</td></tr>
-      <tr><td><strong>succeeder</strong></td><td><code>child</code></td><td>Força SUCCESS (exceto quando RUNNING). Torna um ramo opcional.</td></tr>
-      <tr><td><strong>cooldown</strong></td><td><code>ms</code>, <code>child</code></td><td>Bloqueia (FAILURE) por <code>ms</code> milissegundos após o filho ter SUCCESS. Mantém estado.</td></tr>
-      <tr><td><strong>limiter</strong></td><td><code>max</code>, <code>child</code>, <code>key?</code></td><td>Permite no máximo <code>max</code> sucessos do filho; depois falha.</td></tr>
+      <tr><td><strong>Inverter</strong><br><code>inverter</code></td><td><code>child</code></td><td>Troca SUCCESS↔FAILURE; RUNNING passa.</td></tr>
+      <tr><td><strong>Sucesso</strong><br><code>succeeder</code></td><td><code>child</code></td><td>Força SUCCESS (exceto quando RUNNING). Torna um ramo opcional.</td></tr>
+      <tr><td><strong>Recarga</strong><br><code>cooldown</code></td><td><code>ms</code>, <code>child</code></td><td>Bloqueia (FAILURE) por <code>ms</code> milissegundos após o filho ter SUCCESS. Mantém estado.</td></tr>
+      <tr><td><strong>Limitador</strong><br><code>limiter</code></td><td><code>max</code>, <code>child</code>, <code>key?</code></td><td>Permite no máximo <code>max</code> sucessos do filho; depois falha.</td></tr>
     </tbody>
   </table>
 
@@ -85,7 +85,7 @@
   <table>
     <thead><tr><th>Nó</th><th>Campos</th><th>Semântica</th></tr></thead>
     <tbody>
-      <tr><td><strong>check</strong></td><td><code>name</code>, <code>params?</code>, <code>child?</code></td><td>Avalia a condição <code>name</code>. Se verdadeira e há <code>child</code>, executa-o e devolve o status dele; se verdadeira e não há <code>child</code>, devolve SUCCESS. Se falsa, devolve FAILURE sem executar o filho.</td></tr>
+      <tr><td><strong>Condição</strong><br><code>check</code></td><td><code>name</code>, <code>params?</code>, <code>child?</code></td><td>Avalia a condição <code>name</code>. Se verdadeira e há <code>child</code>, executa-o e devolve o status dele; se verdadeira e não há <code>child</code>, devolve SUCCESS. Se falsa, devolve FAILURE sem executar o filho.</td></tr>
     </tbody>
   </table>
   <p>Na prática, <code>check</code> é como a árvore amarra “se condição X, então faça Y” num único nó (ex.: <code>HasOwnerCommand → HandleOwnerCommand</code>).</p>
@@ -95,87 +95,143 @@
   <table>
     <thead><tr><th>Nó</th><th>Campos</th><th>Semântica</th></tr></thead>
     <tbody>
-      <tr><td><strong>monsterCheck</strong></td><td><code>monster</code> (id, 0=nenhum), <code>group</code> (id, 0=nenhum), <code>negate</code> (bool), <code>child</code></td><td>Casa quando o alvo <strong>é</strong> o monstro <code>monster</code> <strong>ou está</strong> no grupo <code>group</code>. Com <code>negate</code>, casa quando não é e não está. Se casa e há <code>child</code>, executa-o; sem <code>child</code>, devolve SUCCESS; se não casa, FAILURE. <strong>Sem alvo atual, sempre FAILURE.</strong></td></tr>
+      <tr><td><strong>Monstro</strong><br><code>monsterCheck</code></td><td><code>monster</code> (id, 0=nenhum), <code>group</code> (id, 0=nenhum), <code>negate</code> (bool), <code>child</code></td><td>Casa quando o alvo <strong>é</strong> o monstro <code>monster</code> <strong>ou está</strong> no grupo <code>group</code>. Com <code>negate</code>, casa quando não é e não está. Se casa e há <code>child</code>, executa-o; sem <code>child</code>, devolve SUCCESS; se não casa, FAILURE. <strong>Sem alvo atual, sempre FAILURE.</strong></td></tr>
     </tbody>
   </table>
 
   <h2 id="condicoes">Folhas: condições</h2>
-  <p>Uma condição (dentro de uma <strong>Condição</strong>/check) referencia uma destas pelo <code>name</code>. As que têm parâmetros recebem-nos em <code>params</code>.</p>
+  <p>Uma condição (dentro de uma <strong>Condição</strong>/<code>check</code>) referencia uma destas pelo <code>name</code>. As que têm parâmetros recebem-nos em <code>params</code>. A ordem dos grupos abaixo é a mesma da paleta do editor.</p>
+  <h3>Vida (HP/SP)</h3>
   <table>
-    <thead><tr><th>Condição</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
     <tbody>
-      <tr><td><code>HasOwnerCommand</code></td><td>—</td><td>Há comando do dono pendente neste tick.</td></tr>
-      <tr><td><code>HpBelow</code></td><td><code>pct</code></td><td>HP% do homúnculo abaixo de <code>pct</code>.</td></tr>
-      <tr><td><code>HpAbove</code></td><td><code>pct</code></td><td>HP% do homúnculo ≥ <code>pct</code>.</td></tr>
-      <tr><td><code>SpAbove</code></td><td><code>pct</code></td><td>SP% do homúnculo ≥ <code>pct</code>.</td></tr>
-      <tr><td><code>BeingAttacked</code></td><td>—</td><td>Algum monstro mira no homúnculo.</td></tr>
-      <tr><td><code>OwnerUnderAttack</code></td><td><code>count?</code></td><td>O dono está sendo atacado por pelo menos <code>count</code> monstros (padrão 1).</td></tr>
-      <tr><td><code>HasValidTarget</code></td><td>—</td><td>Existe alvo válido (em vista, vivo, alcançável).</td></tr>
-      <tr><td><code>InAttackRange</code></td><td>—</td><td>Alvo atual dentro do alcance de ataque normal.</td></tr>
-      <tr><td><code>TooFarFromOwner</code></td><td><code>dist</code></td><td>Distância do dono acima do limite.</td></tr>
-      <tr><td><code>CanEngage</code></td><td>—</td><td>Condições gerais para buscar alvo (HP/SP, não SuperPassive, não standby).</td></tr>
-      <tr><td><code>ShouldFlee</code></td><td>—</td><td>HP abaixo de FleeHP e sob ataque.</td></tr>
-      <tr><td><code>OwnerHpBelow</code></td><td><code>pct</code></td><td>HP% do dono abaixo de <code>pct</code> (ex.: curar o dono).</td></tr>
-      <tr><td><code>OwnerHpAbove</code></td><td><code>pct</code></td><td>HP% do dono ≥ <code>pct</code>.</td></tr>
-      <tr><td><code>Mobbed</code></td><td><code>count</code></td><td>Pelo menos <code>count</code> monstros atacando o homúnculo (marca berserk).</td></tr>
-      <tr><td><code>StyleIs</code></td><td><code>style</code> (<code>power</code>|<code>grapple</code>)</td><td>O estilo atual (Eleanor) é o pedido.</td></tr>
-      <tr><td><code>SafeToGrapple</code></td><td><code>radius</code>, <code>limit</code></td><td>Seguro p/ Agarrão: nº de monstros no raio ≤ <code>limit</code>.</td></tr>
-      <tr><td><code>TargetIsBoss</code></td><td>—</td><td>O monstro alvo é Boss/MVP. Útil p/ proibir skills em boss ou trocar de tática.</td></tr>
+      <tr><td><strong>HP do homúnculo (abaixo)</strong><br><code>HpBelow</code></td><td><code>pct</code></td><td>HP% do homúnculo abaixo de <code>pct</code>.</td></tr>
+      <tr><td><strong>HP do homúnculo (acima)</strong><br><code>HpAbove</code></td><td><code>pct</code></td><td>HP% do homúnculo ≥ <code>pct</code>.</td></tr>
+      <tr><td><strong>SP do homúnculo (acima)</strong><br><code>SpAbove</code></td><td><code>pct</code></td><td>SP% do homúnculo ≥ <code>pct</code>.</td></tr>
+      <tr><td><strong>HP do dono (abaixo)</strong><br><code>OwnerHpBelow</code></td><td><code>pct</code></td><td>HP% do dono abaixo de <code>pct</code> (ex.: curar o dono).</td></tr>
+      <tr><td><strong>HP do dono (acima)</strong><br><code>OwnerHpAbove</code></td><td><code>pct</code></td><td>HP% do dono ≥ <code>pct</code>.</td></tr>
+    </tbody>
+  </table>
+  <h3>Ameaça</h3>
+  <table>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Homúnculo é alvo de monstro</strong><br><code>BeingAttacked</code></td><td>—</td><td>Algum monstro mira no homúnculo.</td></tr>
+      <tr><td><strong>Homúnculo sob ataque (≥N)</strong><br><code>SelfUnderAttack</code></td><td><code>count?</code></td><td>O homúnculo está sendo atacado por pelo menos <code>count</code> monstros (padrão 1). Não liga o berserk (≠ <code>Mobbed</code>).</td></tr>
+      <tr><td><strong>Dono sob ataque (≥N)</strong><br><code>OwnerUnderAttack</code></td><td><code>count?</code></td><td>O dono está sendo atacado por pelo menos <code>count</code> monstros (padrão 1).</td></tr>
+      <tr><td><strong>Cercado / berserk (≥N)</strong><br><code>Mobbed</code></td><td><code>count</code></td><td>Pelo menos <code>count</code> monstros atacando o homúnculo (marca berserk).</td></tr>
+      <tr><td><strong>Deve fugir (HP baixo + ataque)</strong><br><code>ShouldFlee</code></td><td>—</td><td>HP abaixo de FleeHP e sob ataque.</td></tr>
+    </tbody>
+  </table>
+  <h3>Alvo</h3>
+  <table>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Tem alvo válido</strong><br><code>HasValidTarget</code></td><td>—</td><td>Existe alvo válido (em vista, vivo, alcançável).</td></tr>
+      <tr><td><strong>Alvo no alcance de ataque</strong><br><code>InAttackRange</code></td><td>—</td><td>Alvo atual dentro do alcance de ataque normal.</td></tr>
+      <tr><td><strong>Pode engajar</strong><br><code>CanEngage</code></td><td>—</td><td>Condições gerais para buscar alvo (HP/SP, não SuperPassive, não standby).</td></tr>
+      <tr><td><strong>Alvo é Boss/MVP</strong><br><code>TargetIsBoss</code></td><td>—</td><td>O monstro alvo é Boss/MVP. Útil p/ proibir skills em boss ou trocar de tática.</td></tr>
+    </tbody>
+  </table>
+  <h3>Dono</h3>
+  <table>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Há comando do dono</strong><br><code>HasOwnerCommand</code></td><td>—</td><td>Há comando do dono pendente neste tick.</td></tr>
+      <tr><td><strong>Longe demais do dono</strong><br><code>TooFarFromOwner</code></td><td><code>dist</code></td><td>Distância do dono acima do limite.</td></tr>
+    </tbody>
+  </table>
+  <h3>Eleanor &amp; Sera</h3>
+  <table>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Estilo atual (Eleanor)</strong><br><code>StyleIs</code></td><td><code>style</code> (<code>power</code>|<code>grapple</code>)</td><td>O estilo atual (Eleanor) é o pedido.</td></tr>
+      <tr><td><strong>Seguro p/ Agarrão (Eleanor)</strong><br><code>SafeToGrapple</code></td><td><code>radius</code>, <code>limit</code></td><td>Seguro p/ Agarrão: nº de monstros no raio ≤ <code>limit</code>.</td></tr>
+      <tr><td><strong>Legião ativa (Sera)</strong><br><code>LegionActive</code></td><td>—</td><td>A Legião invocada (Sera) está ativa (vista ou dentro da janela de duração).</td></tr>
+      <tr><td><strong>Legião abaixo de N insetos</strong><br><code>LegionBelow</code></td><td><code>count</code></td><td>Menos de <code>count</code> insetos vivos na Legião (gatilho de reforço).</td></tr>
+      <tr><td><strong>Legião expirando (Sera)</strong><br><code>LegionExpiring</code></td><td><code>ms</code></td><td>A janela da Legião expira em menos de <code>ms</code> (re-summon antecipado).</td></tr>
     </tbody>
   </table>
 
   <h2 id="acoes">Folhas: ações</h2>
-  <h3>Combate e movimento</h3>
+  <p>Uma ação é uma folha que <strong>faz algo no jogo</strong>. Grupos idênticos aos da paleta do editor.</p>
+  <h3>Alvo</h3>
   <table>
-    <thead><tr><th>Ação</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
     <tbody>
-      <tr><td><code>AcquireTarget</code></td><td><code>by</code> (<code>nearest</code>|<code>lowestHp</code>|<code>ownerAttacker</code>)</td><td>Seleciona o alvo por prioridade, respeitando o modo de KS.</td></tr>
-      <tr><td><code>ReacquireIfBetter</code></td><td><code>by</code>, <code>gate</code></td><td>Mantém o alvo atual; troca por um melhor se aparecer (oportunista). <code>gate</code> liga ao flag de config (ex.: <code>OpportunisticTargeting</code>).</td></tr>
-      <tr><td><code>AcquireOwnerAttacker</code></td><td>—</td><td>Mira no monstro que está atacando o dono (resgate).</td></tr>
-      <tr><td><code>RescueOwner</code></td><td><code>pct</code></td><td>Vai para o lado do dono quando o HP% do dono cai abaixo de <code>pct</code> (vazio = <code>config.RescueOwnerLowHP</code>). Resgate posicional.</td></tr>
-      <tr><td><code>ChaseTarget</code></td><td><code>dist</code>, <code>giveUp</code></td><td>Persegue até a distância <code>dist</code>; com <code>giveUp</code>, desiste se não houver progresso.</td></tr>
-      <tr><td><code>DanceAttack</code></td><td><code>gate</code></td><td>Ataca enquanto reposiciona: alterna golpe e passo lateral. <code>gate</code> liga ao flag (ex.: <code>UseDanceAttack</code>).</td></tr>
-      <tr><td><code>Kite</code></td><td><code>dist</code>, <code>step</code>, <code>bounds</code>, <code>gate</code></td><td>Afasta-se para manter a distância (kiting), respeitando os limites do dono. <code>gate</code> liga ao flag (ex.: <code>KiteMonsters</code>).</td></tr>
-      <tr><td><code>AttackTarget</code></td><td><code>blockIf</code></td><td>Ataque normal no alvo atual. <code>blockIf</code> (chave de config) desliga o ataque normal (ex.: <code>UseSkillOnly</code>).</td></tr>
-      <tr><td><code>Flee</code></td><td>—</td><td>Afasta-se do agressor mais próximo.</td></tr>
+      <tr><td><strong>Escolher alvo</strong><br><code>AcquireTarget</code></td><td><code>by</code> (<code>nearest</code>|<code>lowestHp</code>|<code>ownerAttacker</code>)</td><td>Seleciona o alvo por prioridade, respeitando o modo de KS.</td></tr>
+      <tr><td><strong>Trocar p/ alvo melhor</strong><br><code>ReacquireIfBetter</code></td><td><code>by</code>, <code>gate</code></td><td>Mantém o alvo atual; troca por um melhor se aparecer (oportunista). <code>gate</code> liga ao flag de config.</td></tr>
+      <tr><td><strong>Mirar quem ataca o dono</strong><br><code>AcquireOwnerAttacker</code></td><td>—</td><td>Mira no monstro que está atacando o dono (resgate).</td></tr>
     </tbody>
   </table>
-  <h3>Comandos e ocioso</h3>
+  <h3>Ataque</h3>
   <table>
-    <thead><tr><th>Ação</th><th>Descrição</th></tr></thead>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
     <tbody>
-      <tr><td><code>HandleOwnerCommand</code></td><td>Executa o comando pendente do dono (move/attack/follow).</td></tr>
-      <tr><td><code>MoveToOwner</code></td><td>Aproxima-se do dono até FollowStayBack (+<code>StickyMargin</code> se <code>MoveSticky</code>). Com <code>MoveStickyFight</code>, não retorna ao dono enquanto há alvo.</td></tr>
-      <tr><td><code>Idle</code></td><td>Ocioso (sem ação).</td></tr>
-      <tr><td><code>IdleWalk</code></td><td>Perambula perto do dono quando ocioso (<code>UseIdleWalk</code>), dentro de <code>IdleWalkDistance</code> e só com SP% acima de <code>IdleWalkSP</code>.</td></tr>
+      <tr><td><strong>Atacar (ataque normal)</strong><br><code>AttackTarget</code></td><td><code>blockIf</code></td><td>Ataque normal no alvo atual. <code>blockIf</code> (chave de config) desliga o ataque normal (ex.: <code>UseSkillOnly</code>).</td></tr>
+      <tr><td><strong>Perseguir o alvo</strong><br><code>ChaseTarget</code></td><td><code>dist</code>, <code>giveUp</code></td><td>Persegue até a distância <code>dist</code>; com <code>giveUp</code>, desiste se não houver progresso.</td></tr>
+      <tr><td><strong>Atacar dançando</strong><br><code>DanceAttack</code></td><td><code>gate</code></td><td>Ataca enquanto reposiciona: alterna golpe e passo lateral. <code>gate</code> liga ao flag (ex.: <code>UseDanceAttack</code>).</td></tr>
     </tbody>
   </table>
-  <h3>Skills automáticas (dirigidas pelo perfil do homúnculo)</h3>
-  <p>Estas ações resolvem qual skill usar a partir do perfil do tipo de homúnculo — você não indica IDs.</p>
+  <h3>Movimento</h3>
   <table>
-    <thead><tr><th>Ação</th><th>Descrição</th></tr></thead>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
     <tbody>
-      <tr><td><code>UseMainSkill</code></td><td>Usa a 1ª skill single-target <b>utilizável</b> da <b>lista de prioridade</b> do papel (0..N skills; <b>lista vazia ⇒ não age</b>). Gates: <code>UseHomunSSkillAttack</code> (em alcance) / <code>UseHomunSSkillChase</code> (aproximando). Knobs aceitam <b>override por nó</b> (param do nó &gt; Config global).</td></tr>
-      <tr><td><code>UseAoESkill</code></td><td>Usa a 1ª AoE <b>utilizável</b> da <b>lista de prioridade</b> (0..N); <b>lista vazia ⇒ não age</b>. <b>Sem <code>mainAtk</code></b> (ex.: Dieter), a AoE é a ofensiva <b>principal</b> e dispara com <b>≥1 alvo</b>; <b>com <code>mainAtk</code></b> exige <code>AutoMobCount</code> alvos (economia de SP: single no isolado, AoE no aglomerado). <code>AutoMobMode=0</code> desliga; <code>AoEFixedLevel</code> fixa o nível; <code>AoEMaximizeTargets</code> mira no aglomerado.</td></tr>
-      <tr><td><code>UseOffensiveBuff</code></td><td><b>Mantém TODOS</b> os buffs ofensivos da lista (0..N; recasta cada um ao expirar — ex.: Bayeri usa Golden Ferse <i>e</i> Angriff Modus; <b>vazia ⇒ nenhum</b>).</td></tr>
-      <tr><td><code>UseDefensiveBuff</code></td><td><b>Mantém TODOS</b> os buffs defensivos da lista (0..N; Amistr Bulwark, Granitic Armor, Stein Wand, ...; <b>vazia ⇒ nenhum</b>). Nível por skill via tela de Skills.</td></tr>
-      <tr><td><code>UseHealSelf</code></td><td>Cura a si quando HP% &lt; HealSelfHP (Chaotic Blessing).</td></tr>
-      <tr><td><code>UseHealOwner</code></td><td>Cura o dono quando HP% &lt; HealOwnerHP (Healing Hands/Silent Breeze/Chaotic).</td></tr>
-      <tr><td><code>UseOwnerBuff</code></td><td>Mantém buff no dono (Painkiller da Sera).</td></tr>
-      <tr><td><code>UseSummon</code></td><td>Invoca minions contra o alvo (Summon Legion). Nível/política: <b>param do nó &gt; padrão da tela de Skills (<code>homun_summons.json</code>) &gt; perfil</b>.</td></tr>
-      <tr><td><code>UseCastling</code></td><td>Castling para tirar mobs do dono quando ele está cercado (Amistr).</td></tr>
+      <tr><td><strong>Seguir o dono</strong><br><code>MoveToOwner</code></td><td>—</td><td>Aproxima-se do dono até FollowStayBack (+<code>StickyMargin</code> se <code>MoveSticky</code>). Com <code>MoveStickyFight</code>, não retorna ao dono enquanto há alvo.</td></tr>
+      <tr><td><strong>Fugir</strong><br><code>Flee</code></td><td>—</td><td>Afasta-se do agressor mais próximo.</td></tr>
+      <tr><td><strong>Kite (manter distância)</strong><br><code>Kite</code></td><td><code>dist</code>, <code>step</code>, <code>bounds</code>, <code>gate</code></td><td>Afasta-se para manter a distância (kiting), respeitando os limites do dono. <code>gate</code> liga ao flag (ex.: <code>KiteMonsters</code>).</td></tr>
+      <tr><td><strong>Ficar parado</strong><br><code>Idle</code></td><td>—</td><td>Ocioso (sem ação).</td></tr>
+      <tr><td><strong>Perambular ocioso</strong><br><code>IdleWalk</code></td><td>—</td><td>Perambula perto do dono quando ocioso (<code>UseIdleWalk</code>), dentro de <code>IdleWalkDistance</code> e só com SP% acima de <code>IdleWalkSP</code>.</td></tr>
     </tbody>
   </table>
-  <h3>Skills explícitas (você escolhe a skill)</h3>
-  <p>Use estas para comportamentos customizados apontando uma skill específica. No editor, o campo <code>skill</code> é preenchido pelo seletor de skills por categoria.</p>
+  <h3>Skills ofensivas</h3>
+  <p>Automáticas: resolvem a skill concreta pelo <strong>perfil</strong> do homúnculo (você não indica IDs). Ajuste fino no botão <strong>Parâmetros</strong>.</p>
   <table>
-    <thead><tr><th>Ação</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
     <tbody>
-      <tr><td><code>UseSkill</code></td><td><code>skill</code>, <code>level</code>, <code>on</code> (<code>enemy</code>|<code>owner</code>)</td><td>Usa uma skill de dano em alvo único ou área. <code>on</code> define o centro das skills de área.</td></tr>
-      <tr><td><code>UseSkillBuff</code></td><td><code>skill</code>, <code>level</code></td><td>Usa um buff em si mesmo (não recasta enquanto durar).</td></tr>
-      <tr><td><code>SetStyle</code></td><td><code>style</code> (<code>power</code>|<code>grapple</code>)</td><td>Garante o estilo (Eleanor): conjura Style Change se necessário.</td></tr>
-      <tr><td><code>UseCombo</code></td><td><code>combo</code>, <code>window</code></td><td>Executa um combo no alvo (sequência de golpes).</td></tr>
-      <tr><td><code>UseEleanorOffense</code></td><td><code>style</code>, <code>comboSpheres</code>, <code>window</code>, ...</td><td><strong>Eleanor:</strong> combo + estilo + esferas + segurança do Agarrão num só nó. Precedência: <b>param do nó &gt; padrão da tela de Skills (<code>homun_skills.json</code>) &gt; config</b>. Veja <a href="monstros-e-skills.html#eleanor">Monstros &amp; skills</a>.</td></tr>
+      <tr><td><strong>Skill principal (alvo único)</strong><br><code>UseMainSkill</code></td><td>(perfil)</td><td>Usa a 1ª skill single-target <b>utilizável</b> da <b>lista de prioridade</b> do papel (0..N; <b>lista vazia ⇒ não age</b>). Gates: <code>UseHomunSSkillAttack</code> (em alcance) / <code>UseHomunSSkillChase</code> (aproximando).</td></tr>
+      <tr><td><strong>Skill em área (AoE)</strong><br><code>UseAoESkill</code></td><td>(perfil)</td><td>Usa a 1ª AoE <b>utilizável</b> da <b>lista de prioridade</b>. <b>Sem <code>mainAtk</code></b> (ex.: Dieter), a AoE é a ofensiva principal e dispara com <b>≥1 alvo</b>; <b>com <code>mainAtk</code></b> exige <code>AutoMobCount</code> alvos. <code>AutoMobMode=0</code> desliga; <code>AoEFixedLevel</code> fixa o nível; <code>AoEMaximizeTargets</code> mira no aglomerado.</td></tr>
+    </tbody>
+  </table>
+  <h3>Buffs, cura &amp; defesa</h3>
+  <p>Também automáticas (skill pelo perfil).</p>
+  <table>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Buff ofensivo</strong><br><code>UseOffensiveBuff</code></td><td>(perfil)</td><td><b>Mantém TODOS</b> os buffs ofensivos da lista (recasta cada um ao expirar — ex.: Bloodlust, Pyroclastic; <b>vazia ⇒ nenhum</b>).</td></tr>
+      <tr><td><strong>Buff defensivo</strong><br><code>UseDefensiveBuff</code></td><td>(perfil)</td><td><b>Mantém TODOS</b> os buffs defensivos da lista (Amistr Bulwark, Granitic Armor, Stein Wand…; <b>vazia ⇒ nenhum</b>).</td></tr>
+      <tr><td><strong>Curar a si</strong><br><code>UseHealSelf</code></td><td>(perfil)</td><td>Cura a si quando HP% &lt; HealSelfHP (Chaotic Blessing).</td></tr>
+      <tr><td><strong>Curar o dono</strong><br><code>UseHealOwner</code></td><td>(perfil)</td><td>Cura o dono quando HP% &lt; HealOwnerHP (Healing Hands/Silent Breeze/Chaotic).</td></tr>
+      <tr><td><strong>Buff no dono (Painkiller)</strong><br><code>UseOwnerBuff</code></td><td>(perfil)</td><td>Mantém buff no dono (Painkiller da Sera).</td></tr>
+      <tr><td><strong>Castling (trocar c/ o dono)</strong><br><code>UseCastling</code></td><td>(perfil)</td><td>Castling para tirar mobs do dono quando ele está cercado (Amistr).</td></tr>
+    </tbody>
+  </table>
+  <h3>Skills (manual)</h3>
+  <p>Aqui <strong>você</strong> escolhe a skill, pelo seletor de skills por categoria do inspetor.</p>
+  <table>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Usar skill específica</strong><br><code>UseSkill</code></td><td><code>skill</code>, <code>level</code>, <code>on</code> (<code>enemy</code>|<code>owner</code>)</td><td>Usa uma skill de dano em alvo único ou área. <code>on</code> define o centro das skills de área.</td></tr>
+      <tr><td><strong>Usar buff específico</strong><br><code>UseSkillBuff</code></td><td><code>skill</code>, <code>level</code></td><td>Usa um buff em si mesmo (não recasta enquanto durar).</td></tr>
+    </tbody>
+  </table>
+  <h3>Dono</h3>
+  <table>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Executar comando do dono</strong><br><code>HandleOwnerCommand</code></td><td>—</td><td>Executa o comando pendente do dono (move/attack/follow).</td></tr>
+      <tr><td><strong>Resgatar o dono</strong><br><code>RescueOwner</code></td><td><code>pct</code></td><td>Vai para o lado do dono quando o HP% do dono cai abaixo de <code>pct</code> (vazio = <code>config.RescueOwnerLowHP</code>). Resgate posicional.</td></tr>
+    </tbody>
+  </table>
+  <h3>Eleanor &amp; Sera</h3>
+  <table>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Trocar estilo (Eleanor)</strong><br><code>SetStyle</code></td><td><code>style</code> (<code>power</code>|<code>grapple</code>)</td><td>Garante o estilo (Eleanor): conjura Style Change se necessário.</td></tr>
+      <tr><td><strong>Combo (sequência)</strong><br><code>UseCombo</code></td><td><code>combo</code>, <code>window</code></td><td>Executa um combo no alvo (sequência de golpes).</td></tr>
+      <tr><td><strong>Ofensiva da Eleanor</strong><br><code>UseEleanorOffense</code></td><td><code>style</code>, <code>comboSpheres</code>, <code>window</code>, …</td><td><strong>Eleanor:</strong> combo + estilo + esferas + segurança do Agarrão num só nó. Precedência: <b>param do nó &gt; padrão da tela de Skills (<code>homun_skills.json</code>) &gt; config</b>.</td></tr>
+      <tr><td><strong>Invocar Legião</strong><br><code>UseSummon</code></td><td>—</td><td>Invoca a Legião com a config padrão (atalho do <code>UseSeraLegion</code>).</td></tr>
+      <tr><td><strong>Invocar/manter Legião (Sera)</strong><br><code>UseSeraLegion</code></td><td><code>level</code>, <code>resummon</code>, <code>minCount</code>, <code>minMobCount</code>, <code>vsBossOnly</code></td><td><strong>Sera:</strong> invoca/mantém a Legião com parâmetros. <code>resummon</code>: <code>onExpire</code>|<code>keepFull</code>|<code>minCount</code>; nível 1–5; <code>vsBossOnly</code>; <code>minMobCount</code>.</td></tr>
     </tbody>
   </table>
 

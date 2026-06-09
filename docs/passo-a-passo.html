@@ -53,7 +53,7 @@
       <li><a href="#dieter">2. Exemplo completo: o Dieter</a></li>
       <li><a href="#blastforge">2b. Blast Forge: dois jeitos</a></li>
       <li><a href="#amistr">3. Amistr tanque</a></li>
-      <li><a href="#eira">4. Suporte e reagir a chefes</a></li>
+      <li><a href="#eira">4. Suporte, monstros e grupos</a></li>
       <li><a href="#eleanor">5. Combos da Eleanor</a></li>
       <li><a href="#sera">6. Invocação da Sera</a></li>
       <li><a href="#avancado">7. Recursos avançados</a></li>
@@ -216,19 +216,31 @@
   </figure>
 
   <!-- ===================== 4. EIRA / MONSTERCHECK ===================== -->
-  <h2 id="eira">4. Suporte e reagir a chefes <span class="pill inter">intermediário</span></h2>
+  <h2 id="eira">4. Suporte, monstros e grupos <span class="pill inter">intermediário</span></h2>
   <p>A Eira (base Lif) é suporte: cuida do dono antes de pensar em atacar. A ideia: <strong>curar o dono</strong> se ele cair de vida (Silent Breeze), fugir se ela mesma estiver em apuros, manter o buff e, no combate, ter um <strong>ramo especial contra chefes</strong>.</p>
   <figure>
     <a href="img/tut-eira-geral.png" target="_blank" rel="noopener"><img src="img/tut-eira-geral.png" alt="Árvore da Eira suporte com cura do dono e ramo contra chefe" /></a>
     <figcaption><b>1</b> cura o dono quando ele cai abaixo de 70% · <b>2</b> ramo que só roda quando o alvo é um chefe.</figcaption>
   </figure>
 
-  <h3>4.1 Reagir a um monstro/grupo: o nó Monstro</h3>
-  <p>Para "se o alvo é um chefe, faça X", use o nó <strong>Monstro</strong> (monsterCheck). Ele roda o filho só quando o alvo atual <em>é</em> o monstro escolhido <em>ou está</em> no grupo escolhido. Os monstros e grupos (ex.: o grupo <strong>Chefes</strong>) são cadastrados no botão <strong>Monstros</strong> — veja <a href="monstros-e-skills.html">Monstros &amp; skills</a>.</p>
+  <h3 id="monstros">4.1 Cadastrar monstros e grupos (botão Monstros)</h3>
+  <p>Por padrão a árvore decide só pelo <strong>tipo de homúnculo</strong>. Quando você precisa de ações diferentes conforme <strong>o monstro que está sendo o alvo</strong>, primeiro <strong>cadastre</strong> esse monstro. Clique em <strong>Monstros</strong> na barra de configurações para abrir o gerenciador. À esquerda você cadastra cada monstro pelo <strong>ID</strong> — que é a <em>classe</em> do monstro no jogo (o <code>V_TYPE</code>) — com uma descrição para se achar. À direita você cria <strong>grupos</strong> (ex.: <strong>Chefes</strong>) e marca quais monstros pertencem a cada um. O cadastro é <strong>global do projeto</strong> (salvo em <code>monsters.json</code>) e vale para todas as árvores.</p>
+  <figure>
+    <a href="img/tut-monstros.png" target="_blank" rel="noopener"><img src="img/tut-monstros.png" alt="Gerenciador de monstros e grupos com o grupo Chefes selecionado" /></a>
+    <figcaption><b>1</b> cadastre um monstro: ID (a classe no jogo) + descrição · <b>2</b> marque quem entra no grupo selecionado · <b>3</b> crie ou escolha um grupo (ex.: Chefes).</figcaption>
+  </figure>
+  <div class="box note">
+    <div class="h">Como descobrir o ID de um monstro</div>
+    <p>O ID é a <strong>classe</strong> do monstro (o mesmo número que o jogo usa internamente, o <code>V_TYPE</code>). Você pode pegá-lo numa base de dados do servidor (por exemplo, o divine-pride) ou observando no próprio jogo. No <strong>simulador</strong>, você define a classe de cada monstro no painel dele e vê o ramo disparar — dá para testar a reação antes de levar ao jogo.</p>
+  </div>
+
+  <h3 id="nomonstro">4.2 O nó Monstro (a condição que reage ao alvo)</h3>
+  <p>Com os monstros cadastrados, o nó <strong>Monstro</strong> (monsterCheck) é a condição que reage a eles. Ele tem <strong>um único filho</strong> e o executa <strong>só quando o alvo atual <em>é</em></strong> o monstro escolhido <strong><em>ou está</em></strong> no grupo escolhido. Sem alvo no momento, ele simplesmente falha — e a árvore segue para o próximo item. A opção <strong>negar</strong> inverte tudo: roda quando o alvo <em>não</em> é aquele monstro e <em>não</em> está no grupo — útil para "ataque normalmente, <strong>exceto</strong> contra o grupo X".</p>
   <figure>
     <a href="img/tut-monstercheck.png" target="_blank" rel="noopener"><img src="img/tut-monstercheck.png" alt="Inspetor do nó Monstro com grupo Chefes selecionado" /></a>
     <figcaption><b>1</b> um monstro específico… · <b>2</b> …ou um grupo (ex.: Chefes) · <b>3</b> "negar" inverte (todos menos esse).</figcaption>
   </figure>
+  <p>No exemplo da Eira acima, o nó Monstro aponta para o grupo <strong>Chefes</strong>: quando o alvo é um chefe, ela troca o ataque em área por um foco no alvo. Você verá esse padrão de novo em <a href="#cooldown">7.1</a>, onde um <em>cooldown</em> joga um debuff só em chefes a cada 12&nbsp;s. Ao <strong>Gerar Lua</strong>, o cadastro vira um <code>monsters.lua</code> que acompanha o pacote (o <code>AI.lua</code> o carrega sozinho). A referência completa está em <a href="monstros-e-skills.html">Monstros &amp; skills</a>.</p>
 
   <!-- ===================== 5. ELEANOR ===================== -->
   <h2 id="eleanor">5. Combos da Eleanor <span class="pill avanc">avançado</span></h2>
@@ -278,10 +290,10 @@
   </figure>
 
   <h3 id="parametros">7.3 Parâmetros por papel: ajuste fino sem mexer na árvore</h3>
-  <p>O botão <strong>Parâmetros</strong> abre um painel com uma <strong>aba por papel</strong> (skill de área, buff, cura…). Ali você ajusta <em>quando e como</em> cada skill dispara — por exemplo, a partir de quantos monstros agrupados a AoE vale a pena, ou a reserva de SP. É global do homúnculo e vale no simulador e no Lua.</p>
+  <p>O botão <strong>Parâmetros</strong> abre um painel com uma <strong>aba por papel</strong> (skill de área, buff, cura…). Ali você ajusta <em>quando e como</em> cada skill dispara — por exemplo, a partir de quantos monstros agrupados a AoE vale a pena, ou a reserva de SP. É global do homúnculo e vale no simulador e no Lua. Cada parâmetro aparece com um <strong>rótulo descritivo</strong> (ex.: <em>Usar skill de ataque</em>, <em>Mín. de alvos p/ AoE</em>); passe o mouse para ver o código e uma dica.</p>
   <figure>
     <a href="img/tut-parametros.png" target="_blank" rel="noopener"><img src="img/tut-parametros.png" alt="Painel de Parâmetros das skills com abas por papel" /></a>
-    <figcaption><b>1</b> uma aba por papel · <b>2</b> os ajustes (AutoMobCount, reserva de SP, nível fixo…).</figcaption>
+    <figcaption><b>1</b> uma aba por papel · <b>2</b> os ajustes com rótulos descritivos (mín. de alvos p/ AoE, reserva de SP, nível fixo…).</figcaption>
   </figure>
 
   <h3 id="desativar">7.4 Desativar um nó para testar</h3>

@@ -9,6 +9,9 @@ const NW = 200, NH = 58, GX = 28, GY = 66; // largura/altura do nó + gaps de la
 
 const $ = (id) => document.getElementById(id);
 let registry = {};
+let paramMeta = {};
+function pLabel(k) { return (paramMeta[k] && paramMeta[k].label) || k; }
+function pHelp(k) { return (paramMeta[k] && paramMeta[k].help) || ''; }
 let tree = null;
 let selId = null;
 let uidSeq = 1;
@@ -127,12 +130,12 @@ function ovKnobField(role, knob) {
   const gv = (knob.globalValue != null) ? knob.globalValue : '';
   if (knob.type === 'boolean') {
     const selv = v ? 'true' : 'false';
-    return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + '</label>' +
+    return '<div class="sp-knob"><label title="' + esc(knob.key + (knob.help ? ' — ' + knob.help : '')) + '">' + esc(knob.label || knob.key) + '</label>' +
       '<select class="ovKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="boolean">' +
       '<option value="true"' + (selv === 'true' ? ' selected' : '') + '>sim</option>' +
       '<option value="false"' + (selv === 'false' ? ' selected' : '') + '>não</option></select></div>';
   }
-  return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + '</label>' +
+  return '<div class="sp-knob"><label title="' + esc(knob.key + (knob.help ? ' — ' + knob.help : '')) + '">' + esc(knob.label || knob.key) + '</label>' +
     '<input class="ovKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="number" data-gv="' + esc(String(gv)) + '" type="number" value="' + esc(String(v != null ? v : '')) + '" /></div>';
 }
 function spSetKnob(role, key, value) {
@@ -168,13 +171,13 @@ function spKnobField(role, knob) {
   if (knob.type === 'boolean') {
     const selv = ((cur != null) ? cur : !!gv) ? 'true' : 'false';   // sem "herdar": mostra o valor efetivo
     const o = [['true', 'sim'], ['false', 'não']];
-    return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + '</label>' +
+    return '<div class="sp-knob"><label title="' + esc(knob.key + (knob.help ? ' — ' + knob.help : '')) + '">' + esc(knob.label || knob.key) + '</label>' +
       '<select class="spKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="boolean">' +
       o.map(x => '<option value="' + x[0] + '"' + (x[0] === selv ? ' selected' : '') + '>' + esc(x[1]) + '</option>').join('') + '</select></div>';
   }
   const v = (cur != null) ? cur : '';
   const ph = (gv !== undefined) ? ' placeholder="' + esc(String(gv)) + '"' : '';
-  return '<div class="sp-knob"><label title="' + esc(knob.key) + '">' + esc(knob.key) + (gv !== undefined ? ' <span class="sp-gl">· padrão: ' + esc(fmtCfg(gv)) + '</span>' : '') + '</label>' +
+  return '<div class="sp-knob"><label title="' + esc(knob.key + (knob.help ? ' — ' + knob.help : '')) + '">' + esc(knob.label || knob.key) + (gv !== undefined ? ' <span class="sp-gl">· padrão: ' + esc(fmtCfg(gv)) + '</span>' : '') + '</label>' +
     '<input class="spKnob" data-role="' + role + '" data-key="' + knob.key + '" data-type="number" type="number" value="' + v + '"' + ph + ' /></div>';
 }
 async function loadSummonChoice() { try { const r = await window.summonIO.load(); if (r && r.ok) summonCfg = normChoice(JSON.parse(r.data)); } catch (e) { summonCfg = { choices: {} }; } try { await callSim('setSummonChoice', summonCfg); } catch (e) {} }
@@ -965,13 +968,13 @@ function paramFieldHtml(f, type, sel) {
     let opts = '<option value="">— skill —</option>';
     for (const sk of catalog.slice().sort((a, b) => a.iro.localeCompare(b.iro)))
       opts += '<option value="' + sk.id + '"' + (sel.params && sk.id === sel.params.skill ? ' selected' : '') + '>' + esc(sk.iro) + '</option>';
-    return field('param: skill', '<select class="iParamSkill" data-f="skill">' + opts + '</select>');
+    return field(pLabel('skill'), '<select class="iParamSkill" data-f="skill">' + opts + '</select>', pHelp('skill'));
   }
   if (f === 'by') {
     // prioridade de alvo (AcquireTarget / ReacquireIfBetter)
     const cur = (sel.params && sel.params.by) || 'nearest';
     const o = [['nearest', 'Mais próximo'], ['lowestHp', 'Menor HP'], ['ownerAttacker', 'Atacante do dono']];
-    return field('Prioridade de alvo', '<select class="iParam" data-f="by">' +
+    return field(pLabel('by'), '<select class="iParam" data-f="by">' +
       o.map(x => '<option value="' + x[0] + '"' + (x[0] === cur ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select>');
   }
   if (f === 'combo' || f === 'style') {
@@ -980,7 +983,7 @@ function paramFieldHtml(f, type, sel) {
     const o = f === 'combo'
       ? [['power', 'Power (Sonic Claw)'], ['grapple', 'Grapple (Tinder Breaker)']]
       : [['power', 'Power (Combate)'], ['grapple', 'Grapple (Agarrão)']];
-    return field(f === 'combo' ? 'Combo' : 'Estilo', '<select class="iParam" data-f="' + f + '">' +
+    return field(f === 'combo' ? pLabel('combo') : pLabel('style'), '<select class="iParam" data-f="' + f + '">' +
       o.map(x => '<option value="' + x[0] + '"' + (x[0] === cur ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select>');
   }
   // #4: booleano TRI-ESTADO (herdar | sim | não) — ausente = herda a Config global
@@ -991,7 +994,7 @@ function paramFieldHtml(f, type, sel) {
     const selB = '<select class="iParamBool" data-f="' + f + '">' +
       o.map(x => '<option value="' + x[0] + '"' + (x[0] === curB ? ' selected' : '') + '>' + esc(x[1]) + '</option>').join('') + '</select>';
     const optB = paramsOptional(sel.name).includes(f);
-    return field('param: ' + f + ' (booleano)' + (optB ? ' — opcional' : ''), selB);
+    return field(pLabel(f) + (optB ? ' — opcional' : ''), selB, pHelp(f));
   }
   const v = (sel.params && sel.params[f] != null) ? sel.params[f] : '';
   const gv = effectiveGlobal(f);
@@ -1000,7 +1003,7 @@ function paramFieldHtml(f, type, sel) {
     ? '<input class="iParam" data-f="' + f + '" type="number" value="' + v + '"' + ph + ' />'
     : '<input class="iParam" data-f="' + f + '" type="text" value="' + esc(v) + '"' + ph + ' />';
   const opt = paramsOptional(sel.name).includes(f);
-  return field('param: ' + f + ' (' + type + ')' + (opt ? ' — opcional' : '') + cfgHint(f), inp);
+  return field(pLabel(f) + (opt ? ' — opcional' : '') + cfgHint(f), inp, pHelp(f));
 }
 // resumo dos params p/ o rótulo do nó (skill aparece pelo nome)
 function paramStr(n, ks) {
@@ -1011,7 +1014,7 @@ function paramStr(n, ks) {
 }
 
 // ---- inspetor ------------------------------------------------------------
-function field(l, html) { return '<div class="field"><label>' + esc(l) + '</label>' + html + '</div>'; }
+function field(l, html, title) { return '<div class="field"><label' + (title ? ' title="' + esc(title) + '"' : '') + '>' + esc(l) + '</label>' + html + '</div>'; }
 function renderInspector() {
   const sel = selected();
   if (!sel) { $('inspector').innerHTML = '<span class="desc">Selecione um nó no grafo.</span>'; return; }
@@ -1374,6 +1377,7 @@ document.addEventListener('mousedown', function (e) { const m = document.getElem
 (async function boot() {
   try {
     registry = await callSim('registry');
+    try { paramMeta = await callSim('paramMeta'); } catch (e) { paramMeta = {}; }
     try { cfgDefaults = await callSim('defaultConfig'); } catch (e) {}   // #4: dica de herança dos knobs por nó
     await loadMonsters();
     await loadSkillChoice();
