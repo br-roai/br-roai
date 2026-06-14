@@ -190,13 +190,14 @@ function captureScenario(srcFrame) {
     entities: ents,
   };
 }
-// cenário p/ ARQUIVO: remove TODA info do homúnculo — o homún é estado da SESSÃO do
-// simulador (seletor homún/base), não do cenário (que descreve só o "mundo": dono, monstros,
-// aliados, grid). Assim o mesmo cenário serve p/ qualquer homúnculo.
+// cenário p/ ARQUIVO: mantém os STATS (HP/SP/ATK/MATK) e a posição do homúnculo, mas remove o
+// TIPO do homún (homunType/baseType/config.BaseHomunType). O tipo é a seleção da SESSÃO (seletor
+// homún/base), não do cenário — assim o mesmo cenário serve p/ qualquer tipo de homúnculo.
+function stripHomunType(e) { const o = {}; for (const k in e) if (k !== 'homunType') o[k] = e[k]; return o; }
 function scenarioForFile(scn) {
   const out = {};
   for (const k in scn) out[k] = scn[k];
-  out.entities = (scn.entities || []).filter(e => e.kind !== 'homun');
+  out.entities = (scn.entities || []).map(e => (e.kind === 'homun' ? stripHomunType(e) : e));
   delete out.homunType; delete out.baseType;
   if (out.config) { const c = {}; for (const k in out.config) if (k !== 'BaseHomunType') c[k] = out.config[k]; out.config = c; }
   return out;
@@ -231,13 +232,9 @@ async function loadScenarioFile() {
   SCENARIO.homunId = scn.homunId || SCENARIO.homunId;
   SCENARIO.ownerId = scn.ownerId || SCENARIO.ownerId;
   SCENARIO.config = scn.config || {};
-  // ignora QUALQUER homúnculo do arquivo: mantém o homún atual do simulador (seletor) e só
-  // troca o "mundo" (dono/monstros/aliados). syncBaseUI (em loadScenario) ajusta o tipo pelo seletor.
-  const curHomun = SCENARIO.entities.find(e => e.kind === 'homun');
-  if (Array.isArray(scn.entities)) {
-    const world = scn.entities.filter(e => e.kind !== 'homun');
-    SCENARIO.entities = curHomun ? [curHomun].concat(world) : world;
-  }
+  if (Array.isArray(scn.entities)) SCENARIO.entities = scn.entities;   // mantém stats/posição do mundo
+  // IGNORA o TIPO do homúnculo do arquivo: o tipo vem do seletor ATUAL da sessão — syncBaseUI
+  // (em loadScenario) aplica o tipo do seletor no homún. Não sobrescreve os seletores pelo arquivo.
   $('scnName').value = name;
   await loadScenario();
   $('status').textContent = 'Cenário carregado: ' + name;
