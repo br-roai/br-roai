@@ -912,6 +912,31 @@
   function findByLabel(spec, label) {
     var found = null; walk(spec, function (n) { if (!found && n.label === label) found = n; }); return found;
   }
+  // Âncoras por CONTEÚDO (robustas a rótulos): a árvore default é editável pelo usuário,
+  // então localizamos os ramos pela estrutura, não por label fixo.
+  function findSelectorWith(spec, pred) {
+    var hit = null;
+    walk(spec, function (n) {
+      if (hit || n.type !== 'selector' || !Array.isArray(n.children)) return;
+      if (n.children.some(pred)) hit = n;
+    });
+    return hit;
+  }
+  function findCombatAction(spec) {   // selector com UseMainSkill/UseAoESkill/ChaseTarget/InAttackRange
+    return findSelectorWith(spec, function (c) {
+      return (c.type === 'action' && (c.name === 'UseMainSkill' || c.name === 'UseAoESkill' || c.name === 'ChaseTarget'))
+          || (c.type === 'check' && c.name === 'InAttackRange');
+    });
+  }
+  function findIdleNode(spec) {        // selector que contém a folha Idle
+    return findSelectorWith(spec, function (c) { return c.name === 'Idle'; });
+  }
+  function findEngageNode(spec) {      // selector de aquisição/engajamento de alvo
+    return findSelectorWith(spec, function (c) {
+      return (c.type === 'check' && (c.name === 'HasValidTarget' || c.name === 'CanEngage'))
+          || (c.type === 'action' && c.name === 'AcquireTarget');
+    });
+  }
 
   // tipo de homún alvo: opção do usuário, senão o tipo com mais skills no SkillList, senão 4
   function pickType(opts, hconfig, skillList) {
@@ -982,12 +1007,12 @@
     if (dr.aoeAtk) disableActions(spec, ['UseAoESkill']);
     if (dr.mainAtk) disableActions(spec, ['UseMainSkill']);
     if (rTac.tacticsBranch) {
-      var combat = findByLabel(spec, 'combate-acao') || findByLabel(spec, 'Engajar');
+      var combat = findByLabel(spec, 'combate-acao') || findCombatAction(spec) || findByLabel(spec, 'Engajar');
       if (combat && Array.isArray(combat.children)) combat.children.unshift(rTac.tacticsBranch);
       else if (Array.isArray(spec.children)) spec.children.push(rTac.tacticsBranch);
     }
     // Fase 8a: ramos opcionais (nós já existentes), ligados pelo flag de config
-    var combat8a = findByLabel(spec, 'combate-acao');
+    var combat8a = findByLabel(spec, 'combate-acao') || findCombatAction(spec);
     if (combat8a && Array.isArray(combat8a.children)) {
       if (config.KiteMonsters || config.ForceKite) {
         var ti = -1; for (var ki = 0; ki < combat8a.children.length; ki++) { if (combat8a.children[ki].label === 'Táticas por monstro') { ti = ki; break; } }
@@ -1013,11 +1038,15 @@
       }
     }
     if (config.OpportunisticTargeting) {                                      // troca p/ um alvo melhor (liga o ReacquireIfBetter)
+      var reacq = { type: 'action', name: 'ReacquireIfBetter', params: { gate: 'OpportunisticTargeting' }, label: 'mira oportunista' };
       var setAlvo = findByLabel(spec, 'Definir alvo');
       if (setAlvo && Array.isArray(setAlvo.children)) {
         var temIdx = -1; for (var ci2 = 0; ci2 < setAlvo.children.length; ci2++) { if (setAlvo.children[ci2].label === 'Tem alvo') { temIdx = ci2; break; } }
-        var reacq = { type: 'action', name: 'ReacquireIfBetter', params: { gate: 'OpportunisticTargeting' }, label: 'mira oportunista' };
         if (temIdx >= 0) setAlvo.children.splice(temIdx, 0, reacq); else setAlvo.children.unshift(reacq);
+      } else {
+        var eng = findEngageNode(spec);                                       // fallback por conteúdo (sem label 'Definir alvo')
+        if (eng && Array.isArray(eng.children)) eng.children.unshift(reacq);
+        else if (Array.isArray(spec.children)) spec.children.unshift(reacq);
       }
     }
     if (config.UseSkillOnly) {                                                // só skill: bloqueia TODO ataque normal
@@ -1025,7 +1054,7 @@
     }
     // Fase 8c: IdleWalk no ramo «ocioso» (os demais knobs — sticky, AoE, skill-S — são só config lida por nós já existentes)
     if (config.UseIdleWalk) {
-      var ocioso = findByLabel(spec, 'ocioso');
+      var ocioso = findByLabel(spec, 'ocioso') || findIdleNode(spec);
       if (ocioso && Array.isArray(ocioso.children)) {
         var idi = -1; for (var oi = 0; oi < ocioso.children.length; oi++) { if (ocioso.children[oi].name === 'Idle') { idi = oi; break; } }
         var iw = { type: 'action', name: 'IdleWalk', label: 'perambular' };

@@ -58,6 +58,12 @@ h3{margin:8px 0 6px;font-size:13px;color:#adbac7;text-transform:uppercase;letter
 .gnode.owns{box-shadow:0 0 0 2px #58a6ff88, 0 2px 8px #0008}
 .gnode.drop-ok{outline:2px dashed var(--green);outline-offset:2px}
 .gnode.drop-bad{outline:2px dashed var(--red);outline-offset:2px}
+.gnode.g-noskill{border-style:dashed;border-color:var(--run);
+  background:repeating-linear-gradient(45deg,#161b22,#161b22 7px,#1d1a10 7px,#1d1a10 14px)}
+.gnode.g-noskill .type{opacity:.65}
+.gnode.g-noskill::before{content:'\26a0 sem skill';position:absolute;top:-10px;left:8px;
+  background:var(--run);color:#1a1205;font:700 9px system-ui,sans-serif;padding:1px 6px;border-radius:9px;
+  pointer-events:none;white-space:nowrap;z-index:3}
 .n-edge{stroke:#3b434d;stroke-width:2;fill:none}
 .ghost-edge{stroke:#1f6feb;stroke-width:2;stroke-dasharray:5 4;opacity:.9}
 .ins-mark{stroke:#1f6feb;stroke-width:3;stroke-linecap:round}
@@ -275,3 +281,14 @@ button:disabled{opacity:.45;cursor:default}
 .mm-foot{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;border-top:1px solid var(--line);flex:0 0 auto}
 .mm-save{background:#2d6a4f;border:1px solid #2d6a4f;color:#fff;font-weight:600;border-radius:6px;padding:7px 16px;cursor:pointer}
 .mm-save:hover{background:#358a63}
+/* feature "usar skills da base": checkbox no contexto + destaque "via base" */
+.usebase{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--muted);cursor:pointer}
+.usebase input{margin:0}
+.usebase input:disabled{opacity:.5;cursor:not-allowed}
+.usebase .hint{cursor:help;color:var(--blue)}
+.gnode.g-frombase{border-style:dashed;border-color:var(--blue)}
+.gnode.g-frombase .type{opacity:.85}
+.gnode.g-frombase::before{content:'\2197 via base';position:absolute;top:-10px;left:8px;
+  background:var(--blue);color:#04121f;font:700 9px system-ui,sans-serif;padding:1px 6px;border-radius:9px;
+  pointer-events:none;white-space:nowrap;z-index:3}
+.gnode .sk.sk-base{color:#7ab8f5}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>BR-AI — Editor de Árvores (web)</title><link rel="icon" href="favicon.ico" sizes="32x32" /><link rel="icon" href="favicon.svg" type="image/svg+xml" /><link rel="apple-touch-icon" href="apple-touch-icon.png" /><link rel="manifest" href="site.webmanifest" /><meta name="theme-color" content="#0c141b" />
-  <link rel="stylesheet" href="assets/editor_css.58aade5c8f.css" />
+  <link rel="stylesheet" href="assets/editor_css.75e22077b8.css" />
   <link rel="stylesheet" href="assets/static.4ebe8688aa.css" />
   <style>
     #braibar { display:flex; align-items:center; gap:10px; padding:6px 10px; background:#101417; color:#cfd6dd; border-bottom:1px solid #263038; font:13px system-ui, sans-serif; }
@@ -38,6 +38,9 @@
       base <select id="ctxBase" disabled title="Forma base (Homunculus S herda as skills da base)">
         <option value="0">—</option><option value="4">Vanilmirth</option><option value="2">Amistr</option><option value="3">Filir</option><option value="1">Lif</option>
       </select>
+      <label class="usebase" id="ctxUseBaseWrap" title="Quando o Homunculus S não tem uma skill de um tipo, usa a da forma base (o S tem prioridade). Ex.: Sera base Vanilmirth — a Sera não tem cura, então usa o Chaotic Blessings do Vanilmirth. Buffs ofensivos/defensivos: a base só entra se o S não tiver nenhum.">
+        <input type="checkbox" id="ctxUseBase" disabled> usar skills da base <span class="hint" title="Quando o Homunculus S não tem uma skill de um tipo, usa a da forma base (o S tem prioridade). Ex.: Sera base Vanilmirth — a Sera não tem cura, então usa o Chaotic Blessings do Vanilmirth. Buffs ofensivos/defensivos: a base só entra se o S não tiver nenhum.">ⓘ</span>
+      </label>
     </span>
     <button id="btnUndo" title="Desfazer (Ctrl+Z)" disabled>↶</button>
     <button id="btnRedo" title="Refazer (Ctrl+Y)" disabled>↷</button>
@@ -88,11 +91,11 @@
   <script src="assets/build_tree_web.50becfbc82.js"></script>
   <script src="assets/zip_web.8114b4c800.js"></script>
   <script src="assets/lua_host_core.e39837dc12.js"></script>
-  <script src="assets/lua-bundle.9064558d31.js"></script>
+  <script src="assets/lua-bundle.4a63994a33.js"></script>
   <script src="assets/static_host.cf05239916.js"></script>
   <script src="assets/bridge_core.5aafec5090.js"></script>
   <script src="assets/s3_backend.28c579d5ce.js"></script>
   <script src="assets/static_ui.ae518c1533.js"></script>
-  <script src="assets/editor.874ebd6286.js"></script>
+  <script src="assets/editor.b7101f30ee.js"></script>
 </body>
 </html>

@@ -5,141 +5,120 @@
     {
       "type": "check",
       "name": "HasOwnerCommand",
-      "label": "comando",
+      "params": {},
       "child": {
         "type": "action",
-        "name": "HandleOwnerCommand"
+        "name": "HandleOwnerCommand",
+        "params": {}
       }
+    },
+    {
+      "type": "selector",
+      "children": [
+        {
+          "type": "action",
+          "name": "UseOffensiveBuff",
+          "params": {}
+        },
+        {
+          "type": "action",
+          "name": "UseDefensiveBuff",
+          "params": {}
+        },
+        {
+          "type": "action",
+          "name": "UseOwnerBuff",
+          "params": {}
+        }
+      ],
+      "label": "Buffs"
     },
     {
       "type": "check",
-      "name": "ShouldFlee",
-      "label": "sobrevivencia",
+      "name": "OwnerUnderAttack",
+      "params": {
+        "count": 4
+      },
       "child": {
         "type": "action",
-        "name": "Flee"
+        "name": "UseCastling",
+        "params": {}
       }
     },
     {
       "type": "selector",
-      "label": "cura-urgente",
       "children": [
         {
-          "type": "action",
-          "name": "UseHealSelf"
-        },
-        {
-          "type": "action",
-          "name": "UseHealOwner"
-        }
-      ]
-    },
-    {
-      "type": "action",
-      "name": "UseCastling"
-    },
-    {
-      "type": "action",
-      "name": "UseOwnerBuff"
-    },
-    {
-      "type": "sequence",
-      "label": "Engajar",
-      "children": [
-        {
-          "type": "selector",
-          "label": "Definir alvo",
-          "children": [
-            {
-              "type": "check",
-              "name": "OwnerUnderAttack",
-              "params": {},
-              "label": "Dono sob ataque",
-              "child": {
+          "type": "check",
+          "name": "HasValidTarget",
+          "params": {},
+          "child": {
+            "type": "selector",
+            "children": [
+              {
                 "type": "action",
-                "name": "AcquireOwnerAttacker",
+                "name": "UseMainSkill",
+                "params": {}
+              },
+              {
+                "type": "action",
+                "name": "UseAoESkill",
+                "params": {}
+              },
+              {
+                "type": "check",
+                "name": "InAttackRange",
+                "params": {},
+                "child": {
+                  "type": "action",
+                  "name": "AttackTarget",
+                  "params": {}
+                }
+              },
+              {
+                "type": "action",
+                "name": "ChaseTarget",
                 "params": {}
               }
-            },
-            {
-              "type": "check",
-              "name": "HasValidTarget",
-              "params": {},
-              "label": "Tem alvo"
-            },
-            {
-              "type": "check",
-              "name": "CanEngage",
-              "params": {},
-              "label": "Pode engajar",
-              "child": {
-                "type": "action",
-                "name": "AcquireTarget",
-                "params": {}
-              }
-            }
-          ]
+            ],
+            "label": "Ataques"
+          }
         },
         {
-          "type": "selector",
-          "label": "combate-acao",
-          "children": [
-            {
-              "type": "action",
-              "name": "UseSummon"
-            },
-            {
-              "type": "action",
-              "name": "UseAoESkill"
-            },
-            {
-              "type": "action",
-              "name": "UseMainSkill"
-            },
-            {
-              "type": "check",
-              "name": "InAttackRange",
-              "child": {
-                "type": "action",
-                "name": "AttackTarget"
-              }
-            },
-            {
-              "type": "action",
-              "name": "ChaseTarget"
-            }
-          ]
+          "type": "check",
+          "name": "CanEngage",
+          "params": {},
+          "child": {
+            "type": "action",
+            "name": "AcquireTarget",
+            "params": {}
+          }
         }
-      ]
+      ],
+      "label": "Engajar"
     },
     {
       "type": "selector",
-      "label": "ocioso",
       "children": [
         {
           "type": "check",
           "name": "TooFarFromOwner",
           "params": {
-            "dist": 3
+            "dist": 4
           },
           "child": {
             "type": "action",
-            "name": "MoveToOwner"
+            "name": "MoveToOwner",
+            "params": {}
           }
         },
         {
           "type": "action",
-          "name": "UseOffensiveBuff"
-        },
-        {
-          "type": "action",
-          "name": "UseDefensiveBuff"
-        },
-        {
-          "type": "action",
-          "name": "Idle"
+          "name": "Idle",
+          "params": {}
         }
-      ]
+      ],
+      "label": "Ocioso"
     }
   ]
 }

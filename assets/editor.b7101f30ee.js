@@ -17,7 +17,7 @@ let selId = null;
 let uidSeq = 1;
 let nodeEls = {};       // uid -> elemento DOM
 let zoom = 1;           // fator de zoom do canvas
-let ctxHomun = 4, ctxBase = 0, catalog = [];
+let ctxHomun = 4, ctxBase = 0, ctxUseBase = false, catalog = [];
 let treeConfig = {};  // knobs do H_Config (migrados/editados) — vão p/ save/build/sim
 let cfgDefaults = null;  // BRAI.defaultConfig() (do sim), p/ o painel Config  // contexto p/ skills (UseSkill)
 const S_TYPES_E = [48, 49, 50, 51, 52];
@@ -31,7 +31,7 @@ const PARAM_EXTRA = { UseHealSelf: 'healSelf', UseHealOwner: 'healOwner', UseOwn
 async function loadCatalog() {
   try { catalog = await callSim('skillCatalog', { homunType: ctxHomun, baseType: ctxBase }); } catch (e) { catalog = []; }
   try { roleCfgCache = await callSim('roleConfig', { homunType: ctxHomun }); } catch (e) { roleCfgCache = null; }   // #5
-  try { actionSkillsCache = await callSim('actionSkillsAll', { homunType: ctxHomun, baseType: ctxBase }); } catch (e) { actionSkillsCache = null; }   // S3
+  try { actionSkillsCache = await callSim('actionSkillsAll', { homunType: ctxHomun, baseType: ctxBase, useBase: ctxUseBase }); } catch (e) { actionSkillsCache = null; }   // S3
 }
 // rótulo das skills efetivas de uma ação automática (nome + nível). Vazio (ex.: Dieter mainAtk) => ''.
 function roleSkillsLabel(actionName) {
@@ -322,6 +322,12 @@ function syncCtx() {
   $('ctxBase').disabled = !isS;
   if (!isS) $('ctxBase').value = '0';
   ctxBase = isS ? (parseInt($('ctxBase').value, 10) || 0) : 0;
+  const canBase = isS && ctxBase !== 0;
+  const ubEl = $('ctxUseBase');
+  if (ubEl) { ubEl.disabled = !canBase; if (!canBase) ubEl.checked = false; ctxUseBase = canBase && ubEl.checked; }
+  else { ctxUseBase = canBase && ctxUseBase; }
+  treeConfig = treeConfig || {};
+  treeConfig.UseBaseSkills = ctxUseBase;   // persistido no wrapper e enviado ao simulador
 }
 
 // ---- ponte / util --------------------------------------------------------
@@ -613,6 +619,7 @@ function nodeSkillsHtml(n) {
   const lines = [];
   if (as && as.state === 'ok') as.skills.forEach(s => lines.push('<span class="sk">' + esc(skLabel(s)) + '</span>'));
   else if (as && as.state === 'none') lines.push('<span class="sk sk-warn">\u26a0 nenhuma skill selecionada</span>');
+  else if (as && as.state === 'base') as.skills.forEach(s => lines.push('<span class="sk sk-base">' + esc(skLabel(s)) + ' \u00b7 via base' + (ctxBase ? ' (' + esc(HOMUN_NAMES[ctxBase] || '') + ')' : '') + '</span>'));
   else if (as && as.state === 'missing') lines.push('<span class="sk sk-na">\u2014 sem skill p/ este tipo</span>');
   const sc = paramsSchema(n.name);
   const ks = Object.keys(sc).filter(k => n.params && n.params[k] != null);
@@ -682,6 +689,15 @@ function nodeClass(n) {
   const base = k === 'composite' ? 'g-composite' : k === 'decorator' ? 'g-decorator' : k === 'check' ? 'g-check' : k === 'monstercheck' ? 'g-mcheck' : k === 'leaf-cond' ? 'g-cond' : 'g-act';
   return base + (valid ? '' : ' g-bad');
 }
+// destaque (só visual): homún selecionado NÃO tem skill do papel desta ação automática.
+function nodeSkillStateClass(n) {
+  if (n.type !== 'action') return '';
+  const as = actionSkillsCache && actionSkillsCache[n.name];
+  if (!as) return '';
+  if (as.state === 'missing') return ' g-noskill';
+  if (as.state === 'base') return ' g-frombase';
+  return '';
+}
 // ponto de origem do vínculo na BASE do nó pai (distribuído por ordem dos filhos)
 function childOrigin(parent, idx, count) {
   const frac = count <= 1 ? 0.5 : (idx + 1) / (count + 1);
@@ -731,7 +747,7 @@ function drawEdges() {
 function renderGraph() {
   const parts = [];
   (function w(n) {
-    parts.push('<div class="gnode ' + nodeClass(n) + (n.disabled ? ' gdisabled' : '') + (n._uid === selId ? ' sel' : '') + '" data-uid="' + n._uid +
+    parts.push('<div class="gnode ' + nodeClass(n) + nodeSkillStateClass(n) + (n.disabled ? ' gdisabled' : '') + (n._uid === selId ? ' sel' : '') + '" data-uid="' + n._uid +
       '" style="left:' + n._x + 'px;top:' + n._y + 'px">' +
       '<span class="type ' + nodeTypeClass(n) + '">' + esc(nodeTypeLabel(n)) + '</span>' +
       '<span class="t" title="' + esc((n.name ? n.name + (registry[n.name] && registry[n.name].desc ? ' — ' + registry[n.name].desc : '') : '')) + '">' + esc(nodeMain(n)) + '</span>' +
@@ -1225,6 +1241,7 @@ async function refreshTreeList() {
 function applyContextToUI() {
   $('ctxHomun').value = String(ctxHomun);
   $('ctxBase').value = String(ctxBase);
+  const ubEl = $('ctxUseBase'); if (ubEl) ubEl.checked = !!ctxUseBase;
   syncCtx();
 }
 async function openTree() {
@@ -1236,6 +1253,7 @@ async function openTree() {
   tree = w.spec || w;
   ctxHomun = w.homunType || 4; ctxBase = w.baseType || 0;
   treeConfig = w.config || {};
+  ctxUseBase = !!(treeConfig && treeConfig.UseBaseSkills);
   applyContextToUI(); await loadCatalog();
   uidSeq = 1; assignUids(tree); selId = tree._uid; autoLayout();
   currentName = name; $('treeName').value = name;
@@ -1261,23 +1279,16 @@ async function buildTreeLua() {
   if (!r.ok) { setStatus('Erro: ' + r.error, true); return; }
   setStatus('Pacote gerado: trees/' + r.name + '/dist/  +  trees/' + r.name + '/' + r.name + '.zip  (' + (r.files || '?') + ' arquivos, pronto p/ a pasta da IA do RO).');
 }
-async function newTree() {
+function newTree() {
+  // "Nova" só monta a árvore (apenas o nó raiz) na tela — NÃO grava nem baixa nada.
+  // A persistência fica nos botões Salvar (trees/<nome>/tree.json) e Gerar Lua.
   const name = ($('treeName').value || '').trim();
   if (!name) { setStatus('Digite um nome para a nova árvore.', true); return; }
-  let exists = false;
-  try { const r = await window.trees.list(); if (r.ok) exists = r.data.some(n => n.toLowerCase() === name.toLowerCase()); } catch (e) {}
-  if (exists && !confirm('Já existe a árvore "' + name + '". Sobrescrever por uma nova (apenas o nó raiz)?')) {
-    setStatus('Criação cancelada.'); return;
-  }
   tree = { type: 'selector', label: 'root', children: [] };
   uidSeq = 1; assignUids(tree); selId = tree._uid; autoLayout();
-  const wrapper = { name: name, homunType: ctxHomun, baseType: ctxBase, config: treeConfig, spec: exportSpec(tree) };
-  const r = await window.trees.save(name, JSON.stringify(wrapper, null, 2));
-  if (!r.ok) { setStatus('Erro ao criar: ' + r.error, true); return; }
-  currentName = r.name; $('treeName').value = r.name;
-  await refreshTreeList();
+  currentName = name; $('treeName').value = name;
   renderInspector(); renderAll(); histInit();
-  setStatus((exists ? 'Sobrescrita' : 'Criada') + ': trees/' + r.name + '/ (só o nó raiz)');
+  setStatus('Nova árvore "' + name + '" criada (só o nó raiz). Clique em Salvar para gravar em trees/' + name + '/.');
 }
 async function simulateTree() {
   if (renderValidation() > 0) { setStatus('Corrija os erros antes de simular.', true); return; }
@@ -1333,7 +1344,7 @@ function saveEditorState() {
     sessionStorage.setItem(STATE_KEY, JSON.stringify({
       tree: tree,                 // inclui _uid/_x/_y p/ preservar layout e seleção
       selId: selId,
-      ctxHomun: ctxHomun, ctxBase: ctxBase, config: treeConfig,
+      ctxHomun: ctxHomun, ctxBase: ctxBase, ctxUseBase: ctxUseBase, config: treeConfig,
       treeName: $('treeName').value || '', currentName: currentName,
       zoom: zoom,
       sl: wrap ? wrap.scrollLeft : 0, st: wrap ? wrap.scrollTop : 0,
@@ -1387,7 +1398,8 @@ document.addEventListener('mousedown', function (e) { const m = document.getElem
     const bcf = $('btnConfig'); if (bcf) bcf.onclick = () => openConfigManager();
     const bsp = $('btnSkillParams'); if (bsp) bsp.onclick = () => openSkillParams();
     $('ctxHomun').addEventListener('change', async () => { syncCtx(); await loadCatalog(); renderInspector(); renderAll(); });   // #5: atualiza rótulos
-    $('ctxBase').addEventListener('change', async () => { syncCtx(); await loadCatalog(); renderInspector(); });
+    $('ctxBase').addEventListener('change', async () => { syncCtx(); await loadCatalog(); renderInspector(); renderAll(); });
+    { const ub = $('ctxUseBase'); if (ub) ub.addEventListener('change', async () => { syncCtx(); await loadCatalog(); renderInspector(); renderAll(); }); }
     window.addEventListener('beforeunload', saveEditorState);
 
     const saved = readEditorState();
@@ -1396,6 +1408,7 @@ document.addEventListener('mousedown', function (e) { const m = document.getElem
       tree = saved.tree;
       ctxHomun = saved.ctxHomun || 4; ctxBase = saved.ctxBase || 0;
       treeConfig = saved.config || {};
+      ctxUseBase = !!(saved.ctxUseBase || (treeConfig && treeConfig.UseBaseSkills));
       applyContextToUI(); await loadCatalog();
       currentName = saved.currentName || '';
       $('treeName').value = saved.treeName || '';
