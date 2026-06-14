@@ -190,6 +190,17 @@ function captureScenario(srcFrame) {
     entities: ents,
   };
 }
+// cenário p/ ARQUIVO: remove TODA info do homúnculo — o homún é estado da SESSÃO do
+// simulador (seletor homún/base), não do cenário (que descreve só o "mundo": dono, monstros,
+// aliados, grid). Assim o mesmo cenário serve p/ qualquer homúnculo.
+function scenarioForFile(scn) {
+  const out = {};
+  for (const k in scn) out[k] = scn[k];
+  out.entities = (scn.entities || []).filter(e => e.kind !== 'homun');
+  delete out.homunType; delete out.baseType;
+  if (out.config) { const c = {}; for (const k in out.config) if (k !== 'BaseHomunType') c[k] = out.config[k]; out.config = c; }
+  return out;
+}
 async function refreshScenarioList() {
   try {
     const r = await window.scenarios.list();
@@ -202,7 +213,7 @@ async function refreshScenarioList() {
 async function saveScenario() {
   const name = ($('scnName').value || '').trim();
   if (!name) { $('status').textContent = 'Dê um nome ao cenário.'; return; }
-  const r = await window.scenarios.save(name, JSON.stringify(captureScenario(), null, 2));
+  const r = await window.scenarios.save(name, JSON.stringify(scenarioForFile(captureScenario()), null, 2));
   if (!r.ok) { showError('salvar cenário: ' + r.error); return; }
   $('scnName').value = r.name;
   await refreshScenarioList();
@@ -220,9 +231,13 @@ async function loadScenarioFile() {
   SCENARIO.homunId = scn.homunId || SCENARIO.homunId;
   SCENARIO.ownerId = scn.ownerId || SCENARIO.ownerId;
   SCENARIO.config = scn.config || {};
-  if (Array.isArray(scn.entities)) SCENARIO.entities = scn.entities;
-  if (scn.homunType != null) $('homun').value = String(scn.homunType);
-  if (scn.baseType != null) $('base').value = String(scn.baseType);
+  // ignora QUALQUER homúnculo do arquivo: mantém o homún atual do simulador (seletor) e só
+  // troca o "mundo" (dono/monstros/aliados). syncBaseUI (em loadScenario) ajusta o tipo pelo seletor.
+  const curHomun = SCENARIO.entities.find(e => e.kind === 'homun');
+  if (Array.isArray(scn.entities)) {
+    const world = scn.entities.filter(e => e.kind !== 'homun');
+    SCENARIO.entities = curHomun ? [curHomun].concat(world) : world;
+  }
   $('scnName').value = name;
   await loadScenario();
   $('status').textContent = 'Cenário carregado: ' + name;
