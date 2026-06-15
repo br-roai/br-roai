@@ -1767,7 +1767,9 @@ function closeSkillManager() { const ov = document.getElementById('scModal'); if
 async function renderSkillManager() {
   const ov = document.getElementById('scModal'); if (!ov) return;
   let roles = [];
-  try { roles = await callSim('roleConfig', { homunType: scHomun, baseType: (scHomun === ctxHomun ? (ctxBase || 0) : 0) }); } catch (e) { roles = []; }
+  // a tela mostra SÓ as skills do próprio homúnculo (baseType=0): qualquer skill herdada da
+  // forma base é configurada na tela do homúnculo base (selecione-o no dropdown / botão "via base").
+  try { roles = await callSim('roleConfig', { homunType: scHomun, baseType: 0 }); } catch (e) { roles = []; }
   let ovc = [];
   try { ovc = await callSim('overrideConfig', { homunType: scHomun }); } catch (e) { ovc = []; }
   const ovByRole = {}; (ovc || []).forEach(o => { ovByRole[o.role] = o; });
