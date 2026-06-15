@@ -1753,16 +1753,14 @@ async function openSkillManager(homun, focusRole) {
   ov.style.display = 'flex';
   if (focusRole) scFocusRoleRow(focusRole);
 }
-// rola até e destaca o papel `role` na tela de Skills (one-shot ao abrir pelo nó)
+// rola até e destaca o papel `role` (o BLOCO inteiro) na tela de Skills (one-shot ao abrir pelo nó)
 function scFocusRoleRow(role) {
   const ov = document.getElementById('scModal'); if (!ov) return;
-  const hdr = ov.querySelector('.sc-row[data-role="' + role + '"]');
-  const body = ov.querySelector('.sc-skills[data-role="' + role + '"]');
-  const target = hdr || body; if (!target) return;
-  if (hdr) hdr.classList.add('sc-focus');
-  if (body) body.classList.add('sc-focus');
-  if (target.scrollIntoView) target.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  setTimeout(function () { if (hdr) hdr.classList.remove('sc-focus'); if (body) body.classList.remove('sc-focus'); }, 1600);
+  const block = ov.querySelector('.sc-roleblock[data-role="' + role + '"]');
+  if (!block) return;
+  block.classList.add('sc-focus');
+  if (block.scrollIntoView) block.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  setTimeout(function () { block.classList.remove('sc-focus'); }, 1600);
 }
 function closeSkillManager() { const ov = document.getElementById('scModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
 
@@ -1799,9 +1797,9 @@ async function renderSkillManager() {
       const effF = r.effective || [];
       if (!effF.length) return '';   // homúnculo não tem essa skill fixa → oculta (não é necessário)
       const bodyF = effF.map(sk => roSkillLine(r.key, sk)).join('');
-      return '<div class="sc-row" data-role="' + r.key + '"><span class="sc-role">' + label + ' <span class="sc-fixed-tag" title="Skill fixa do perfil. Os parâmetros desta ação ficam em Parâmetros (global).">fixa</span></span>' +
+      return '<div class="sc-roleblock" data-role="' + r.key + '"><div class="sc-row" data-role="' + r.key + '"><span class="sc-role">' + label + ' <span class="sc-fixed-tag" title="Skill fixa do perfil. Os parâmetros desta ação ficam em Parâmetros (global).">fixa</span></span>' +
              '<span class="sc-ctrl"><button class="sc-paramlink" type="button" data-role="' + r.key + '" title="Abrir os parâmetros globais desta ação">⚙ parâmetros</button></span></div>' +
-             '<div class="sc-skills" data-role="' + r.key + '">' + bodyF + '</div>' + ovArea(r.key);
+             '<div class="sc-skills" data-role="' + r.key + '">' + bodyF + '</div>' + ovArea(r.key) + '</div>';
     }
     const cands = r.candidates || [];
     if (cands.length === 0) return '';   // homúnculo não tem skill deste papel → oculta (não é necessário)
@@ -1815,9 +1813,9 @@ async function renderSkillManager() {
     const skillLines = eff.length
       ? eff.map(sk => skillLine(r.key, sk)).join('')
       : '<div class="sc-empty-skill">nenhuma skill — este papel não age</div>';
-    return '<div class="sc-row" data-role="' + r.key + '"><span class="sc-role">' + label + '</span>' +
+    return '<div class="sc-roleblock" data-role="' + r.key + '"><div class="sc-row" data-role="' + r.key + '"><span class="sc-role">' + label + '</span>' +
            '<span class="sc-ctrl">' + addCtrl + resetBtn + '</span></div>' +
-           '<div class="sc-skills' + (eff.length > 1 ? ' multi' : '') + '" data-role="' + r.key + '">' + skillLines + '</div>' + ovArea(r.key);
+           '<div class="sc-skills' + (eff.length > 1 ? ' multi' : '') + '" data-role="' + r.key + '">' + skillLines + '</div>' + ovArea(r.key) + '</div>';
   }).join('');
 
   let si = null; try { si = await callSim('summonInfo', { homunType: scHomun }); } catch (e) {}

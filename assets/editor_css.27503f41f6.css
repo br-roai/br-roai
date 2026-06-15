@@ -165,6 +165,7 @@ button:disabled{opacity:.45;cursor:default}
 .sc-pick select{width:220px}
 .sc-note{font-size:12px;color:var(--muted);line-height:1.5}
 .sc-rows{display:flex;flex-direction:column;gap:9px}
+.sc-roleblock{display:flex;flex-direction:column;gap:9px}
 .sc-row{display:flex;align-items:center;gap:10px}
 .sc-role{flex:0 0 168px;font-size:13px;color:var(--ink)}
 .sc-sel{flex:1;min-width:0}
@@ -293,7 +294,7 @@ button:disabled{opacity:.45;cursor:default}
   pointer-events:none;white-space:nowrap;z-index:3}
 .gnode .sk.sk-base{color:#7ab8f5}
 /* atalhos de config: realce transitório do papel/monstro alvo */
-.sc-row.sc-focus, .sc-skills.sc-focus, .mm-row.mm-focus{
+.sc-roleblock.sc-focus, .mm-row.mm-focus{
   outline:2px solid var(--blue);outline-offset:1px;border-radius:6px;
   background:#1f6feb22;transition:background .3s,outline-color .3s}
 /* atalho de config no próprio nó (⚙) — sempre visível nos nós de skill/monsterCheck */
