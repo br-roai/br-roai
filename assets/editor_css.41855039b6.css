@@ -292,3 +292,17 @@ button:disabled{opacity:.45;cursor:default}
   background:var(--blue);color:#04121f;font:700 9px system-ui,sans-serif;padding:1px 6px;border-radius:9px;
   pointer-events:none;white-space:nowrap;z-index:3}
 .gnode .sk.sk-base{color:#7ab8f5}
+/* atalhos de config: realce transitório do papel/monstro alvo */
+.sc-row.sc-focus, .sc-skills.sc-focus, .mm-row.mm-focus{
+  outline:2px solid var(--blue);outline-offset:1px;border-radius:6px;
+  background:#1f6feb22;transition:background .3s,outline-color .3s}
+/* atalho de config no próprio nó (⚙) — sempre visível nos nós de skill/monsterCheck */
+.gnode .cfgbtn{position:absolute;top:-9px;left:-9px;width:18px;height:18px;border-radius:50%;
+  background:#8957e5;color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:11px;line-height:1;cursor:pointer;border:2px solid #0d1117;z-index:4;opacity:.78}
+.gnode .cfgbtn:hover{opacity:1;background:#a371f7}
+.gnode:hover .cfgbtn{opacity:1}
+/* 2º botão no nó: parâmetros do tipo de skill (ao lado do ⚙ de skills) */
+.gnode .cfgbtn ~ .cfgbtn{top:13px}   /* 2o botao empilha abaixo; sozinho fica no topo */
+.gnode .cfgbtn.cfg-params{background:#1f6feb;font-size:14px}
+.gnode .cfgbtn.cfg-params:hover{background:#388bfd}

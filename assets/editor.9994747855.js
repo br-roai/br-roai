@@ -744,14 +744,44 @@ function drawEdges() {
   $('graph').style.height = Math.round(ext.h * zoom) + 'px';
   const zl = $('zoomlbl'); if (zl) zl.textContent = Math.round(zoom * 100) + '%';
 }
+// homún p/ "Configurar skills" de um nó: se a skill do papel vem da BASE (UseBaseSkills ligado),
+// abre no homúnculo BASE (ctxBase) — é lá que a skill realmente existe; senão, no principal.
+function skillCfgHomun(node) {
+  const as = node && actionSkillsCache && actionSkillsCache[node.name];
+  if (as && as.fromBase && ctxBase) return ctxBase;
+  return ctxHomun;
+}
+// true quando NEM o homún selecionado NEM a base têm skill daquele papel (estado 'missing').
+function skillRoleMissing(node) {
+  const as = node && actionSkillsCache && actionSkillsCache[node.name];
+  return !!(as && as.state === 'missing');
+}
+// botões de configuração de um nó (p/ o inspetor e p/ os botões no próprio nó). Nós de skill
+// têm o de parâmetros sempre; o de "configurar skills do homúnculo" some quando nem o homún
+// nem a base têm aquele tipo de skill (não há o que configurar).
+function nodeConfigButtons(n) {
+  if (!n) return [];
+  if (n.type === 'action' && (ACTION_ROLE[n.name] || PARAM_EXTRA[n.name])) {
+    const role = ACTION_ROLE[n.name] || PARAM_EXTRA[n.name];
+    const out = [];
+    if (!skillRoleMissing(n)) out.push({ cls: 'cfg-skills', glyph: '\u2699', title: 'Configurar skills do homúnculo…', open: () => openSkillManager(skillCfgHomun(n), role) });
+    out.push({ cls: 'cfg-params', glyph: '\u2261', title: 'Parâmetros deste tipo de skill…', open: () => openSkillParams(role) });
+    return out;
+  }
+  if (n.type === 'monsterCheck') {
+    return [{ cls: 'cfg-mon', glyph: '\u2699', title: 'Gerenciar monstros/grupos…', open: () => openMonsterManager(n.monster, n.group) }];
+  }
+  return [];
+}
 function renderGraph() {
   const parts = [];
   (function w(n) {
+    const cfgBtns = nodeConfigButtons(n).map((b, i) => '<span class="cfgbtn ' + b.cls + '" data-cfg="' + i + '" title="' + esc(b.title) + '">' + b.glyph + '</span>').join('');
     parts.push('<div class="gnode ' + nodeClass(n) + nodeSkillStateClass(n) + (n.disabled ? ' gdisabled' : '') + (n._uid === selId ? ' sel' : '') + '" data-uid="' + n._uid +
       '" style="left:' + n._x + 'px;top:' + n._y + 'px">' +
       '<span class="type ' + nodeTypeClass(n) + '">' + esc(nodeTypeLabel(n)) + '</span>' +
       '<span class="t" title="' + esc((n.name ? n.name + (registry[n.name] && registry[n.name].desc ? ' — ' + registry[n.name].desc : '') : '')) + '">' + esc(nodeMain(n)) + '</span>' +
-      (n.type === 'action' && (ACTION_ROLE[n.name] || PARAM_EXTRA[n.name]) ? '<span class="s s-skills">' + nodeSkillsHtml(n) + '</span>' : '<span class="s">' + esc(nodeSub(n)) + '</span>') + (canAddChild(n) ? '<span class="addbtn" title="Adicionar filho">+</span>' : '') + '</div>');
+      (n.type === 'action' && (ACTION_ROLE[n.name] || PARAM_EXTRA[n.name]) ? '<span class="s s-skills">' + nodeSkillsHtml(n) + '</span>' : '<span class="s">' + esc(nodeSub(n)) + '</span>') + cfgBtns + (canAddChild(n) ? '<span class="addbtn" title="Adicionar filho">+</span>' : '') + '</div>');
     // pontos de ligação na BASE do pai — um por filho (na ordem): arrastar = reordenar/reparentar
     const kids = childrenOf(n);
     kids.forEach((c, i) => {
@@ -773,6 +803,10 @@ function renderGraph() {
     const ab = el.querySelector('.addbtn');
     if (ab) { ab.addEventListener('mousedown', (e) => e.stopPropagation());
       ab.addEventListener('click', (e) => { e.stopPropagation(); const r = ab.getBoundingClientRect(); openTypeMenu(uid, r.right, r.bottom, 'child', false); }); }
+    el.querySelectorAll('.cfgbtn').forEach((cb) => {
+      cb.addEventListener('mousedown', (e) => e.stopPropagation());
+      cb.addEventListener('click', (e) => { e.stopPropagation(); const n = find(tree, uid); const btns = nodeConfigButtons(n); const idx = parseInt(cb.dataset.cfg, 10) || 0; if (btns[idx]) btns[idx].open(); });
+    });
   });
   $('nodes').querySelectorAll('.linkh').forEach(el => {
     const uid = parseInt(el.dataset.uid, 10);
@@ -1083,7 +1117,7 @@ function renderInspector() {
       html += '<div class="field"><label>Skill usada (padrão por homúnculo)</label><div class="desc">' +
         (skills ? esc(skills) : '— este homúnculo não tem skill para este papel —') + '</div></div>';
       html += '<div class="field insp-links">' +
-        '<button id="iSkillCfg" type="button">\u2699 Configurar skills\u2026</button>' +
+        (skillRoleMissing(sel) ? '' : '<button id="iSkillCfg" type="button">\u2699 Configurar skills\u2026</button>') +
         '<button id="iParamCfg" type="button">\u2699 Par\u00e2metros desta skill\u2026</button></div>';
       // override por nó (#4) RECOLHIDO — em geral, ajuste em "Parâmetros" (global). [C6]
       const sc = paramsSchema(sel.name);
@@ -1095,7 +1129,9 @@ function renderInspector() {
         knobsHtml + '</details>';
     } else if (sel.type === 'action' && PARAM_EXTRA[sel.name]) {
       sel.params = sel.params || {};
-      html += '<div class="field"><button id="iParamCfg" type="button">\u2699 Par\u00e2metros desta skill\u2026</button></div>';
+      html += '<div class="field insp-links">' +
+        (skillRoleMissing(sel) ? '' : '<button id="iSkillCfg" type="button">\u2699 Configurar skills\u2026</button>') +
+        '<button id="iParamCfg" type="button">\u2699 Par\u00e2metros desta skill\u2026</button></div>';
     } else {
       const sc = paramsSchema(sel.name);
       for (const f of Object.keys(sc)) html += paramFieldHtml(f, sc[f], sel);
@@ -1133,7 +1169,7 @@ function wireInspector(sel) {
   const im = $('iMon'); if (im) im.onchange = () => { sel.monster = parseInt(im.value, 10) || 0; renderInspector(); renderAll(); };
   const ig = $('iGrp'); if (ig) ig.onchange = () => { sel.group = parseInt(ig.value, 10) || 0; renderInspector(); renderAll(); };
   const ing = $('iNeg'); if (ing) ing.onchange = () => { sel.negate = ing.checked; renderInspector(); renderAll(); };
-  const imgr = $('iMonMgr'); if (imgr) imgr.onclick = () => openMonsterManager();
+  const imgr = $('iMonMgr'); if (imgr) imgr.onclick = () => openMonsterManager(sel.monster, sel.group);
   const isk = $('iSkill'); if (isk) isk.onchange = () => { const id = parseInt(isk.value, 10) || 0; const sk = catSkill(id); sel.params = { skill: id, level: sk ? sk.maxLevel : 1 }; if (sk && sk.target === 'ground') sel.params.on = sel.params.on || 'enemy'; renderInspector(); renderAll(); };
   const ilv = $('iLevel'); if (ilv) ilv.onchange = () => { sel.params.level = parseInt(ilv.value, 10) || 1; renderInspector(); renderAll(); };
   const ion = $('iOn'); if (ion) ion.onchange = () => { sel.params.on = ion.value; renderAll(); };
@@ -1147,7 +1183,7 @@ function wireInspector(sel) {
   };
   const irs = $('iReset'); if (irs) irs.onchange = () => { if (irs.checked) sel.params.reset = true; else delete sel.params.reset; renderAll(); };
   const ep = $('iEleanorPanel'); if (ep) ep.onclick = () => openComboManager();
-  const isc = $('iSkillCfg'); if (isc) isc.onclick = () => openSkillManager();
+  const isc = $('iSkillCfg'); if (isc) isc.onclick = () => openSkillManager(skillCfgHomun(sel), ACTION_ROLE[sel.name] || PARAM_EXTRA[sel.name]);
   const ipc = $('iParamCfg'); if (ipc) ipc.onclick = () => openSkillParams(ACTION_ROLE[sel.name] || PARAM_EXTRA[sel.name]);
   document.querySelectorAll('.iParamSkill').forEach(sk => {
     sk.onchange = () => { const id = parseInt(sk.value, 10); sel.params = sel.params || {}; if (id) sel.params.skill = id; else delete sel.params.skill; renderAll(); };
@@ -1499,7 +1535,7 @@ function mmFilteredMonsters() {
   return list.sort((a, b) => String(a.desc || a.id).localeCompare(String(b.desc || b.id)));
 }
 
-function openMonsterManager() {
+function openMonsterManager(monsterId, groupId) {
   let ov = document.getElementById('monModal');
   if (!ov) {
     ov = document.createElement('div');
@@ -1507,9 +1543,21 @@ function openMonsterManager() {
     ov.className = 'mm-overlay';
     document.body.appendChild(ov);
   }
+  if (groupId != null && groupId !== 0 && grpById(groupId)) mmGroupId = groupId;   // grupo do nó
   if (mmGroupId == null && monCatalog.groups.length) mmGroupId = monCatalog.groups[0].id;
+  if (monsterId != null && monsterId !== 0) mmSearch = '';   // limpa o filtro p/ o monstro aparecer
   renderMonManager();
   ov.style.display = 'flex';
+  if (monsterId != null && monsterId !== 0) mmFocusMonster(monsterId);
+}
+// rola até e destaca a linha do monstro `id` no gerenciador (one-shot ao abrir pelo nó)
+function mmFocusMonster(id) {
+  const ov = document.getElementById('monModal'); if (!ov) return;
+  const row = ov.querySelector('.mm-row[data-id="' + id + '"]');
+  if (!row) return;
+  row.classList.add('mm-focus');
+  if (row.scrollIntoView) row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  setTimeout(function () { row.classList.remove('mm-focus'); }, 1600);
 }
 function closeMonManager() { const ov = document.getElementById('monModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
 
@@ -1693,15 +1741,28 @@ async function renderSkillParamsModal() {
 }
 
 // ===== Tela: Skills por homúnculo (modal) =================================
-async function openSkillManager() {
+async function openSkillManager(homun, focusRole) {
   await loadSkillChoice();
   await loadSummonChoice();
   await loadSkillParams();
+  if (homun != null) scHomun = parseInt(homun, 10) || scHomun;   // força o homún do contexto (mata o "grudento")
   if (scHomun == null) scHomun = ctxHomun || 51;
   let ov = document.getElementById('scModal');
   if (!ov) { ov = document.createElement('div'); ov.id = 'scModal'; ov.className = 'mm-overlay'; document.body.appendChild(ov); }
   await renderSkillManager();
   ov.style.display = 'flex';
+  if (focusRole) scFocusRoleRow(focusRole);
+}
+// rola até e destaca o papel `role` na tela de Skills (one-shot ao abrir pelo nó)
+function scFocusRoleRow(role) {
+  const ov = document.getElementById('scModal'); if (!ov) return;
+  const hdr = ov.querySelector('.sc-row[data-role="' + role + '"]');
+  const body = ov.querySelector('.sc-skills[data-role="' + role + '"]');
+  const target = hdr || body; if (!target) return;
+  if (hdr) hdr.classList.add('sc-focus');
+  if (body) body.classList.add('sc-focus');
+  if (target.scrollIntoView) target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  setTimeout(function () { if (hdr) hdr.classList.remove('sc-focus'); if (body) body.classList.remove('sc-focus'); }, 1600);
 }
 function closeSkillManager() { const ov = document.getElementById('scModal'); if (ov) ov.style.display = 'none'; refreshTreeLabels(); }
 
@@ -1738,7 +1799,7 @@ async function renderSkillManager() {
       const effF = r.effective || [];
       if (!effF.length) return '';   // homúnculo não tem essa skill fixa → oculta (não é necessário)
       const bodyF = effF.map(sk => roSkillLine(r.key, sk)).join('');
-      return '<div class="sc-row"><span class="sc-role">' + label + ' <span class="sc-fixed-tag" title="Skill fixa do perfil. Os parâmetros desta ação ficam em Parâmetros (global).">fixa</span></span>' +
+      return '<div class="sc-row" data-role="' + r.key + '"><span class="sc-role">' + label + ' <span class="sc-fixed-tag" title="Skill fixa do perfil. Os parâmetros desta ação ficam em Parâmetros (global).">fixa</span></span>' +
              '<span class="sc-ctrl"><button class="sc-paramlink" type="button" data-role="' + r.key + '" title="Abrir os parâmetros globais desta ação">⚙ parâmetros</button></span></div>' +
              '<div class="sc-skills" data-role="' + r.key + '">' + bodyF + '</div>' + ovArea(r.key);
     }
@@ -1754,7 +1815,7 @@ async function renderSkillManager() {
     const skillLines = eff.length
       ? eff.map(sk => skillLine(r.key, sk)).join('')
       : '<div class="sc-empty-skill">nenhuma skill — este papel não age</div>';
-    return '<div class="sc-row"><span class="sc-role">' + label + '</span>' +
+    return '<div class="sc-row" data-role="' + r.key + '"><span class="sc-role">' + label + '</span>' +
            '<span class="sc-ctrl">' + addCtrl + resetBtn + '</span></div>' +
            '<div class="sc-skills' + (eff.length > 1 ? ' multi' : '') + '" data-role="' + r.key + '">' + skillLines + '</div>' + ovArea(r.key);
   }).join('');
