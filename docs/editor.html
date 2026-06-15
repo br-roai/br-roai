@@ -39,6 +39,8 @@
       <li><a href="#tipos">Tipos de nó</a></li>
       <li><a href="#inspetor">Inspetor e parâmetros</a></li>
       <li><a href="#skills">Seletor de skills e contexto</a></li>
+      <li><a href="#atalhos">Atalhos de configuração nos nós</a></li>
+      <li><a href="#destaque">Como o nó se destaca</a></li>
       <li><a href="#config">Ajustes (painel Config)</a></li>
       <li><a href="#desativar">Desativar nós</a></li>
       <li><a href="#validacao">Validação</a></li>
@@ -131,6 +133,49 @@
   <h2 id="skills">Seletor de skills e contexto</h2>
   <p>As ações de skill (<code>UseSkill</code>, <code>UseSkillBuff</code>) ganham um <strong>seletor de skills por categoria</strong> no inspetor, em vez de pedir um número cru. As categorias são <em>dano alvo único</em>, <em>dano em área</em>, <em>buff</em>, <em>cura</em>, <em>especial</em> e <em>passiva</em>. O catálogo é montado a partir do <strong>contexto</strong> atual (tipo de homúnculo e, para Homunculus S, o tipo base), então você só vê skills que aquele homúnculo realmente possui. Para cada skill o inspetor mostra alcance, SP, tempos de cast, recarga e duração; ao escolher um <strong>nível</strong>, mostra o efeito daquele nível (dano, cura, status) com dados Renewal.</p>
   <p>No alto da barra ficam os seletores de <strong>homúnculo</strong> e <strong>base</strong>. Eles definem qual catálogo de skills aparece e são compartilhados com o simulador, então <strong>▶ Simular</strong> já abre o simulador no tipo certo. O seletor de <strong>base</strong> só fica ativo para os tipos Homunculus S. Ao lado da base há a opção <strong>usar skills da base</strong>: quando ligada, o Homunculus S usa as skills da forma base como <em>fallback</em> — o S tem prioridade, e a base só entra num papel que o S não tem. Ex.: <em>Sera base Vanilmirth</em> — a Sera não tem cura, então usa o <em>Chaotic Blessings</em> do Vanilmirth. É opt-in (vem desligada) e vale para o pacote gerado e o simulador. Nós que dependem da base aparecem com o destaque <strong>“via base”</strong>.</p>
+  <p>Cada skill da lista de um papel pode ter uma <strong>condição opcional</strong>: <em>usar só se [TIVER / NÃO TIVER] a skill X</em>.
+  Ex.: deixe o Dieter usar <em>Lava Slide enquanto NÃO tiver Blast Forge</em> — ao aprender a Blast Forge (prioridade maior), ele troca.
+  Existe também a percepção <strong>“Possui a skill”</strong> no combobox de condições, p/ usar isso direto na árvore (negue com <code>inverter</code>).
+  No jogo, “possui a skill” é resolvido pelo cliente; no <strong>simulador</strong>, use o campo <strong>lvl</strong> do homúnculo (ao lado de homún/base) p/ decidir quais skills ele já aprendeu — isso é só do simulador, não vai para a IA gerada.</p>
+
+  <h2 id="atalhos">Atalhos de configuração nos nós</h2>
+  <p>Para não precisar caçar a configuração certa nos modais, os nós de skill e o <code>monsterCheck</code> trazem <strong>atalhos</strong> que abrem a tela certa já <strong>pré-selecionada</strong>. Eles aparecem em dois lugares:</p>
+  <ul>
+    <li><strong>No próprio nó</strong> (canto superior esquerdo, sempre visíveis): nos nós de skill, um <strong>⚙</strong> abre <strong>Skills por homúnculo</strong> e, logo abaixo, um <strong>≡</strong> abre os <strong>Parâmetros</strong> daquele papel; no <code>monsterCheck</code>, um <strong>⚙</strong> abre o gerenciador de <strong>Monstros</strong> no monstro/grupo do nó.</li>
+    <li><strong>No inspetor</strong>: os mesmos atalhos como links (“Configurar skills…”, “⚙ Parâmetros desta skill…”, “Gerenciar monstros…”).</li>
+  </ul>
+  <p>A pré-seleção segue o <strong>contexto</strong>: o atalho de skills abre no <strong>homúnculo selecionado</strong> e rola até o <strong>papel</strong> daquele nó (destacado). Quando a opção <strong>usar skills da base</strong> está ligada e o papel vem da base, o atalho abre direto no <strong>homúnculo base</strong> — porque é lá que aquela skill se configura. O atalho do <code>monsterCheck</code> abre já no <strong>monstro/grupo</strong> referenciado. Os parâmetros são por papel (globais), então o atalho de parâmetros abre na aba do papel.</p>
+  <div class="box note">
+    <div class="h">ℹ O ⚙ de skills some quando não há o que configurar</div>
+    <p>Se nem o homúnculo selecionado nem a base têm aquele tipo de skill, o atalho de <strong>skills</strong> do nó desaparece (não há o que configurar); o de <strong>parâmetros</strong> continua. Skills exclusivas da forma base (Castling do Amistr, Chaotic Blessings do Vanilmirth…) se configuram <strong>na tela do homúnculo base</strong>.</p>
+  </div>
+  <figure class="inline">
+    <img src="img/editor-cfgbtn.png" alt="Nó de skill com os atalhos ⚙ e ≡" />
+    <figcaption>Nos nós de skill, o <b>⚙</b> abre <b>Skills por homúnculo</b> e o <b>≡</b> abre os <b>Parâmetros</b> do papel — já no homúnculo e no papel do contexto.</figcaption>
+  </figure>
+
+  <h2 id="destaque">Como o nó se destaca por homúnculo</h2>
+  <p>O mesmo nó de skill muda de aparência conforme o homúnculo do contexto <strong>tem</strong> (ou não) aquela skill:</p>
+  <ul>
+    <li><strong>Normal</strong> — o homúnculo tem a skill do papel; o rótulo mostra as skills efetivas (nome + nível).</li>
+    <li><strong>⚠ “sem skill p/ este tipo” (âmbar)</strong> — o homúnculo selecionado <strong>não</strong> tem skill daquele papel e a base também não (ou a base está desligada). O nó fica realçado em âmbar para você notar que ele não faria nada naquele homúnculo.</li>
+    <li><strong>↗ “via base (Nome)”</strong> — o homúnculo não tem o papel, mas a <strong>base</strong> tem e <strong>usar skills da base</strong> está ligada; o nó usa a skill da base (ex.: Sera usando o Chaotic Blessings do Vanilmirth).</li>
+  </ul>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin:1.2em 0">
+    <figure class="inline" style="flex:1;min-width:260px;margin:0">
+      <img src="img/editor-no-semskill.png" alt="Nó âmbar: sem skill para este tipo" />
+      <figcaption><b>Sem skill p/ este tipo</b>: o nó fica âmbar e o <b>⚙</b> some (não há o que configurar).</figcaption>
+    </figure>
+    <figure class="inline" style="flex:1;min-width:260px;margin:0">
+      <img src="img/editor-via-base.png" alt="Nó azul: skill vinda da forma base" />
+      <figcaption><b>↗ via base</b>: borda azul; o nó usa a skill da forma base (cura via Vanilmirth) com a flag ligada.</figcaption>
+    </figure>
+  </div>
+  <p>É um realce só visual do editor (e espelhado no simulador): ajuda a enxergar, ao trocar de homúnculo no contexto, quais ramos da árvore aquele tipo realmente executa.</p>
+  <figure>
+    <img src="img/base-skills.svg" alt="Diagrama: o Homunculus S usa as skills da forma base como fallback" />
+    <figcaption>Com <b>usar skills da base</b> ligada, o perfil efetivo é o do <b>S</b> e a <b>base</b> preenche só os papéis vazios (“via base”). Buffs ofensivo/defensivo usam <b>fallback estrito</b> (não somam).</figcaption>
+  </figure>
 
   <h2 id="config">Ajustes (painel Config)</h2>
   <p>O botão <strong>Config</strong> na barra abre os <strong>ajustes do H_Config</strong> daquela árvore: HP de agressão (<code>AggroHP</code>), cura do dono (<code>HealOwnerHP</code>), nº de alvos p/ AoE (<code>AutoMobCount</code>), reserva de SP, esferas p/ combo (<code>AutoComboSpheres</code>), <strong>kite global</strong> (<code>KiteMonsters</code>/<code>ForceKite</code>, distância em <code>KiteBounds</code>), <strong>ataque dançante</strong> (<code>UseDanceAttack</code>) a <strong>trava de estilo da Eleanor</strong> (<code>EleanorDoNotSwitchMode</code>), <strong>resgate do dono</strong> (<code>RescueOwnerLowHP</code>), <strong>mira oportunista</strong> (<code>OpportunisticTargeting</code>) e <strong>só skill</strong> (<code>UseSkillOnly</code>), <strong>perambular ocioso</strong> (<code>UseIdleWalk</code>), <strong>movimento sticky</strong> (<code>MoveSticky</code>) e <strong>AoE</strong> (<code>AutoMobMode</code>/<code>AoEFixedLevel</code>), e por aí vai. Cada knob mostra o valor atual e o <strong>padrão</strong> ao lado; em <strong style="color:#46c46a">verde</strong> ficam os que você (ou a migração da AzzyAI) alterou. Limpar um número volta ao padrão; <strong>restaurar tudo ao padrão</strong> zera os overrides.</p>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 314" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="10" refX="7.5" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 z" fill="#7fd1ff"/></marker>
+    <marker id="ag" markerWidth="10" markerHeight="10" refX="7.5" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 z" fill="#6fe0a0"/></marker>
+    <marker id="aw" markerWidth="10" markerHeight="10" refX="7.5" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 z" fill="#ffcf5c"/></marker>
+  </defs>
+  <rect x="0" y="0" width="800" height="314" rx="12" fill="#0f151b"/>
+  <text x="400" y="30" text-anchor="middle" fill="#dfe6ec" font-size="18" font-weight="700">Gate por skill: usar uma skill só se (não) tiver outra</text>
+
+  <!-- Box1: next skill -->
+  <rect x="24" y="110" width="182" height="60" rx="10" fill="#141b22" stroke="#2e3c46"/>
+  <text x="115" y="135" text-anchor="middle" fill="#dfe6ec" font-size="13.5" font-weight="600">Próxima skill da lista</text>
+  <text x="115" y="153" text-anchor="middle" fill="#8593a0" font-size="12">(por prioridade)</text>
+
+  <!-- arrow to diamond -->
+  <line x1="206" y1="140" x2="258" y2="140" stroke="#7fd1ff" stroke-width="2.5" marker-end="url(#a)"/>
+
+  <!-- diamond: gate blocks? -->
+  <polygon points="380,74 500,140 380,206 260,140" fill="#141b22" stroke="#ffcf5c" stroke-width="1.5"/>
+  <text x="380" y="132" text-anchor="middle" fill="#dfe6ec" font-size="13.5" font-weight="600">O gate bloqueia?</text>
+  <text x="380" y="151" text-anchor="middle" fill="#8593a0" font-size="11">(tem gate e a</text>
+  <text x="380" y="166" text-anchor="middle" fill="#8593a0" font-size="11">condição falhou)</text>
+
+  <!-- não -> green box -->
+  <line x1="500" y1="140" x2="558" y2="140" stroke="#6fe0a0" stroke-width="2.5" marker-end="url(#ag)"/>
+  <text x="528" y="130" text-anchor="middle" fill="#6fe0a0" font-size="12" font-weight="700">não</text>
+  <rect x="560" y="112" width="216" height="56" rx="10" fill="#13201a" stroke="#27543c"/>
+  <text x="668" y="135" text-anchor="middle" fill="#6fe0a0" font-size="13.5" font-weight="600">Conjura a skill</text>
+  <text x="668" y="153" text-anchor="middle" fill="#8593a0" font-size="11.5">se estiver utilizável</text>
+
+  <!-- sim -> amber box (down) -->
+  <line x1="380" y1="206" x2="380" y2="222" stroke="#ffcf5c" stroke-width="2.5" marker-end="url(#aw)"/>
+  <text x="396" y="220" text-anchor="start" fill="#ffcf5c" font-size="12" font-weight="700">sim</text>
+  <rect x="296" y="224" width="168" height="46" rx="10" fill="#211b10" stroke="#5a4a1e"/>
+  <text x="380" y="245" text-anchor="middle" fill="#ffcf5c" font-size="13" font-weight="600">Pula esta skill</text>
+  <text x="380" y="261" text-anchor="middle" fill="#8593a0" font-size="11">tenta a próxima da lista</text>
+
+  <!-- loop back to box1 -->
+  <path d="M296,247 L115,247 L115,172" fill="none" stroke="#ffcf5c" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#aw)"/>
+
+  <text x="400" y="290" text-anchor="middle" fill="#aeb9c4" font-size="11.5">Sem gate, a skill é sempre candidata.</text>
+  <text x="400" y="306" text-anchor="middle" fill="#8593a0" font-size="11.5">O gate (“só se TIVER / NÃO TIVER a skill X”): no jogo o cliente responde; no simulador, o campo lvl.</text>
+</svg>

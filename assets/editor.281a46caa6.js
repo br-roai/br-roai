@@ -219,6 +219,14 @@ function scSetSkillLevel(type, id, lvl) {
   if (!lvl || lvl <= 0) { delete sl[String(id)]; if (!Object.keys(sl).length) delete skillChoice.choices[k].skillLevels; if (!Object.keys(skillChoice.choices[k]).length) delete skillChoice.choices[k]; }
   else sl[String(id)] = lvl;
 }
+// gate POR SKILL: condição "só usar se [não] tiver a skill X" -> skillChoice.choices[type].skillGate[id]
+function scGetSkillGate(type, id) { const t = skillChoice.choices[String(type)]; return (t && t.skillGate && t.skillGate[String(id)]) || null; }
+function scSetSkillGate(type, id, gate) {
+  const k = String(type); skillChoice.choices[k] = skillChoice.choices[k] || {};
+  const sg = skillChoice.choices[k].skillGate = skillChoice.choices[k].skillGate || {};
+  if (!gate || !gate.skill) { delete sg[String(id)]; if (!Object.keys(sg).length) delete skillChoice.choices[k].skillGate; if (!Object.keys(skillChoice.choices[k]).length) delete skillChoice.choices[k]; }
+  else sg[String(id)] = { skill: gate.skill, negate: !!gate.negate };
+}
 // lista de skills do papel (0..N ids; [] = nenhuma). scClearRole remove a chave (= padrão do perfil).
 function scSetRoleList(type, role, ids) { const k = String(type); skillChoice.choices[k] = skillChoice.choices[k] || {}; skillChoice.choices[k][role] = (ids || []).slice(); }
 function scClearRole(type, role) { const k = String(type); if (skillChoice.choices[k]) { delete skillChoice.choices[k][role]; if (!Object.keys(skillChoice.choices[k]).length) delete skillChoice.choices[k]; } }
@@ -1018,7 +1026,10 @@ function paramFieldHtml(f, type, sel) {
     let opts = '<option value="">— skill —</option>';
     for (const sk of catalog.slice().sort((a, b) => a.iro.localeCompare(b.iro)))
       opts += '<option value="' + sk.id + '"' + (sel.params && sk.id === sel.params.skill ? ' selected' : '') + '>' + esc(sk.iro) + '</option>';
-    return field(pLabel('skill'), '<select class="iParamSkill" data-f="skill">' + opts + '</select>', pHelp('skill'));
+    let h = field(pLabel('skill'), '<select class="iParamSkill" data-f="skill">' + opts + '</select>', pHelp('skill'));
+    const sk = sel.params && catSkill(sel.params.skill);   // infos da skill escolhida (no nível MÁXIMO)
+    if (sk) h += '<div class="desc" style="margin-top:5px">Informações no nível máximo (Lv' + (sk.maxLevel || 1) + '):</div>' + skillInfoHtml(sk, sk.maxLevel || 1);
+    return h;
   }
   if (f === 'by') {
     // prioridade de alvo (AcquireTarget / ReacquireIfBetter)
@@ -1186,7 +1197,7 @@ function wireInspector(sel) {
   const isc = $('iSkillCfg'); if (isc) isc.onclick = () => openSkillManager(skillCfgHomun(sel), ACTION_ROLE[sel.name] || PARAM_EXTRA[sel.name]);
   const ipc = $('iParamCfg'); if (ipc) ipc.onclick = () => openSkillParams(ACTION_ROLE[sel.name] || PARAM_EXTRA[sel.name]);
   document.querySelectorAll('.iParamSkill').forEach(sk => {
-    sk.onchange = () => { const id = parseInt(sk.value, 10); sel.params = sel.params || {}; if (id) sel.params.skill = id; else delete sel.params.skill; renderAll(); };
+    sk.onchange = () => { const id = parseInt(sk.value, 10); sel.params = sel.params || {}; if (id) sel.params.skill = id; else delete sel.params.skill; renderAll(); renderInspector(); };
   });
   document.querySelectorAll('.iParam').forEach(inp => {
     inp.oninput = () => {
@@ -1777,6 +1788,21 @@ async function renderSkillManager() {
 
   const homunOpts = SC_HOMUN_ORDER.map(t => '<option value="' + t + '"' + (t === scHomun ? ' selected' : '') + '>' + esc(HOMUN_NAMES[t] || ('#' + t)) + '</option>').join('');
 
+  // lista plana das skills do homún (p/ o seletor X da condição por skill)
+  const _gateSkills = []; { const seen = {}; (roles || []).forEach(r => (r.candidates || []).forEach(c => { if (!seen[c.id]) { seen[c.id] = 1; _gateSkills.push(c); } })); _gateSkills.sort((a, b) => (a.iro || a.name || '').localeCompare(b.iro || b.name || '')); }
+  const gateSkillOpts = (selId) => '<option value="">— skill —</option>' + _gateSkills.map(c => '<option value="' + c.id + '"' + (c.id === selId ? ' selected' : '') + '>' + esc(c.iro || c.name) + '</option>').join('');
+  const gateCtrl = (role, sk) => {
+    const g = sk.gate, gm = g ? (g.negate ? 'not' : 'has') : '';
+    return '<div class="sc-gate" data-role="' + role + '" data-skill="' + sk.id + '">' +
+      '<span class="sc-gate-lbl">usar</span>' +
+      '<select class="sc-gate-mode" data-role="' + role + '" data-skill="' + sk.id + '">' +
+        '<option value=""' + (gm === '' ? ' selected' : '') + '>sempre</option>' +
+        '<option value="has"' + (gm === 'has' ? ' selected' : '') + '>só se TIVER</option>' +
+        '<option value="not"' + (gm === 'not' ? ' selected' : '') + '>só se NÃO TIVER</option>' +
+      '</select>' +
+      '<select class="sc-gate-skill' + (gm ? '' : ' sc-gate-hidden') + '" data-role="' + role + '" data-skill="' + sk.id + '">' + gateSkillOpts(g && g.skill) + '</select>' +
+      '</div>';
+  };
   const skillLine = (role, sk) => {
     const maxLv = sk.maxLevel || 1;
     const cur = sk.level || maxLv;   // pré-seleciona o nível efetivo (skillLevels[id] ou o conhecido); sem rótulo "Padrão"
@@ -1789,6 +1815,7 @@ async function renderSkillManager() {
         '<select class="sc-skill-lvl" data-role="' + role + '" data-skill="' + sk.id + '">' + lo + '</select></span>' +
       '</span>' +
       '<button class="sc-rm" type="button" data-role="' + role + '" data-skill="' + sk.id + '" title="remover">✕</button>' +
+      gateCtrl(role, sk) +
       '</div>';
   };
   const roSkillLine = (role, sk) => '<div class="sc-skill sc-skill-ro" data-role="' + role + '" data-skill="' + sk.id + '">' +
@@ -1885,6 +1912,24 @@ async function renderSkillManager() {
     ovSetKnob(scHomun, role, key, value);
     await saveSkillParams();
     setStatus('Override atualizado (' + (HOMUN_NAMES[scHomun] || scHomun) + ').');
+  });
+  ov.querySelectorAll('.sc-gate-mode').forEach(sel => sel.onchange = async () => {
+    const wrap = sel.closest('.sc-gate'); const xsel = wrap && wrap.querySelector('.sc-gate-skill');
+    const id = parseInt(sel.dataset.skill, 10), mode = sel.value;
+    if (!mode) { scSetSkillGate(scHomun, id, null); if (xsel) xsel.classList.add('sc-gate-hidden'); }
+    else {
+      const cur = scGetSkillGate(scHomun, id);
+      const x = (cur && cur.skill) || (xsel && parseInt(xsel.value, 10)) || id;
+      scSetSkillGate(scHomun, id, { skill: x, negate: mode === 'not' });
+      if (xsel) { xsel.value = String(x); xsel.classList.remove('sc-gate-hidden'); }
+    }
+    await saveSkillChoice();   // SEM re-render: evita clique-fantasma e mexer em outras skills
+  });
+  ov.querySelectorAll('.sc-gate-skill').forEach(sel => sel.onchange = async () => {
+    const id = parseInt(sel.dataset.skill, 10), x = parseInt(sel.value, 10);
+    const cur = scGetSkillGate(scHomun, id) || { negate: false };
+    scSetSkillGate(scHomun, id, x ? { skill: x, negate: cur.negate } : null);
+    await saveSkillChoice();
   });
   ov.querySelectorAll('.sc-skill-lvl').forEach(sel => sel.onchange = async () => {
     scSetSkillLevel(scHomun, parseInt(sel.dataset.skill, 10), parseInt(sel.value, 10) || 0);

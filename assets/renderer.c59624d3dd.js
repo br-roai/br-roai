@@ -154,6 +154,8 @@ function syncBaseUI() {
   if (!isS) baseSel.value = '0';
   const h = SCENARIO.entities.find(e => e.kind === 'homun');
   if (h) h.homunType = t;
+  const lvlEl = $('homunLvl');
+  if (h && lvlEl) h.lvl = parseInt(lvlEl.value, 10) || 250;   // SÓ no sim: decide skills aprendidas
   SCENARIO.config = Object.assign({}, SCENARIO.config, { BaseHomunType: isS ? (parseInt(baseSel.value, 10) || 0) : 0 });
   return t;
 }
@@ -821,6 +823,7 @@ $('tree').addEventListener('click', (ev) => { const el = ev.target.closest('.tno
 document.addEventListener('mousedown', (ev) => { const t = document.getElementById('treetip'); if (t && t.style.display !== 'none' && !t.contains(ev.target) && !(ev.target.closest && ev.target.closest('.tnode'))) t.style.display = 'none'; }, true);
 $('homun').addEventListener('change', () => { syncBaseUI(); loadScenario(); });
 $('base').addEventListener('change', () => loadScenario());
+{ const le = $('homunLvl'); if (le) le.addEventListener('change', () => loadScenario()); }
 { const sp = (fps) => { $('speed').value = String(fps); if (playing) { stop(); play(); } };
   if ($('spd05')) $('spd05').onclick = () => sp(4);
   if ($('spd1')) $('spd1').onclick = () => sp(8);
@@ -899,6 +902,7 @@ function persistSetup() {
       ui: {
         homun: $('homun') ? $('homun').value : null,
         base: $('base') ? $('base').value : null,
+        homunLvl: $('homunLvl') ? $('homunLvl').value : null,
         speed: $('speed') ? $('speed').value : null,
         mapsize: $('mapsize') ? $('mapsize').value : null,
         scnName: $('scnName') ? $('scnName').value : '',
@@ -923,6 +927,7 @@ function restoreSetup() {
   // UI (homún/base podem ser sobrescritos por applySimContext no fluxo "Simular")
   if (ui.homun != null && $('homun')) $('homun').value = String(ui.homun);
   if (ui.base != null && $('base')) $('base').value = String(ui.base);
+  if (ui.homunLvl != null && $('homunLvl')) $('homunLvl').value = String(ui.homunLvl);
   if (ui.speed != null && $('speed')) $('speed').value = String(ui.speed);
   if (ui.scnName != null && $('scnName')) $('scnName').value = ui.scnName;
   if (ui.showAllHp) { showAllHp = true; const b = $('btnAllHp'); if (b) { b.textContent = 'HP: todos'; b.classList.add('active'); } }

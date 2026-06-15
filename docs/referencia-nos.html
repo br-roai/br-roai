@@ -141,6 +141,18 @@
       <tr><td><strong>Longe demais do dono</strong><br><code>TooFarFromOwner</code></td><td><code>dist</code></td><td>Distância do dono acima do limite.</td></tr>
     </tbody>
   </table>
+  <h3 id="skills-cond">Skills</h3>
+  <table>
+    <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Possui a skill</strong><br><code>HasSkill</code></td><td><code>skill</code></td><td>Verdadeira quando o homúnculo <strong>já aprendeu</strong> a skill escolhida. Ao selecionar a skill, o inspetor mostra suas informações no <strong>nível máximo</strong>. Para “<strong>não</strong> possui”, envolva num <code>inverter</code>. No jogo é o cliente que responde; no simulador, o campo <strong>lvl</strong> do homúnculo decide (veja o <a href="simulador.html#lvl">Guia do Simulador</a>).</td></tr>
+    </tbody>
+  </table>
+  <figure class="narrow">
+    <img src="img/cond-possui-skill.png" alt="Inspetor com a condição Possui a skill e as informações da skill no nível máximo" />
+    <figcaption>A condição <b>“Possui a skill”</b> no inspetor: ao escolher a skill (Blast Forge), aparecem as <b>informações no nível máximo</b>.</figcaption>
+  </figure>
+
   <h3>Eleanor &amp; Sera</h3>
   <table>
     <thead><tr><th>Nome (e código)</th><th>Parâmetros</th><th>Descrição</th></tr></thead>
@@ -237,6 +249,7 @@
 
   <h2 id="adapta">Como os nós de skill se adaptam por homúnculo</h2>
   <p>A mesma árvore atende os 9 tipos de homúnculo. As ações automáticas resolvem a skill concreta pelo <strong>perfil</strong> do tipo, obtido do homúnculo (e, para Homunculus S, do tipo base). Por exemplo, <code>UseMainSkill</code> vira Caprice no Vanilmirth, Moonlight no Filir, Stahl Horn no Bayeri; <code>UseHealOwner</code> só faz algo no Lif; <code>UseCastling</code> só no Amistr. Por isso você monta a árvore uma vez e ela serve a todos os tipos — basta trocar o homúnculo no contexto. No editor, o <strong>rótulo</strong> de cada ação automática mostra as <strong>skills efetivas</strong> (nome + nível) do homúnculo do contexto, e o <strong>inspetor</strong> traz um link <strong>“⚙ Parâmetros desta skill”</strong> para o modal de <strong>parâmetros globais</strong> da ação (AutoMobCount, AttackRange, HealSelfHP, etc.) — valem para todos os homúnculos. O override <strong>por nó</strong> fica recolhido em <strong>“⚙ Avançado”</strong>. A precedência é <strong>param do nó &gt; override do homúnculo &gt; parâmetros globais &gt; Config global &gt; padrão</strong>. Para sobrepor os parâmetros num homúnculo específico, marque <strong>“sobrepor parâmetros”</strong> naquele papel no modal <strong>Skills por homúnculo</strong> (booleanos são sim/não).</p>
+  <p>Para <strong>Homunculus S</strong>, ligar <strong>usar skills da base</strong> faz um papel que o S não tem cair na skill da <strong>forma base</strong> (fallback); no editor e no simulador o nó aparece como “<strong>via base</strong>”. E cada skill de um papel pode ter um <strong>gate</strong> (“só se TIVER / NÃO TIVER a skill X”), configurado na tela <strong>Skills por homúnculo</strong> — a IA pula a skill quando o gate falha. Veja <a href="monstros-e-skills.html#condicao-skill">Monstros &amp; skills</a>.</p>
 
   <h2 id="exemplo">Exemplo de árvore</h2>
   <p>Trecho da árvore padrão mostrando <code>check</code>, <code>selector</code>, <code>sequence</code> e folhas:</p>

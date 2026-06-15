@@ -307,3 +307,9 @@ button:disabled{opacity:.45;cursor:default}
 .gnode .cfgbtn ~ .cfgbtn{top:13px}   /* 2o botao empilha abaixo; sozinho fica no topo */
 .gnode .cfgbtn.cfg-params{background:#1f6feb;font-size:14px}
 .gnode .cfgbtn.cfg-params:hover{background:#388bfd}
+/* condição por skill (gate "possui a skill X") na tela de papéis */
+.sc-skill{flex-wrap:wrap}
+.sc-gate{flex-basis:100%;display:flex;align-items:center;gap:6px;margin:3px 0 2px 0;font-size:11px;color:var(--muted)}
+.sc-gate-hidden{display:none}
+.sc-gate-lbl{color:#7a8590}
+.sc-gate select{font-size:11px;padding:2px 5px}

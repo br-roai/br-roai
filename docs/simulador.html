@@ -37,6 +37,7 @@
       <li><a href="#tempo">Controle de tempo</a></li>
       <li><a href="#mapa">Interagir com o mapa</a></li>
       <li><a href="#cenario">Montar o cenário</a></li>
+      <li><a href="#lvl">Nível e skills aprendidas</a></li>
       <li><a href="#indicadores">Barras e indicadores</a></li>
       <li><a href="#efeitos">Efeitos de skill</a></li>
       <li><a href="#blackboard">Inspetor de blackboard</a></li>
@@ -82,6 +83,16 @@
 
   <h2 id="cenario">Montar o cenário</h2>
   <p>Você pinta o mundo: <strong>＋ monstro</strong> e <strong>＋ aliado</strong> adicionam entidades (aliados ajudam a testar a proteção anti-KS). Clique numa entidade para editar HP, ataque, intervalo de ataque, se é agressiva e — no monstro — a classe/ID (usada pelos nós <code>monsterCheck</code>). O relógio do mundo é <strong>determinístico</strong> (avança por um passo fixo por frame), o que torna os testes reproduzíveis — essencial para depurar cooldowns e timeouts.</p>
+  <h2 id="lvl">Nível e skills aprendidas</h2>
+  <p>No painel do homúnculo (ao lado do tipo e da base) há o campo <strong>lvl</strong> (nível de base). Ele decide <strong>quais skills o homúnculo já aprendeu</strong> no simulador: uma skill conta como “possuída” quando o <strong>lvl</strong> é maior ou igual ao nível mínimo dela. Isso alimenta a condição <strong>“Possui a skill”</strong> e os <strong>gates por skill</strong> (“só se TIVER / NÃO TIVER”). Baixe o <strong>lvl</strong> para testar o homúnculo “novo” (ex.: o Dieter ainda sem Blast Forge, caindo na Lava Slide) e suba para testar com tudo aprendido.</p>
+  <figure class="inline">
+    <img src="img/sim-lvl.png" alt="Campo lvl do homúnculo no simulador, ao lado de homún e base" />
+    <figcaption>O campo <b>lvl</b> (ao lado de homún/base) define quais skills o homúnculo já aprendeu no simulador.</figcaption>
+  </figure>
+  <div class="box key">
+    <div class="h">★ O lvl é só do simulador</div>
+    <p>Esse campo existe <strong>apenas no simulador</strong>, para imitar o que o cliente do jogo responde sobre skills aprendidas. Ele <strong>não vai</strong> para a IA gerada — no jogo, quem sabe se o homúnculo tem a skill é o próprio cliente. As skills aprendidas são sempre tratadas no <strong>nível máximo</strong>.</p>
+  </div>
 
   <h2 id="indicadores">Barras e indicadores</h2>
   <p>Cada entidade mostra barras: <strong>HP</strong> (verde › amarelo › vermelho conforme a porcentagem) e, abaixo, <strong>SP</strong> (azul). Dono, homúnculo e aliados exibem as barras sempre; <strong>monstros só quando são o alvo atual</strong> do homúnculo (ou quando você os clica) — assim o mapa não fica poluído. O botão <strong>HP: alvo/todos</strong> alterna mostrar o HP de todos os monstros.</p>
@@ -136,7 +147,7 @@
   <p>O painel <strong>Skills / Buffs</strong> lista os cooldowns em andamento, os buffs ativos e os efeitos de área ainda no chão, cada um com uma barra de tempo restante — útil para confirmar recasts e janelas de recarga. O painel <strong>Log</strong> mostra as chamadas de <code>TraceAI</code> da árvore no formato <code>[tick] mensagem</code>, com as linhas de falha destacadas. Como tudo é gravado por frame, o log acompanha o replay.</p>
 
   <h2 id="cenarios">Salvar e carregar cenários</h2>
-  <p>Um cenário é um mundo completo (mapa, entidades, config, tipo de homúnculo). Na versão estática, <strong>salvar baixa um arquivo</strong> e <strong>carregar/importar envia um arquivo</strong>:</p>
+  <p>Um cenário guarda o mapa, as entidades, os stats (HP/SP/ATK/MATK, posição) e a config — mas <strong>não</strong> o tipo do homúnculo: ao salvar ou carregar, o tipo (e a base) vêm do <strong>contexto atual</strong>, não do arquivo, então o mesmo cenário serve para testar qualquer homúnculo. Na versão estática, <strong>salvar baixa um arquivo</strong> e <strong>carregar/importar envia um arquivo</strong>:</p>
   <ul>
     <li><strong>💾 salvar cenário</strong> — captura o estado ao vivo atual e <strong>baixa</strong> um <code>.json</code>.</li>
     <li><strong>📤 Importar cenário</strong> — <strong>envia</strong> um <code>.json</code> e o carrega no mapa.</li>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 384" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="11" markerHeight="11" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7fd1ff"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="820" height="384" rx="12" fill="#0f151b"/>
+  <text x="410" y="32" text-anchor="middle" fill="#dfe6ec" font-size="18.5" font-weight="700">Skills da base (opt-in): o Homunculus S usa a forma base como fallback</text>
+
+  <!-- S box -->
+  <g>
+    <rect x="18" y="58" width="224" height="250" rx="10" fill="#141b22" stroke="#243038"/>
+    <rect x="18" y="58" width="224" height="34" rx="10" fill="#16323f"/>
+    <rect x="18" y="80" width="224" height="12" fill="#16323f"/>
+    <text x="130" y="80" text-anchor="middle" fill="#7fd1ff" font-size="14.5" font-weight="700">Sera · Homunculus S</text>
+    <text x="34" y="124" fill="#8593a0" font-size="12">Invocação</text>
+    <text x="34" y="142" fill="#dfe6ec" font-size="14">Summon Legion ✓</text>
+    <text x="34" y="178" fill="#8593a0" font-size="12">Dano único</text>
+    <text x="34" y="196" fill="#5f6c78" font-size="14">— (vazio)</text>
+    <text x="34" y="232" fill="#8593a0" font-size="12">Cura</text>
+    <text x="34" y="250" fill="#5f6c78" font-size="14">— (vazio)</text>
+    <text x="130" y="290" text-anchor="middle" fill="#aeb9c4" font-size="12.5" font-style="italic">prioritário</text>
+  </g>
+
+  <text x="256" y="190" text-anchor="middle" fill="#8593a0" font-size="26" font-weight="700">+</text>
+
+  <!-- base box -->
+  <g>
+    <rect x="270" y="58" width="224" height="250" rx="10" fill="#141b22" stroke="#243038"/>
+    <rect x="270" y="58" width="224" height="34" rx="10" fill="#1b2530"/>
+    <rect x="270" y="80" width="224" height="12" fill="#1b2530"/>
+    <text x="382" y="80" text-anchor="middle" fill="#aeb9c4" font-size="14.5" font-weight="700">Vanilmirth · forma base</text>
+    <text x="286" y="124" fill="#8593a0" font-size="12">Dano único</text>
+    <text x="286" y="142" fill="#dfe6ec" font-size="14">Caprice ✓</text>
+    <text x="286" y="178" fill="#8593a0" font-size="12">Cura</text>
+    <text x="286" y="196" fill="#dfe6ec" font-size="14">Chaotic Blessings ✓</text>
+    <text x="286" y="232" fill="#8593a0" font-size="12">Invocação</text>
+    <text x="286" y="250" fill="#5f6c78" font-size="14">—</text>
+    <text x="382" y="290" text-anchor="middle" fill="#aeb9c4" font-size="12.5" font-style="italic">preenche só o que falta</text>
+  </g>
+
+  <line x1="500" y1="183" x2="566" y2="183" stroke="#7fd1ff" stroke-width="2.5" marker-end="url(#arr)"/>
+
+  <!-- effective box (chips on the label line to avoid overlap) -->
+  <g>
+    <rect x="574" y="58" width="228" height="250" rx="10" fill="#141b22" stroke="#2e3c46"/>
+    <rect x="574" y="58" width="228" height="34" rx="10" fill="#1a2b22"/>
+    <rect x="574" y="80" width="228" height="12" fill="#1a2b22"/>
+    <text x="688" y="80" text-anchor="middle" fill="#6fe0a0" font-size="14.5" font-weight="700">Perfil efetivo (S + base)</text>
+
+    <text x="590" y="124" fill="#8593a0" font-size="12">Invocação</text>
+    <rect x="734" y="111" width="34" height="17" rx="8" fill="#16323f"/><text x="751" y="123" text-anchor="middle" fill="#7fd1ff" font-size="10.5" font-weight="700">do S</text>
+    <text x="590" y="142" fill="#dfe6ec" font-size="14">Summon Legion</text>
+
+    <text x="590" y="178" fill="#8593a0" font-size="12">Dano único</text>
+    <rect x="706" y="165" width="62" height="17" rx="8" fill="#1a2b22"/><text x="737" y="177" text-anchor="middle" fill="#6fe0a0" font-size="10.5" font-weight="700">via base</text>
+    <text x="590" y="196" fill="#dfe6ec" font-size="14">Caprice</text>
+
+    <text x="590" y="232" fill="#8593a0" font-size="12">Cura</text>
+    <rect x="706" y="219" width="62" height="17" rx="8" fill="#1a2b22"/><text x="737" y="231" text-anchor="middle" fill="#6fe0a0" font-size="10.5" font-weight="700">via base</text>
+    <text x="590" y="250" fill="#dfe6ec" font-size="14">Chaotic Blessings</text>
+
+    <text x="688" y="290" text-anchor="middle" fill="#6fe0a0" font-size="12.5" font-style="italic">é o que roda no jogo e no sim</text>
+  </g>
+
+  <text x="410" y="340" text-anchor="middle" fill="#aeb9c4" font-size="12">Opt-in: marque “usar skills da base”. O S é prioritário; a base entra só nos papéis vazios.</text>
+  <text x="410" y="360" text-anchor="middle" fill="#8593a0" font-size="12">Buffs ofensivo e defensivo usam fallback estrito — não somam (a base só entra se o S não tiver nenhum).</text>
+</svg>

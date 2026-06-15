@@ -143,6 +143,10 @@
         var sl = {}; Object.keys(roles.skillLevels).forEach(function (id) { var lv2 = parseInt(roles.skillLevels[id], 10); if (lv2 > 0) sl[String(id)] = lv2; });
         if (Object.keys(sl).length) r.skillLevels = sl;
       }
+      if (roles.skillGate && typeof roles.skillGate === 'object') {   // gate "possui a skill X" por skill
+        var sg = {}; Object.keys(roles.skillGate).forEach(function (id) { var g = roles.skillGate[id]; var gs = g && parseInt(g.skill, 10); if (gs > 0) sg[String(id)] = { skill: gs, negate: !!g.negate }; });
+        if (Object.keys(sg).length) r.skillGate = sg;
+      }
       if (Object.keys(r).length) data[String(k)] = r;
     });
     return [

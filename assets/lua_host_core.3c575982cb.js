@@ -16,7 +16,7 @@
     var re = /f\(\s*"([^"]+)"\s*\)/g, m;
     while ((m = re.exec(bootSrc)) !== null) files.push(m[1]);
     // módulos exclusivos do simulador (não carregados no cliente do RO)
-    files.push('src/sim/json.lua', 'src/sim/runtime.lua');
+    files.push('src/sim/json.lua', 'src/sim/skill_req_level.lua', 'src/sim/runtime.lua');
     return files;
   }
 

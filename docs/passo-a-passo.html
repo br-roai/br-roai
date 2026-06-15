@@ -202,6 +202,25 @@
     <p><strong>Jeito A</strong> quando você quer uma skill <em>exata</em> num ponto da árvore (ex.: um nuke específico contra chefe). <strong>Jeito B</strong> para o ataque do dia a dia: a mesma árvore serve para vários homúnculos, porque cada um usa a sua própria skill de área. As <strong>skills configuradas</strong> valem tanto no simulador quanto no Lua gerado.</p>
   </div>
 
+  <h3>Jeito C — "use uma enquanto não tiver a outra" (gate por nível)</h3>
+  <p>E se você quer que o Dieter use <em>Lava Slide</em> <strong>só enquanto não tiver</strong> a Blast Forge, e troque sozinho quando aprendê-la? Dá para amarrar isso à skill aprendida, sem mexer na árvore. Na tela <strong>Skills por homúnculo</strong>, no papel <em>Skill em área (AoE)</em>, cada skill tem uma <strong>condição</strong> abaixo do nome: deixe a <strong>Blast Forge</strong> no topo e ponha na <strong>Lava Slide</strong> a condição <strong>"só se NÃO TIVER Blast Forge"</strong>. A IA usa a primeira utilizável da lista: enquanto a Blast Forge não foi aprendida, ela é pulada e entra a Lava Slide; ao aprender, a Blast Forge assume.</p>
+  <div class="box tip">
+    <div class="h">▶ Testar no simulador baixando o nível</div>
+    <p>No simulador, o campo <strong>lvl</strong> do homúnculo decide o que ele "já aprendeu". Baixe o <strong>lvl</strong> abaixo do mínimo da Blast Forge e veja a IA cair na Lava Slide; suba o <strong>lvl</strong> e ela passa a usar a Blast Forge. Esse <em>lvl</em> é só do simulador — no jogo, quem sabe é o cliente. A mesma checagem existe como a condição <strong>Possui a skill</strong> no combobox, se preferir amarrar direto na árvore.</p>
+  </div>
+  <table>
+    <thead><tr><th>Jeito</th><th>Onde se define</th><th>Quando usar</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A — skill no nó</strong><br><code>Usar skill específica</code></td><td>No próprio nó da árvore (skill + nível fixos)</td><td>Quando você quer uma skill <em>exata</em> num ponto (ex.: um nuke contra chefe).</td></tr>
+      <tr><td><strong>B — papel</strong><br><code>Skill em área (AoE)</code></td><td>Tela <strong>Skills por homúnculo</strong> (lista de prioridade)</td><td>Ataque do dia a dia: a mesma árvore serve a vários homúnculos.</td></tr>
+      <tr><td><strong>C — papel + gate</strong></td><td>Como o B, com a <strong>condição</strong> “só se (não) TIVER a skill X”</td><td>Trocar de skill conforme o que o homúnculo já aprendeu (ex.: Lava Slide → Blast Forge).</td></tr>
+    </tbody>
+  </table>
+  <figure>
+    <a href="img/skills-condicao.png" target="_blank" rel="noopener"><img src="img/skills-condicao.png" alt="Condição por skill no papel AoE do Dieter" /></a>
+    <figcaption><b>Jeito C</b> na prática: na tela <b>Skills por homúnculo</b>, a Lava Slide ganha a condição <b>“só se NÃO TIVER Blast Forge”</b>.</figcaption>
+  </figure>
+
   <!-- ===================== 3. AMISTR ===================== -->
   <h2 id="amistr">3. Amistr tanque: proteger o dono <span class="pill inter">intermediário</span></h2>
   <p>O Amistr é o tanque. A ideia muda o foco de "matar" para "segurar aggro e proteger o dono": trocar de lugar com o dono quando ele é cercado (<strong>Castling</strong>), manter os buffs e mirar em quem ataca o dono.</p>
